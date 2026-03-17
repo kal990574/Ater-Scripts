@@ -12,20 +12,6 @@ public class LidarRayDebug : MonoBehaviour
     [SerializeField] private bool drawConeOutline = true;
     
     //레이케스트 그리기
-    private void DrawDebugRays()
-    {
-        if (raycastAbility == null)
-        {
-            return;
-        }
-
-        Vector3 origin = _controller.StartPos;
-
-        foreach (Vector3 direction in raycastAbility.EnumerateRayDirections())
-        {
-            DrawSingleDebugRay(origin, direction);
-        }
-    }
 
     private void DrawSingleDebugRay(Vector3 origin, Vector3 direction)
     {

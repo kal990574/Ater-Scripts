@@ -7,12 +7,10 @@ public class LidarEffectAbility : LidarAbility
 {
     [SerializeField] private Transform _shootTransform;
     [SerializeField] private LineRenderer _lineRenderer;
-    [FormerlySerializedAs("_targetingAbility")] [SerializeField] private LidarRaycastAbility raycastAbility;
+    [SerializeField] private LidarRaycastAbility raycastAbility;
     
     [SerializeField] private float _drawDelay = 0.5f;
     
-    [SerializeField] private bool _hasTarget = false;
-    [SerializeField] private bool _isLineVisible = false;
     [SerializeField] private float _lastDrawTime = -999.0f;
 
     protected override void Awake()
@@ -59,7 +57,6 @@ public class LidarEffectAbility : LidarAbility
     public void ResetLine()
     {
         ClearLine();
-        _hasTarget = false;
     }
 
     private bool CanDrawEffect()
@@ -88,9 +85,6 @@ public class LidarEffectAbility : LidarAbility
 
         SetLineColor(Color.green);
         SetLine(_shootTransform.position, targetPoint);
-
-        _hasTarget = true;
-        _isLineVisible = true;
     }
 
     private void DrawRaycastLine()
@@ -105,9 +99,6 @@ public class LidarEffectAbility : LidarAbility
 
         SetLineColor(Color.red);
         SetLine(_shootTransform.position, rayData.EndPoint);
-
-        _hasTarget = false;
-        _isLineVisible = true;
     }
 
     private Vector3 GetPointOnTargetSurface(LidarScannableObject target)
@@ -177,7 +168,6 @@ public class LidarEffectAbility : LidarAbility
 
         Vector3 origin = _shootTransform.position;
         SetLine(origin, origin);
-        _isLineVisible = false;
     }
 
     private void SetLineColor(Color color)

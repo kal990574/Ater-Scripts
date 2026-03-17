@@ -6,7 +6,6 @@ public class LidarScannableObject : MonoBehaviour
 {
     [Header("Settings")]
     [SerializeField] private LidarProgressSetting _settings;
-    [SerializeField] private Transform _scanPoint;
 
     [Header("Minigame")]
     [SerializeField] private MonoBehaviour _minigameProvider;
