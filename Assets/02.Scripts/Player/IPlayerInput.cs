@@ -6,5 +6,6 @@ namespace _02.Scripts.Player
     {
         Vector2 MoveInput { get; }
         Vector2 LookInput { get; }
+        bool LmbInput { get; }
     }
 }
