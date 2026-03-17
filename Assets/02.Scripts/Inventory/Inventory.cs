@@ -15,7 +15,7 @@ public class Inventory
     public int Count => _slots.Count;
 
 
-    public bool AddItem(object item)
+    public bool AddItem(ItemData item)
     {
         if(item == null) return false;
 
@@ -41,6 +41,6 @@ public class Inventory
 
     public bool HasItem(string itemId)
     {
-        return _slots.Exists(slot => slot.Item?.ToString() == itemId);
+        return _slots.Exists(slot => slot.Item?.ItemId == itemId);
     }
 }

@@ -26,6 +26,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
         }
 
         _itemIcon.enabled = true;
+        _itemIcon.sprite = _slot.Item.Icon;
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -40,6 +41,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
         else if (eventData.button == PointerEventData.InputButton.Left)
         {
             Debug.Log($"상세보기 : {_slot.Item} , 인덱스 : {_indexText.text}");
+            ItemViewer.Instance.ShowItem(_slot.Item);
         }
     }
 }
