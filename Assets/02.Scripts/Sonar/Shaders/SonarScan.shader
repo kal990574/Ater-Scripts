@@ -144,7 +144,7 @@ Shader "Custom/SonarScan"
                 // _TrailFadeRadius 이하는 소멸, _ScanRadius 이상은 미도달
                 float inTrail = step(_TrailFadeRadius, dist) * step(dist, _ScanRadius);
 
-                // 꼬리 안쪽(소멸 경계)에서 바깥(링)으로 갈수록 강해짐.
+                // 꼬리 안쪽(소멸 경계)에서 바깥(링)으로 갈수록 강해짐
                 float gradient = saturate((dist - _TrailFadeRadius) / trailRange);
 
                 return inTrail * gradient * _TrailIntensity;
