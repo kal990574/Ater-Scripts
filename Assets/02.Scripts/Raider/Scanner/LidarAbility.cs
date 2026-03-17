@@ -3,10 +3,13 @@ using UnityEngine;
 
 public class LidarAbility : MonoBehaviour
 {
-    protected LidarController _controller;
+    [SerializeField] protected LidarController _controller;
 
-    protected void Awake()
+    protected virtual void Awake()
     {
-        _controller = GetComponentInParent<LidarController>();
+        if (_controller == null)
+        {
+            _controller = GetComponentInParent<LidarController>();
+        }
     }
 }

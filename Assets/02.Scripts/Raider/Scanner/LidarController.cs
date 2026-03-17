@@ -2,49 +2,137 @@ using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-//실질적인 라이더 스캐닝 관리, 모든 하위 컴포넌트 관리
 public class LidarController : MonoBehaviour
 {
-    //라이더의 스텟관리(발사거리, 발사각도 등)
     [Title("Reference")]
-    [SerializeField] private Transform _originPos; //발사 위치
-    
-    [Title("Laider Settings")]
-    [SerializeField] private float _rayDistance = 10.0f;
-    [SerializeField] private float _coneAngle = 45.0f;
-    [SerializeField] private int _ringCount = 4;
-    [SerializeField] private int _raysPerRing = 12;
-    [SerializeField] private Vector3 _originOffset = new Vector3(0.0f, 0.0f, 0.0f);
-    [SerializeField] private LayerMask _hitMask = ~0;
-    
-    public float RayDistance => _rayDistance;
-    public float ConeAngle => _coneAngle;
-    public int RingCount => _ringCount;
-    public int RaysPerRing => _raysPerRing;
-    public LayerMask HitMask => _hitMask;
-    public Vector3 StartPos => _originPos.position  + _originOffset;
+    [SerializeField] private Transform _rayOrigin;
+    [SerializeField] private Transform _shootPoint;
+    [SerializeField] private LidarSetting _setting;
+    [SerializeField] private Vector3 _originOffset = Vector3.zero;
 
-    [Title("Caching")] private Dictionary<Type, LidarAbility> _abilities;
+    [Title("Caching")]
+    private readonly Dictionary<Type, LidarAbility> _abilities = new Dictionary<Type, LidarAbility>();
+
+    [ShowInInspector, ReadOnly]
+    public LidarScannableObject CurrentTarget { get; private set; }
+
+    public float RayDistance => _setting.RayDistance;
+    public float ConeAngle => _setting.ConeAngle;
+    public int RingCount => _setting.RingCount;
+    public int RaysPerRing => _setting.RaysPerRing;
+    public LayerMask HitMask => _setting.HitMask;
+    public Vector3 StartPos => _rayOrigin.position + _originOffset;
+    public Transform RayOrigin => _rayOrigin;
+    public Transform ShootPoint => _shootPoint;
+
+    private void Update()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            UpdateScan();
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            ResetLidar();
+        }
+    }
+
+    private void UpdateScan()
+    {
+        LidarRaycastAbility raycastAbility = GetAbility<LidarRaycastAbility>();
+        raycastAbility.Scan();
+
+        CurrentTarget = ResolveTarget(raycastAbility.HitMap, StartPos, transform.forward);
+
+        GetAbility<LidarEffectAbility>().DrawLidarEffect(CurrentTarget);
+    }
+
+    public void ResetLidar()
+    {
+        CurrentTarget = null;
+        GetAbility<LidarRaycastAbility>().ClearScanResults();
+        GetAbility<LidarEffectAbility>().ResetLine();
+    }
 
     public T GetAbility<T>() where T : LidarAbility
     {
-        var type = typeof(T);
+        Type type = typeof(T);
 
         if (_abilities.TryGetValue(type, out LidarAbility ability))
         {
             return ability as T;
         }
 
-        ability = GetComponent<T>();
+        ability = GetComponentInChildren<T>();
 
         if (ability != null)
         {
-            _abilities[ability.GetType()] = ability;
+            _abilities[type] = ability;
             return ability as T;
         }
 
         throw new Exception($"[LidarController] Ability {type.Name} not found on {gameObject.name}.");
+    }
+
+    private LidarScannableObject ResolveTarget(IReadOnlyDictionary<LidarScannableObject, TargetHitData> hitMap, Vector3 origin, Vector3 forward)
+    {
+        LidarScannableObject bestTarget = null;
+        bool hasBest = false;
+
+        int bestHitCount = int.MinValue;
+        float bestCenterScore = float.MinValue;
+        float bestClosestDistance = float.MaxValue;
+
+        foreach (KeyValuePair<LidarScannableObject, TargetHitData> pair in hitMap)
+        {
+            LidarScannableObject candidate = pair.Key;
+            TargetHitData data = pair.Value;
+
+            Vector3 toRepresentativePoint = (data.RepresentativePoint - origin).normalized;
+            float centerScore = Vector3.Dot(forward, toRepresentativePoint);
+
+            if (hasBest == false)
+            {
+                bestTarget = candidate;
+                bestHitCount = data.HitCount;
+                bestCenterScore = centerScore;
+                bestClosestDistance = data.ClosestDistance;
+                hasBest = true;
+                continue;
+            }
+
+            if (data.HitCount > bestHitCount)
+            {
+                bestTarget = candidate;
+                bestHitCount = data.HitCount;
+                bestCenterScore = centerScore;
+                bestClosestDistance = data.ClosestDistance;
+                continue;
+            }
+
+            if (data.HitCount == bestHitCount)
+            {
+                if (centerScore > bestCenterScore)
+                {
+                    bestTarget = candidate;
+                    bestHitCount = data.HitCount;
+                    bestCenterScore = centerScore;
+                    bestClosestDistance = data.ClosestDistance;
+                    continue;
+                }
+
+                if (Mathf.Approximately(centerScore, bestCenterScore) == true && data.ClosestDistance < bestClosestDistance)
+                {
+                    bestTarget = candidate;
+                    bestHitCount = data.HitCount;
+                    bestCenterScore = centerScore;
+                    bestClosestDistance = data.ClosestDistance;
+                }
+            }
+        }
+
+        return bestTarget;
     }
 }

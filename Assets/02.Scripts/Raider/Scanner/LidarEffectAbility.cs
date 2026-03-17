@@ -1,62 +1,157 @@
-using System.Collections.Generic;
 using Sirenix.OdinInspector;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
-// 라이더 스캔의 연출을 담당
 public class LidarEffectAbility : LidarAbility
 {
     [Title("Reference")]
     [SerializeField] private Transform _shootTransform;
     [SerializeField] private LineRenderer _lineRenderer;
+    [FormerlySerializedAs("_targetingAbility")] [SerializeField] private LidarRaycastAbility raycastAbility;
 
-    [Title("Edit Parameter")]
-    [SerializeField] private float _rayDistance = 3.0f;
-    [SerializeField] private float _rayMaxAngle = 10.0f; // 도 단위
-    [SerializeField] private float _rayShootDelay = 0.1f;
+    [Title("Effect Parameter")]
+    [SerializeField] private float _drawDelay = 0.5f;
 
-    [Title("Cache Parameter")]
-    private bool _hasTarget = false;
+    [Title("Debug Cache")]
+    [SerializeField, ReadOnly] private bool _hasTarget = false;
+    [SerializeField, ReadOnly] private bool _isLineVisible = false;
+    [SerializeField, ReadOnly] private float _lastDrawTime = -999.0f;
 
-    private void Awake()
+    protected override void Awake()
     {
-        //라인렌더러 초기 설정
-        _lineRenderer.useWorldSpace = true;
-        _lineRenderer.positionCount = 2;
+        base.Awake();
+
+        if (_shootTransform == null && _controller != null)
+        {
+            _shootTransform = _controller.ShootPoint;
+        }
+
+        if (raycastAbility == null && _controller != null)
+        {
+            raycastAbility = _controller.GetAbility<LidarRaycastAbility>();
+        }
+
+        if (_lineRenderer != null)
+        {
+            _lineRenderer.useWorldSpace = true;
+            _lineRenderer.positionCount = 2;
+        }
+
+        ClearLine();
     }
 
-    //이벤트 구독방식이 좋을까?
-    public void DrawTargetLine(List<RaycastHit> targetHit)
+    public void DrawLidarEffect(LidarScannableObject target)
     {
-        int randomIndex = Random.Range(0, targetHit.Count);
-        RaycastHit selectedHit = targetHit[randomIndex];
+        if (CanDrawEffect() == false)
+        {
+            return;
+        }
 
-        DrawLineToPoint(selectedHit.point, Color.green);
-    }
-    
-    private void DrawRandomLine()
-    {
-        float yaw = Random.Range(-_rayMaxAngle, _rayMaxAngle);
-        float pitch = Random.Range(-_rayMaxAngle, _rayMaxAngle);
+        _lastDrawTime = Time.time;
 
-        Quaternion rot =
-            Quaternion.AngleAxis(yaw, _shootTransform.up) *
-            Quaternion.AngleAxis(pitch, _shootTransform.right);
+        if (target != null)
+        {
+            DrawTargetLine(target);
+            return;
+        }
 
-        Vector3 direction = rot * _shootTransform.forward;
-        Vector3 endPoint = _shootTransform.position + direction * _rayDistance;
-
-        DrawLineToPoint(endPoint, Color.red);
+        DrawRaycastLine();
     }
 
-    private void DrawLineToPoint(Vector3 endPoint, Color lineColor)
+    public void ResetLine()
     {
-        _lineRenderer.startColor = lineColor;
-        _lineRenderer.endColor = lineColor;
+        ClearLine();
+        _hasTarget = false;
+    }
 
-        Vector3 startPoint = _shootTransform.position;
+    private bool CanDrawEffect()
+    {
+        if (_shootTransform == null)
+        {
+            return false;
+        }
 
+        if (_lineRenderer == null)
+        {
+            return false;
+        }
+
+        if (Time.time < _lastDrawTime + _drawDelay)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void DrawTargetLine(LidarScannableObject target)
+    {
+        Vector3 targetPoint = GetPointOnTargetSurface(target);
+
+        SetLineColor(Color.green);
+        SetLine(_shootTransform.position, targetPoint);
+
+        _hasTarget = true;
+        _isLineVisible = true;
+    }
+
+    private void DrawRaycastLine()
+    {
+        if (raycastAbility == null || raycastAbility.RayResults.Count == 0)
+        {
+            ResetLine();
+            return;
+        }
+
+        LidarRayData rayData = raycastAbility.RayResults[Random.Range(0, raycastAbility.RayResults.Count)];
+
+        SetLineColor(Color.red);
+        SetLine(_shootTransform.position, rayData.EndPoint);
+
+        _hasTarget = false;
+        _isLineVisible = true;
+    }
+
+    private Vector3 GetPointOnTargetSurface(LidarScannableObject target)
+    {
+        if (raycastAbility != null && raycastAbility.TryGetTargetHits(target, out List<RaycastHit> hitList) == true)
+        {
+            RaycastHit hit = hitList[Random.Range(0, hitList.Count)];
+            return hit.point;
+        }
+
+        Collider targetCollider = target.GetComponentInChildren<Collider>();
+        if (targetCollider != null)
+        {
+            return targetCollider.ClosestPoint(_shootTransform.position);
+        }
+
+        return target.transform.position;
+    }
+
+    private void SetLine(Vector3 startPoint, Vector3 endPoint)
+    {
         _lineRenderer.SetPosition(0, startPoint);
         _lineRenderer.SetPosition(1, endPoint);
+    }
+
+    private void ClearLine()
+    {
+        if (_lineRenderer == null || _shootTransform == null)
+        {
+            return;
+        }
+
+        Vector3 origin = _shootTransform.position;
+        SetLine(origin, origin);
+        _isLineVisible = false;
+    }
+
+    private void SetLineColor(Color color)
+    {
+        _lineRenderer.startColor = color;
+        _lineRenderer.endColor = color;
     }
 }
