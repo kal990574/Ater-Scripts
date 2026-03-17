@@ -116,19 +116,54 @@ public class LidarEffectAbility : LidarAbility
 
     private Vector3 GetPointOnTargetSurface(LidarScannableObject target)
     {
-        if (raycastAbility != null && raycastAbility.TryGetTargetHits(target, out List<RaycastHit> hitList) == true)
+        if (target == null)
         {
-            RaycastHit hit = hitList[Random.Range(0, hitList.Count)];
-            return hit.point;
+            return _shootTransform != null ? _shootTransform.position : Vector3.zero;
         }
 
-        Collider targetCollider = target.GetComponentInChildren<Collider>();
-        if (targetCollider != null)
+        List<Collider> colliderList = new List<Collider>();
+        target.GetComponentsInChildren(colliderList);
+
+        if (colliderList.Count > 0)
         {
+            Collider targetCollider = colliderList[Random.Range(0, colliderList.Count)];
+            Vector3 sampledPoint = SampleRandomSurfacePoint(targetCollider);
+
+            if (sampledPoint != targetCollider.bounds.center)
+            {
+                return sampledPoint;
+            }
+
             return targetCollider.ClosestPoint(_shootTransform.position);
         }
 
         return target.transform.position;
+    }
+
+    private Vector3 SampleRandomSurfacePoint(Collider targetCollider)
+    {
+        Bounds bounds = targetCollider.bounds;
+        Vector3 center = bounds.center;
+        float radius = bounds.extents.magnitude;
+
+        if (radius <= Mathf.Epsilon)
+        {
+            return center;
+        }
+
+        for (int attempt = 0; attempt < 8; attempt++)
+        {
+            Vector3 direction = Random.onUnitSphere;
+            Vector3 sampleOrigin = center + direction * radius * 2.0f;
+            Vector3 surfacePoint = targetCollider.ClosestPoint(sampleOrigin);
+
+            if ((surfacePoint - sampleOrigin).sqrMagnitude > 0.0001f)
+            {
+                return surfacePoint;
+            }
+        }
+
+        return center;
     }
 
     private void SetLine(Vector3 startPoint, Vector3 endPoint)
