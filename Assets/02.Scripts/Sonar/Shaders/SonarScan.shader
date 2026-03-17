@@ -196,10 +196,10 @@ Shader "Custom/SonarScan"
                 float edge = SobelDepthEdge(uv);
                 float scanLine = ScanLinePattern(worldPos);
 
-                // 링: 영역 전체 채움 (에지 무관, 스캔라인 무관).
+                // 링: 영역 전체
                 float ringFill = ring * cone * _RingFillIntensity * _RingOpacity;
 
-                // 윤곽선: 링은 에지만, 잔상은 에지 + 스캔라인.
+                // 윤곽선: 링은 edge, 잔상은 edge + scanline
                 float ringOutline = ring * cone * edge * _RingOpacity;
                 float trailOutline = trail * cone * edge * scanLine;
 
