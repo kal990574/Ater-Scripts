@@ -1,28 +1,32 @@
+using System;
 using UnityEngine;
 
 public class ScannableShaderModifier : MonoBehaviour
 {
     [SerializeField] private Renderer targetRenderer;
-    
-    private MaterialPropertyBlock _propertyBlock;
+    [SerializeField, ColorUsage(true, true)] private Color outlineColor = Color.white;
 
-    
-    //프로퍼티 조작 요소 추가
     private static readonly int _outlineColorID = Shader.PropertyToID("_OutlineColor");
-    private static readonly int _textureBlendingCutoffID = Shader.PropertyToID("_TextureBlendingCutoff");
+    private static readonly int _textureBlendingCutoffID = Shader.PropertyToID("_BlendingMaskCutOffWhite");
 
     private MaterialPropertyBlock _mpb;
 
+
     private void Awake()
     {
-        _mpb = new MaterialPropertyBlock();
+        _mpb = new  MaterialPropertyBlock();
+    }
+
+    public void SetOutlineColor()
+    {
+        _mpb.SetColor(_outlineColorID, outlineColor);
+        targetRenderer.SetPropertyBlock(_mpb);
     }
 
     public void SetOutlineColor(Color outlineColor)
     {
-        //추후 두트윈 추가
-        _propertyBlock.SetColor(_outlineColorID, outlineColor);
-        targetRenderer.SetPropertyBlock(_mpb);
+        this.outlineColor = outlineColor;
+        SetOutlineColor();
     }
 
     public void SetBlendCutOff(float cutoff)
@@ -30,6 +34,4 @@ public class ScannableShaderModifier : MonoBehaviour
         _mpb.SetFloat(_textureBlendingCutoffID, cutoff);
         targetRenderer.SetPropertyBlock(_mpb);
     }
-
-
 }

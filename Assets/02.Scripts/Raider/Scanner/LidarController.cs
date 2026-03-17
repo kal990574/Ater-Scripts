@@ -41,7 +41,7 @@ public class LidarController : MonoBehaviour
         raycastAbility.Scan();
 
         CurrentTarget = ResolveTarget(raycastAbility.HitMap, StartPos, transform.forward);
-
+        CurrentTarget.OnScanning(Time.deltaTime);
         GetAbility<LidarEffectAbility>().DrawLidarEffect(CurrentTarget);
     }
 
