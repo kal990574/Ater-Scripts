@@ -1,15 +1,11 @@
-using Sirenix.OdinInspector;
-using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 [ExecuteAlways]
 public class LidarRayDebug : MonoBehaviour
 {
-    [Title("Reference")]
     [SerializeField] private LidarController _controller;
-    [FormerlySerializedAs("_targetingAbility")] [SerializeField] private LidarRaycastAbility raycastAbility;
-    [Title("Settings")]
+    [SerializeField] private LidarRaycastAbility raycastAbility;
+    
     [SerializeField] private bool drawInPlayMode = true;
     [SerializeField] private bool drawInSceneView = true;
     [SerializeField] private float pointRadius = 0.05f;

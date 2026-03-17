@@ -1,20 +1,16 @@
-using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class LidarController : MonoBehaviour
 {
-    [Title("Reference")]
     [SerializeField] private Transform _rayOrigin;
     [SerializeField] private Transform _shootPoint;
     [SerializeField] private LidarSetting _setting;
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
-
-    [Title("Caching")]
+    
     private readonly Dictionary<Type, LidarAbility> _abilities = new Dictionary<Type, LidarAbility>();
-
-    [ShowInInspector, ReadOnly]
+    
     public LidarScannableObject CurrentTarget { get; private set; }
 
     public float RayDistance => _setting.RayDistance;

@@ -1,12 +1,9 @@
-using Sirenix.OdinInspector;
 using UnityEngine;
 
 public class ScannableShaderModifier : MonoBehaviour
 {
-    [Title("Reference")]
     [SerializeField] private Renderer targetRenderer;
-
-    [Title("Caching")] 
+    
     private MaterialPropertyBlock _propertyBlock;
 
     

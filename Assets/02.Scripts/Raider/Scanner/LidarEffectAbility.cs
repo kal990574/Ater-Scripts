@@ -1,4 +1,3 @@
-using Sirenix.OdinInspector;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -6,18 +5,15 @@ using Random = UnityEngine.Random;
 
 public class LidarEffectAbility : LidarAbility
 {
-    [Title("Reference")]
     [SerializeField] private Transform _shootTransform;
     [SerializeField] private LineRenderer _lineRenderer;
     [FormerlySerializedAs("_targetingAbility")] [SerializeField] private LidarRaycastAbility raycastAbility;
-
-    [Title("Effect Parameter")]
+    
     [SerializeField] private float _drawDelay = 0.5f;
-
-    [Title("Debug Cache")]
-    [SerializeField, ReadOnly] private bool _hasTarget = false;
-    [SerializeField, ReadOnly] private bool _isLineVisible = false;
-    [SerializeField, ReadOnly] private float _lastDrawTime = -999.0f;
+    
+    [SerializeField] private bool _hasTarget = false;
+    [SerializeField] private bool _isLineVisible = false;
+    [SerializeField] private float _lastDrawTime = -999.0f;
 
     protected override void Awake()
     {
