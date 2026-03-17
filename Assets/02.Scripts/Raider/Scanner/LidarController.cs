@@ -1,4 +1,5 @@
 using Sirenix.OdinInspector;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -25,5 +26,25 @@ public class LidarController : MonoBehaviour
     public LayerMask HitMask => _hitMask;
     public Vector3 StartPos => _originPos.position  + _originOffset;
 
-    [Title("Caching")] private List<LidarAbility> _abilities;
+    [Title("Caching")] private Dictionary<Type, LidarAbility> _abilities;
+
+    public T GetAbility<T>() where T : LidarAbility
+    {
+        var type = typeof(T);
+
+        if (_abilities.TryGetValue(type, out LidarAbility ability))
+        {
+            return ability as T;
+        }
+
+        ability = GetComponent<T>();
+
+        if (ability != null)
+        {
+            _abilities[ability.GetType()] = ability;
+            return ability as T;
+        }
+
+        throw new Exception($"[LidarController] Ability {type.Name} not found on {gameObject.name}.");
+    }
 }

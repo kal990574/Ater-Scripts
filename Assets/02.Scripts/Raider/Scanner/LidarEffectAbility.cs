@@ -4,7 +4,7 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 
 // 라이더 스캔의 연출을 담당
-public class LidarEffectAbility : MonoBehaviour
+public class LidarEffectAbility : LidarAbility
 {
     [Title("Reference")]
     [SerializeField] private Transform _shootTransform;

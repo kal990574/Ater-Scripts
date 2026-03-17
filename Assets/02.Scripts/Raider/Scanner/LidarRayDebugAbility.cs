@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 [ExecuteAlways]
-public class LidarRayDebugAbility : MonoBehaviour
+public class LidarRayDebugAbility : LidarAbility
 {
     // [SerializeField] private Transform _originPos;
     // [Header("Cone Settings")]
