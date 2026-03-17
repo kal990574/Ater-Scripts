@@ -63,14 +63,14 @@ namespace _02.Scripts.Sonar
             {
                 elapsed += Time.deltaTime;
 
-                // 링 확장.
+                // 링 확장
                 if (_currentRadius < maxRadius)
                 {
                     _currentRadius += expandSpeed * Time.deltaTime;
                     _currentRadius = Mathf.Min(_currentRadius, maxRadius);
                 }
 
-                // 잔상 소멸 경계: trailDelay 후 동일 속도로 추격.
+                // 잔상 소멸 경계: trailDelay 후 동일 속도로 추격
                 if (elapsed > trailDelay)
                 {
                     _trailFadeRadius += expandSpeed * Time.deltaTime;
@@ -81,7 +81,7 @@ namespace _02.Scripts.Sonar
                 yield return null;
             }
 
-            // 초기화.
+            // 초기화
             _currentRadius = 0f;
             _trailFadeRadius = 0f;
             _isScanning = false;
