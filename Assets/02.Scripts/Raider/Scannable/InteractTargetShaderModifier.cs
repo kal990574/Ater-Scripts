@@ -1,35 +1,145 @@
 using System;
+using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Serialization;
+
 public class InteractTargetShaderModifier : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private AllInOneShaderController shaderPropertyController;
+    [SerializeField] private AllInOneShaderController _shaderPropertyController;
+    [SerializeField] private LidarTarget _target;
 
     [Header("Shader Values")]
-    [SerializeField] private InteractTargetShaderConfig config;
+    [SerializeField] private InteractTargetShaderConfig _config;
+
+    [Header("Hit Blend Tween")]
+    [SerializeField] private float _hitBlendPeak = 1.0f;
+    [SerializeField] private float _hitBlendUpDuration = 0.08f;
+    [SerializeField] private float _hitBlendDownDuration = 0.2f;
+    [SerializeField] private Ease _hitBlendUpEase = Ease.OutQuad;
+    [SerializeField] private Ease _hitBlendDownEase = Ease.InQuad;
+
+    private Tween _hitBlendTween;
+    private float _currentHitBlend;
 
     private void Awake()
     {
-        if (shaderPropertyController == null)
+        if (_shaderPropertyController == null)
         {
-            shaderPropertyController = GetComponentInChildren<AllInOneShaderController>();
+            _shaderPropertyController = GetComponentInChildren<AllInOneShaderController>();
+        }
+
+        SetOutlineColor(_config.AbstractOutlineColor);
+        SetGlitchAmountByRatio(1.0f);
+        SetBlendCutOffRatio(0.0f);
+        SetHitBlend(0.0f);
+
+        if (_target == null)
+        {
+            _target = GetComponentInParent<LidarTarget>();
+        }
+
+        if (_target != null)
+        {
+            _target.OnProgressChanged += OnTargetProgressChanged;
+            _target.OnScanComplete += OnTargetScanComplete;
         }
     }
 
-    //추후 변경(추상화 상태일경우 ,호버상태일경우, 소나스캔된 경우)
-    public void SetOutlineColor(Color newOutlineColor)
+    private void OnDestroy()
     {
-        shaderPropertyController.SetColor(config.OutlineColorName, newOutlineColor);
+        if (_target != null)
+        {
+            _target.OnProgressChanged -= OnTargetProgressChanged;
+            _target.OnScanComplete -= OnTargetScanComplete;
+        }
+
+        KillHitBlendTween();
     }
 
-    public void SetBlendCutOff(float newCutOff)
+    private void OnDisable()
     {
-        shaderPropertyController.SetFloat(config.TextureBlendingCutoffName, newCutOff);
+        KillHitBlendTween();
     }
 
-    public void SetGlitchSpeedByRatio(float ratio)
+    private void OnTargetProgressChanged(float ratio)
     {
-        float glitchSpeed = config.DefaultGlitchSpeed * ratio;
-        shaderPropertyController.SetFloat(config.GlitchSpeedName, glitchSpeed);
+        SetBlendCutOffRatio(ratio);
+        SetGlitchAmountByRatio(1.0f - ratio);
+        SetOutlineColor(Color.Lerp(_config.AbstractOutlineColor, _config.OnHoverOutlineColor, ratio));
+    }
+
+    private void OnTargetScanComplete()
+    {
+        PlayHitBlendEffect();
+    }
+
+    private void OnTargetHoverOn()
+    {
+    }
+
+    private void OnTargetHoverOff()
+    {
+    }
+
+    private void PlayHitBlendEffect()
+    {
+        KillHitBlendTween();
+
+        _hitBlendTween = DOTween.Sequence() .Append(DOTween.To(
+                () => _currentHitBlend,
+                value =>
+                {
+                    _currentHitBlend = value;
+                    SetHitBlend(_currentHitBlend);
+                },
+                _hitBlendPeak,
+                _hitBlendUpDuration))
+            .SetEase(_hitBlendUpEase)
+            .Append(DOTween.To(
+                () => _currentHitBlend,
+                value =>
+                {
+                    _currentHitBlend = value;
+                    SetHitBlend(_currentHitBlend);
+                },
+                0.0f,
+                _hitBlendDownDuration))
+            .SetEase(_hitBlendDownEase)
+            .SetLink(gameObject, LinkBehaviour.KillOnDisable)
+            .OnKill(() =>
+            {
+                _hitBlendTween = null;
+            });
+    }
+
+    private void KillHitBlendTween()
+    {
+        if (_hitBlendTween != null && _hitBlendTween.IsActive() == true)
+        {
+            _hitBlendTween.Kill();
+            _hitBlendTween = null;
+        }
+    }
+
+    private void SetOutlineColor(Color newOutlineColor)
+    {
+        _shaderPropertyController.SetColor(_config.OutlineColorName, newOutlineColor);
+    }
+
+    private void SetBlendCutOffRatio(float ratio)
+    {
+        _shaderPropertyController.SetFloat(_config.TextureBlendingCutoffName, ratio);
+    }
+
+    private void SetGlitchAmountByRatio(float ratio)
+    {
+        float glitchSpeed = _config.GlitchAmountPower * ratio;
+        _shaderPropertyController.SetFloat(_config.GlitchAmountName, glitchSpeed);
+    }
+
+    private void SetHitBlend(float power)
+    {
+        _shaderPropertyController.SetFloat(_config.HitBlendName, power);
     }
 }

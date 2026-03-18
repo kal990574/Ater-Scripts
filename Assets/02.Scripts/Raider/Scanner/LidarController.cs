@@ -1,23 +1,24 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class LidarController : MonoBehaviour
 {
     [SerializeField] private Transform _rayOrigin;
     [SerializeField] private Transform _shootPoint;
-    [SerializeField] private LidarSetting _setting;
+    [FormerlySerializedAs("_setting")] [SerializeField] private LidarConfig config;
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
     
     private readonly Dictionary<Type, LidarAbility> _abilities = new();
     
     public LidarTarget CurrentTarget { get; private set; }
 
-    public float RayDistance => _setting.RayDistance;
-    public float ConeAngle => _setting.ConeAngle;
-    public int RingCount => _setting.RingCount;
-    public int RaysPerRing => _setting.RaysPerRing;
-    public LayerMask HitMask => _setting.HitMask;
+    public float RayDistance => config.RayDistance;
+    public float ConeAngle => config.ConeAngle;
+    public int RingCount => config.RingCount;
+    public int RaysPerRing => config.RaysPerRing;
+    public LayerMask HitMask => config.HitMask;
     
     public Vector3 StartPos => _rayOrigin.position + _originOffset;
     public Transform ShootPoint => _shootPoint;

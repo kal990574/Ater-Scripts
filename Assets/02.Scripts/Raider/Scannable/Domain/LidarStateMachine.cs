@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class LidarStateMachine
 {
@@ -26,7 +27,7 @@ public class LidarStateMachine
         {
             _states[nextState] = CreateState(nextState);
         }
-
+        
         _currentState?.Exit();
         _currentState = _states[nextState];
         _currentState.Enter();

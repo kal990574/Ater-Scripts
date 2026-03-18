@@ -1,7 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using Random = UnityEngine.Random;
-
 public class LidarProgress
 {
     private readonly LidarProgressSetting _settings;

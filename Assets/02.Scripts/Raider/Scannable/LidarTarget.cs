@@ -1,10 +1,13 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class LidarTarget : MonoBehaviour
 {
+    [FormerlySerializedAs("shader")]
+    [FormerlySerializedAs("_shaderModifier")]
     [Header("Reference")] 
-    [SerializeField] private AIOShaderModifier _shaderModifier;
+    [SerializeField] private InteractTargetShaderModifier shaderModifier;
     
     [Header("Settings")]
     [SerializeField] private LidarProgressSetting _settings;
@@ -27,10 +30,9 @@ public class LidarTarget : MonoBehaviour
     
     public ELidarTargetState State => _fsm.CurrentStateType;
     public IScanMinigame CurrentMinigame => _currentMinigame;
-
-    public event Action<ELidarTargetState> OnStateChanged;
+    
     public event Action<float> OnProgressChanged; //ratio전달
-    public event Action OnActivated;
+    public event Action OnScanComplete;
 
     private void Awake()
     {
@@ -71,7 +73,6 @@ public class LidarTarget : MonoBehaviour
         _minigame.CancelIfPlaying();            //미니게임 리셋
         _progress.Reset();                      //진행도 리셋
         ChangeState(ELidarTargetState.Default); //스테이트 리셋
-        _shaderModifier.ResetShaderValues();
     }
 
 
@@ -104,7 +105,6 @@ public class LidarTarget : MonoBehaviour
     public void ChangeState(ELidarTargetState nextState, bool force = false)
     {
         _fsm.ChangeState(nextState, force);
-        OnStateChanged?.Invoke(nextState);
     }
     
     public void ChangeState(ELidarTargetState nextState)
@@ -237,12 +237,11 @@ public class LidarTarget : MonoBehaviour
 
     private void HandleProgressChanged(float ratio)
     {
-        _shaderModifier.SetBlendCutOff(ratio);
         OnProgressChanged?.Invoke(ratio);
     }
 
     private void HandleActivated()
     {
-        OnActivated?.Invoke();
+        OnScanComplete?.Invoke();
     }
 }
