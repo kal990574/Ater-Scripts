@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 [Serializable]
-public class LidarSetting
+public class LidarConfig
 {
     public float RayDistance = 10.0f;
     public float ConeAngle = 45.0f;

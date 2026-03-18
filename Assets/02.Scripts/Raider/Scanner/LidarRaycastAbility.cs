@@ -3,17 +3,17 @@ using UnityEngine;
 
 public class LidarRaycastAbility : LidarAbility
 {
-    private readonly Dictionary<LidarScannableObject, TargetHitData> _hitMap = new Dictionary<LidarScannableObject, TargetHitData>();
-    private readonly Dictionary<LidarScannableObject, List<RaycastHit>> _targetHitListMap = new Dictionary<LidarScannableObject, List<RaycastHit>>();
-    private readonly List<LidarRayData> _rayResults = new ();
+    //타겟 감지용
+    private readonly Dictionary<LidarTarget, TargetHitData> _hitMap = new();
+    //레이 연출용
+    private readonly List<LidarRayData> _rayResults = new();
 
-    public IReadOnlyDictionary<LidarScannableObject, TargetHitData> HitMap => _hitMap;
+    public IReadOnlyDictionary<LidarTarget, TargetHitData> HitMap => _hitMap;
     public IReadOnlyList<LidarRayData> RayResults => _rayResults;
 
     public void Scan()
     {
         ClearScanResults();
-
         Vector3 origin = _controller.StartPos;
 
         foreach (Vector3 direction in EnumerateRayDirections())
@@ -25,10 +25,10 @@ public class LidarRaycastAbility : LidarAbility
     public void ClearScanResults()
     {
         _hitMap.Clear();
-        _targetHitListMap.Clear();
         _rayResults.Clear();
     }
 
+    //주어진 설정으로 레이의 발사 방향 저장
     public IEnumerable<Vector3> EnumerateRayDirections()
     {
         Quaternion rotation = transform.rotation;
@@ -48,44 +48,9 @@ public class LidarRaycastAbility : LidarAbility
             }
         }
     }
-
-    public IEnumerable<Vector3> EnumerateOutlineDirections(int segmentCount)
-    {
-        Quaternion rotation = transform.rotation;
-
-        for (int segmentIndex = 0; segmentIndex <= segmentCount; segmentIndex++)
-        {
-            float yaw = (360.0f / segmentCount) * segmentIndex;
-            Vector3 direction = GetConeDirection(rotation, _controller.ConeAngle, yaw);
-            yield return direction;
-        }
-    }
-
-    public bool TryGetTargetHits(LidarScannableObject target, out List<RaycastHit> hitList)
-    {
-        hitList = null;
-
-        if (target == null)
-        {
-            return false;
-        }
-
-        if (_targetHitListMap.TryGetValue(target, out hitList) == false)
-        {
-            hitList = null;
-            return false;
-        }
-
-        if (hitList == null || hitList.Count == 0)
-        {
-            hitList = null;
-            return false;
-        }
-
-        return true;
-    }
-
-    private Vector3 GetConeDirection(Quaternion baseRotation, float angleFromForward, float yawAroundForward)
+    
+    //원뿔 모양 형성, 단 레이 디버그에도 사용됨
+    public Vector3 GetConeDirection(Quaternion baseRotation, float angleFromForward, float yawAroundForward)
     {
         Vector3 localDirection = Quaternion.Euler(angleFromForward, 0.0f, 0.0f) * Vector3.forward;
         localDirection = Quaternion.AngleAxis(yawAroundForward, Vector3.forward) * localDirection;
@@ -94,36 +59,88 @@ public class LidarRaycastAbility : LidarAbility
         return worldDirection.normalized;
     }
 
+    //레이를 생성
     private void CastRay(Vector3 origin, Vector3 direction)
     {
-        bool isHit = Physics.Raycast(
-            origin,
-            direction,
-            out RaycastHit hit,
-            _controller.RayDistance,
-            _controller.HitMask,
-            QueryTriggerInteraction.Ignore);
+        bool isHit = Physics.Raycast(origin, direction, out RaycastHit hit,
+            _controller.RayDistance, _controller.HitMask, QueryTriggerInteraction.Ignore);
 
         if (isHit == false)
         {
-            _rayResults.Add(new LidarRayData(direction, false, origin + direction * _controller.RayDistance, _controller.RayDistance));
+            //끝까지 나간 레이 처리
+            HandleMiss(origin, direction);
             return;
         }
 
-        _rayResults.Add(new LidarRayData(direction, true, hit.point, hit.distance));
+        LidarTarget target = hit.collider.GetComponentInParent<LidarTarget>();
 
-        LidarScannableObject scannableObject = hit.collider.GetComponentInParent<LidarScannableObject>();
-
-        if (scannableObject == null)
+        if (IsInvalidTarget(target))
         {
+            //벽에 막힌 레이 처리
+            HandleBlockedHit(direction, hit);
             return;
         }
+        
+        //타겟을 감지한 레이 처리
+        HandleValidTargetHit(origin, direction, hit, target);
+    }
 
-        AddHitToTargetList(scannableObject, hit);
+    //LidarTarget이면서 추상화가 되어있는 것
+    private bool IsInvalidTarget(LidarTarget target)
+    {
+        if (target == null)
+        {
+            return true;
+        }
 
+        if (target.IsProgressComplete)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private void HandleMiss(Vector3 origin, Vector3 direction)
+    {
+        _rayResults.Add(
+            new LidarRayData(
+                direction,
+                false,
+                origin + direction * _controller.RayDistance,
+                _controller.RayDistance,
+                false));
+    }
+
+    private void HandleBlockedHit(Vector3 direction, RaycastHit hit)
+    {
+        _rayResults.Add(
+            new LidarRayData(
+                direction,
+                true,
+                hit.point,
+                hit.distance,
+                false));
+    }
+
+    private void HandleValidTargetHit(Vector3 origin, Vector3 direction, RaycastHit hit, LidarTarget target)
+    {
+        _rayResults.Add(
+            new LidarRayData(
+                direction,
+                true,
+                hit.point,
+                hit.distance,
+                true));
+        
+        UpdateTargetHitData(origin, hit, target);
+    }
+
+    private void UpdateTargetHitData(Vector3 origin, RaycastHit hit, LidarTarget target)
+    {
         float distance = Vector3.Distance(origin, hit.point);
 
-        if (_hitMap.TryGetValue(scannableObject, out TargetHitData data) == true)
+        if (_hitMap.TryGetValue(target, out TargetHitData data))
         {
             data.HitCount++;
 
@@ -133,22 +150,11 @@ public class LidarRaycastAbility : LidarAbility
                 data.RepresentativePoint = hit.point;
             }
 
-            _hitMap[scannableObject] = data;
+            _hitMap[target] = data;
             return;
         }
 
         TargetHitData newData = new TargetHitData(1, hit.point, distance);
-        _hitMap.Add(scannableObject, newData);
-    }
-
-    private void AddHitToTargetList(LidarScannableObject scannableObject, RaycastHit hit)
-    {
-        if (_targetHitListMap.TryGetValue(scannableObject, out List<RaycastHit> hitList) == false)
-        {
-            hitList = new List<RaycastHit>();
-            _targetHitListMap.Add(scannableObject, hitList);
-        }
-
-        hitList.Add(hit);
+        _hitMap.Add(target, newData);
     }
 }
