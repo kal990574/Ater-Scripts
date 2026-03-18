@@ -76,6 +76,7 @@ public class LidarController : MonoBehaviour
         if (previous != null && current != null && previous != current)
         {
             OnTargetLost?.Invoke();
+            previous.OnScanLost();
             OnTargetFind?.Invoke(current);
             return;
         }
@@ -84,8 +85,7 @@ public class LidarController : MonoBehaviour
         if (previous != null && current == null)
         {
             OnTargetLost?.Invoke();
-            CurrentTarget.OnScanLost();
-            CurrentTarget = null;
+            previous.OnScanLost();
         }
     }
     

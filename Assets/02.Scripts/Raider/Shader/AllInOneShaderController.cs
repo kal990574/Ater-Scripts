@@ -9,7 +9,7 @@ public class AllInOneShaderController : MonoBehaviour
     private MaterialPropertyBlock materialPropertyBlock;
     private readonly Dictionary<string, int> propertyIdCache = new Dictionary<string, int>();
 
-    private void Awake()
+    public void Init()
     {
         if (materialPropertyBlock == null)
         {

@@ -28,7 +28,7 @@ public class InteractTargetShaderModifier : MonoBehaviour
         {
             _shaderPropertyController = GetComponentInChildren<AllInOneShaderController>();
         }
-
+        _shaderPropertyController.Init();
         SetOutlineColor(_config.AbstractOutlineColor);
         SetGlitchAmountByRatio(1.0f);
         SetBlendCutOffRatio(0.0f);
