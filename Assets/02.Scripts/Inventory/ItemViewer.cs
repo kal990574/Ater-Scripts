@@ -78,4 +78,15 @@ public class ItemViewer : MonoBehaviour
         SetLayerRecursively(_currentItem, _itemRoot.gameObject.layer);
         _descriptionText.text = itemData.Description;
     }
+
+    public void TryInteract(Vector2 screenPosition)
+    {
+        Ray ray = _itemViewerCamera.ScreenPointToRay(screenPosition);
+
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            InteractPoint interactPoint = hit.collider.GetComponent<InteractPoint>();
+            interactPoint?.OnClick();
+        }
+    }
 }
