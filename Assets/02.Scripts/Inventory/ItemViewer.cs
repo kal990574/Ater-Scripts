@@ -79,9 +79,16 @@ public class ItemViewer : MonoBehaviour
         _descriptionText.text = itemData.Description;
     }
 
-    public void TryInteract(Vector2 screenPosition)
+    public void TryInteract(Vector2 screenPosition, RectTransform rawImageRect)
     {
-        Ray ray = _itemViewerCamera.ScreenPointToRay(screenPosition);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            rawImageRect, screenPosition, null, out Vector2 localPoint);
+
+        Vector2 viewportPoint = new Vector2(
+            (localPoint.x / rawImageRect.rect.width) + 0.5f,
+            (localPoint.y / rawImageRect.rect.height) + 0.5f);
+
+        Ray ray = _itemViewerCamera.ViewportPointToRay(viewportPoint);
 
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
