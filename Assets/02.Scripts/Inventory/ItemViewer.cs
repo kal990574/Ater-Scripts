@@ -92,8 +92,12 @@ public class ItemViewer : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            InteractPoint interactPoint = hit.collider.GetComponent<InteractPoint>();
-            interactPoint?.OnClick();
+            TryClickInteractPoint(hit.collider.gameObject);
         }
+    }
+    private void TryClickInteractPoint(GameObject hitObject)
+    {
+        InteractPoint interactPoint = hitObject.GetComponent<InteractPoint>();
+        interactPoint?.OnClick();
     }
 }
