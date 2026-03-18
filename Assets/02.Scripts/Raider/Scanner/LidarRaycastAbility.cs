@@ -3,11 +3,14 @@ using UnityEngine;
 
 public class LidarRaycastAbility : LidarAbility
 {
-    private readonly Dictionary<LidarScannableObject, TargetHitData> _hitMap = new Dictionary<LidarScannableObject, TargetHitData>();
-    private readonly Dictionary<LidarScannableObject, List<RaycastHit>> _targetHitListMap = new Dictionary<LidarScannableObject, List<RaycastHit>>();
+    //타겟의 히트데이터 저장(히트된 횟수, 충돌거리등)
+    private readonly Dictionary<LidarTarget, TargetHitData> _hitMap = new ();
+    //타겟별 히트된 레이케스트 저장
+    private readonly Dictionary<LidarTarget, List<RaycastHit>> _targetHitListMap = new ();
+    //프레임별 레이케스트 정보 저장(연출에 추가)
     private readonly List<LidarRayData> _rayResults = new ();
 
-    public IReadOnlyDictionary<LidarScannableObject, TargetHitData> HitMap => _hitMap;
+    public IReadOnlyDictionary<LidarTarget, TargetHitData> HitMap => _hitMap;
     public IReadOnlyList<LidarRayData> RayResults => _rayResults;
 
     public void Scan()
@@ -61,7 +64,7 @@ public class LidarRaycastAbility : LidarAbility
         }
     }
 
-    public bool TryGetTargetHits(LidarScannableObject target, out List<RaycastHit> hitList)
+    public bool TryGetTargetHits(LidarTarget target, out List<RaycastHit> hitList)
     {
         hitList = null;
 
@@ -96,6 +99,7 @@ public class LidarRaycastAbility : LidarAbility
 
     private void CastRay(Vector3 origin, Vector3 direction)
     {
+        //레이케스팅 및 히트 판정
         bool isHit = Physics.Raycast(
             origin,
             direction,
@@ -106,24 +110,28 @@ public class LidarRaycastAbility : LidarAbility
 
         if (isHit == false)
         {
-            _rayResults.Add(new LidarRayData(direction, false, origin + direction * _controller.RayDistance, _controller.RayDistance));
+            //히트 되지 않았다면 길이는 최종까지 뻗어나간 결과
+            _rayResults.Add(new LidarRayData(direction, false, origin + direction * _controller.RayDistance, _controller.RayDistance,false));
             return;
         }
-
-        _rayResults.Add(new LidarRayData(direction, true, hit.point, hit.distance));
-
-        LidarScannableObject scannableObject = hit.collider.GetComponentInParent<LidarScannableObject>();
-
-        if (scannableObject == null)
+        
+        
+        
+        //장애물이든 타겟이든 히트 된 상황
+        LidarTarget target = hit.collider.GetComponentInParent<LidarTarget>();
+        if (target == null || target.IsProgressComplete)
         {
+            //타겟이 없거나 이미 완료된 타겟이라면 벽에 가로막힌 판정
+            _rayResults.Add(new LidarRayData(direction, true, hit.point, hit.distance,false));
             return;
         }
-
-        AddHitToTargetList(scannableObject, hit);
-
+        
+        //히트된 표면과 거리
+        _rayResults.Add(new LidarRayData(direction, true, hit.point, hit.distance,true));
+        //유효한 타겟이 있다면 타겟과 히트맵에 추가
+        AddHitToTargetList(target, hit);
         float distance = Vector3.Distance(origin, hit.point);
-
-        if (_hitMap.TryGetValue(scannableObject, out TargetHitData data) == true)
+        if (_hitMap.TryGetValue(target, out TargetHitData data))
         {
             data.HitCount++;
 
@@ -133,20 +141,19 @@ public class LidarRaycastAbility : LidarAbility
                 data.RepresentativePoint = hit.point;
             }
 
-            _hitMap[scannableObject] = data;
+            _hitMap[target] = data;
             return;
         }
-
         TargetHitData newData = new TargetHitData(1, hit.point, distance);
-        _hitMap.Add(scannableObject, newData);
+        _hitMap.Add(target, newData);
     }
 
-    private void AddHitToTargetList(LidarScannableObject scannableObject, RaycastHit hit)
+    private void AddHitToTargetList(LidarTarget target, RaycastHit hit)
     {
-        if (_targetHitListMap.TryGetValue(scannableObject, out List<RaycastHit> hitList) == false)
+        if (_targetHitListMap.TryGetValue(target, out List<RaycastHit> hitList) == false)
         {
             hitList = new List<RaycastHit>();
-            _targetHitListMap.Add(scannableObject, hitList);
+            _targetHitListMap.Add(target, hitList);
         }
 
         hitList.Add(hit);

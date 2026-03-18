@@ -11,28 +11,6 @@ public class LidarRayDebug : MonoBehaviour
     [SerializeField] private float pointRadius = 0.05f;
     [SerializeField] private bool drawConeOutline = true;
     
-    //레이케스트 그리기
-
-    private void DrawSingleDebugRay(Vector3 origin, Vector3 direction)
-    {
-        bool isHit = Physics.Raycast(
-            origin,
-            direction,
-            out RaycastHit hit,
-            _controller.RayDistance,
-            _controller.HitMask,
-            QueryTriggerInteraction.Ignore);
-
-        if (isHit == true)
-        {
-            Debug.DrawRay(origin, direction * hit.distance, Color.red);
-            return;
-        }
-
-        Debug.DrawRay(origin, direction * _controller.RayDistance, Color.green);
-    }
-    
-    
     //아웃라인 그리기
     private void OnDrawGizmos()
     {
@@ -76,14 +54,14 @@ public class LidarRayDebug : MonoBehaviour
 
         if (isHit == true)
         {
-            Gizmos.color = Color.red;
+            Gizmos.color = Color.green;
             Gizmos.DrawLine(origin, hit.point);
             Gizmos.DrawSphere(hit.point, pointRadius);
             return;
         }
 
         Vector3 endPoint = origin + direction * _controller.RayDistance;
-        Gizmos.color = Color.green;
+        Gizmos.color = Color.red;
         Gizmos.DrawLine(origin, endPoint);
         Gizmos.DrawSphere(endPoint, pointRadius);
     }

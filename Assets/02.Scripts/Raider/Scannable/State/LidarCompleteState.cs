@@ -1,10 +1,10 @@
-﻿public class LidarDefaultState : ILidarTargetState
+﻿public class LidarCompleteState : ILidarTargetState
 {
     private readonly LidarTarget _owner;
 
-    public ELidarTargetState StateType => ELidarTargetState.Default;
+    public ELidarTargetState StateType => ELidarTargetState.OnCompleted;
 
-    public LidarDefaultState(LidarTarget owner)
+    public LidarCompleteState(LidarTarget owner)
     {
         _owner = owner;
     }
@@ -23,8 +23,6 @@
 
     public void OnScanning(float deltaTime)
     {
-        _owner.ChangeState(ELidarTargetState.OnProgress);
-        _owner.AddProgress(deltaTime);
     }
 
     public void OnScanLost()

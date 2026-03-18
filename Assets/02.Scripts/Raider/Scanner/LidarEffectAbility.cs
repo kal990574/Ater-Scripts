@@ -36,7 +36,7 @@ public class LidarEffectAbility : LidarAbility
         ClearLine();
     }
 
-    public void DrawLidarEffect(LidarScannableObject target)
+    public void DrawLidarEffect(LidarTarget target)
     {
         if (CanDrawEffect() == false)
         {
@@ -79,7 +79,7 @@ public class LidarEffectAbility : LidarAbility
         return true;
     }
 
-    private void DrawTargetLine(LidarScannableObject target)
+    private void DrawTargetLine(LidarTarget target)
     {
         Vector3 targetPoint = GetPointOnTargetSurface(target);
 
@@ -101,7 +101,7 @@ public class LidarEffectAbility : LidarAbility
         SetLine(_shootTransform.position, rayData.EndPoint);
     }
 
-    private Vector3 GetPointOnTargetSurface(LidarScannableObject target)
+    private Vector3 GetPointOnTargetSurface(LidarTarget target)
     {
         if (target == null)
         {

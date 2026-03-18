@@ -35,7 +35,7 @@ public class MinigameExample : MonoBehaviour, IScanMinigame
     private float _successEndAngle;
     private float _greatStartAngle;
     private float _greatEndAngle;
-    private MinigameResult _result = MinigameResult.None;
+    private MinigameResult _result = MinigameResult.Default;
 
     public bool IsPlaying => _isPlaying;
     public bool IsFinished => _isFinished;
@@ -56,7 +56,7 @@ public class MinigameExample : MonoBehaviour, IScanMinigame
         _elapsedTime = 0.0f;
         _spinnerElapsedTime = 0.0f;
         _needleAngle = 0.0f;
-        _result = MinigameResult.None;
+        _result = MinigameResult.Default;
 
         GenerateZones();
 

@@ -9,45 +9,92 @@ public class LidarController : MonoBehaviour
     [SerializeField] private LidarSetting _setting;
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
     
-    private readonly Dictionary<Type, LidarAbility> _abilities = new Dictionary<Type, LidarAbility>();
+    private readonly Dictionary<Type, LidarAbility> _abilities = new();
     
-    public LidarScannableObject CurrentTarget { get; private set; }
+    public LidarTarget CurrentTarget { get; private set; }
 
     public float RayDistance => _setting.RayDistance;
     public float ConeAngle => _setting.ConeAngle;
     public int RingCount => _setting.RingCount;
     public int RaysPerRing => _setting.RaysPerRing;
     public LayerMask HitMask => _setting.HitMask;
+    
     public Vector3 StartPos => _rayOrigin.position + _originOffset;
-    public Transform RayOrigin => _rayOrigin;
     public Transform ShootPoint => _shootPoint;
+
+    //현재는 타겟을 스캔할때 나타남
+    //추후에는 호버중일때 80%투명도로 스캔 중일때 100%로 띄우기
+    public event Action<LidarTarget> OnTargetFind;
+    public event Action OnTargetLost;
 
     private void Update()
     {
         if (Input.GetMouseButton(0))
         {
-            UpdateScan();
+            float deltaTime = Time.deltaTime;
+            UpdateScan(deltaTime);
         }
 
         if (Input.GetMouseButtonUp(0))
         {
-            ResetLidar();
+            StopScan();
         }
     }
 
-    private void UpdateScan()
+    private void UpdateScan(float deltaTime)
     {
         LidarRaycastAbility raycastAbility = GetAbility<LidarRaycastAbility>();
         raycastAbility.Scan();
 
-        CurrentTarget = ResolveTarget(raycastAbility.HitMap, StartPos, transform.forward);
-        CurrentTarget.OnScanning(Time.deltaTime);
+        LidarTarget previousTarget = CurrentTarget;
+        LidarTarget newTarget = ResolveTarget(raycastAbility.HitMap, StartPos, transform.forward);
+
+        HandleTargetChanged(previousTarget, newTarget);
+
+        CurrentTarget = newTarget;
+
+        if (CurrentTarget != null)
+        {
+            CurrentTarget.OnScanning(deltaTime);
+        }
+
         GetAbility<LidarEffectAbility>().DrawLidarEffect(CurrentTarget);
     }
 
-    public void ResetLidar()
+    
+    private void HandleTargetChanged(LidarTarget previous, LidarTarget current)
     {
-        CurrentTarget = null;
+        // Case 1: 새로 타겟을 찾은 경우
+        if (previous == null && current != null)
+        {
+            OnTargetFind?.Invoke(current);
+            return;
+        }
+
+        // Case 2: 타겟이 바뀐 경우
+        if (previous != null && current != null && previous != current)
+        {
+            OnTargetLost?.Invoke();
+            OnTargetFind?.Invoke(current);
+            return;
+        }
+
+        // Case 3: 타겟을 잃은 경우
+        if (previous != null && current == null)
+        {
+            OnTargetLost?.Invoke();
+        }
+    }
+    
+    public void StopScan()
+    {
+        if (CurrentTarget != null)
+        {
+            OnTargetLost?.Invoke();
+            CurrentTarget.OnScanLost();
+            CurrentTarget = null;
+        }
+       
         GetAbility<LidarRaycastAbility>().ClearScanResults();
         GetAbility<LidarEffectAbility>().ResetLine();
     }
@@ -72,18 +119,18 @@ public class LidarController : MonoBehaviour
         throw new Exception($"[LidarController] Ability {type.Name} not found on {gameObject.name}.");
     }
 
-    private LidarScannableObject ResolveTarget(IReadOnlyDictionary<LidarScannableObject, TargetHitData> hitMap, Vector3 origin, Vector3 forward)
+    private LidarTarget ResolveTarget(IReadOnlyDictionary<LidarTarget, TargetHitData> hitMap, Vector3 origin, Vector3 forward)
     {
-        LidarScannableObject bestTarget = null;
+        LidarTarget bestTarget = null;
         bool hasBest = false;
 
         int bestHitCount = int.MinValue;
         float bestCenterScore = float.MinValue;
         float bestClosestDistance = float.MaxValue;
 
-        foreach (KeyValuePair<LidarScannableObject, TargetHitData> pair in hitMap)
+        foreach (KeyValuePair<LidarTarget, TargetHitData> pair in hitMap)
         {
-            LidarScannableObject candidate = pair.Key;
+            LidarTarget candidate = pair.Key;
             TargetHitData data = pair.Value;
 
             Vector3 toRepresentativePoint = (data.RepresentativePoint - origin).normalized;

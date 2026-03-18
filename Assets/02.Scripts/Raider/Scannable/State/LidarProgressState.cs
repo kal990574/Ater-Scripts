@@ -1,10 +1,10 @@
-﻿public class LidarProgressState : ILidarScannableState
+﻿public class LidarProgressState : ILidarTargetState
 {
-    private readonly LidarScannableObject _owner;
+    private readonly LidarTarget _owner;
 
-    public ELidarObjectState StateType => ELidarObjectState.OnProgress;
+    public ELidarTargetState StateType => ELidarTargetState.OnProgress;
 
-    public LidarProgressState(LidarScannableObject owner)
+    public LidarProgressState(LidarTarget owner)
     {
         _owner = owner;
     }
@@ -19,6 +19,10 @@
 
     public void Tick(float deltaTime)
     {
+        if (_owner.IsProgressComplete)
+        {
+            _owner.ChangeState(ELidarTargetState.OnCompleted);
+        }
     }
 
     public void OnScanning(float deltaTime)
@@ -28,6 +32,6 @@
 
     public void OnScanLost()
     {
-        _owner.ChangeState(ELidarObjectState.OnReturn);
+        _owner.ChangeState(ELidarTargetState.OnReturn);
     }
 }

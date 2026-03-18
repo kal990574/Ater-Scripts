@@ -1,10 +1,10 @@
-﻿public class LidarMinigameState : ILidarScannableState
+﻿public class LidarMinigameState : ILidarTargetState
 {
-    private readonly LidarScannableObject _owner;
+    private readonly LidarTarget _owner;
 
-    public ELidarObjectState StateType => ELidarObjectState.OnMinigame;
+    public ELidarTargetState StateType => ELidarTargetState.OnMinigame;
 
-    public LidarMinigameState(LidarScannableObject owner)
+    public LidarMinigameState(LidarTarget owner)
     {
         _owner = owner;
     }
@@ -30,6 +30,6 @@
 
     public void OnScanLost()
     {
-        _owner.FailCurrentMinigame();
+        _owner.ForceFailCurrentMinigame();
     }
 }
