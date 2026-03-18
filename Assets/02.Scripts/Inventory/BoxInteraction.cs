@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BoxInteraction : MonoBehaviour, Interactable
+public class BoxInteraction : MonoBehaviour, IInteractable
 {
     [SerializeField] private GameObject _rewardObject;  // 열쇠 오브젝트 (처음엔 비활성화)
 

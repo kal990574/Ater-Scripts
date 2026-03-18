@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class RewardInteraction : MonoBehaviour, Interactable
+public class RewardInteraction : MonoBehaviour, IInteractable
 {
     [SerializeField] private ItemDataTable _itemDataTable;
     [SerializeField] private string _rewardItemId;

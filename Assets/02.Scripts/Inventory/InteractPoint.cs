@@ -3,11 +3,11 @@ using UnityEngine.EventSystems;
 
 public class InteractPoint : MonoBehaviour
 {
-    private Interactable _interactable;
+    private IInteractable _interactable;
 
     private void Awake()
     {
-        _interactable = GetComponentInParent<Interactable>();
+        _interactable = GetComponentInParent<IInteractable>();
     }
 
     public void OnClick()

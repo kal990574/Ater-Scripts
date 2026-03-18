@@ -3,13 +3,13 @@ using UnityEngine.InputSystem;
 
 public class InventoryTest : MonoBehaviour
 {
-    [SerializeField] private ItemDataTable itemDataTable;
+    [SerializeField] private ItemDataTable _itemDataTable;
 
     void Update()
     {
         if (Keyboard.current.fKey.wasPressedThisFrame)
         {
-            InventoryManager.Instance.Inventory.AddItem(itemDataTable.GetItem("Potion_Red"));
+            InventoryManager.Instance.Inventory.AddItem(_itemDataTable.GetItem("Potion_Red"));
         }
     }
 }
