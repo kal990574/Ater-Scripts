@@ -28,17 +28,21 @@ public class LidarController : MonoBehaviour
     public event Action<LidarTarget> OnTargetFind;
     public event Action OnTargetLost;
 
+    public bool IsOnScan { get; private set; } = false;
+
     private void Update()
     {
         if (Input.GetMouseButton(0))
         {
             float deltaTime = Time.deltaTime;
             UpdateScan(deltaTime);
+            IsOnScan = true;
         }
 
         if (Input.GetMouseButtonUp(0))
         {
             StopScan();
+            IsOnScan = false;
         }
     }
 

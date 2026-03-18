@@ -1,30 +1,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[ExecuteAlways]
 public class LidarRayDebug : MonoBehaviour
 {
     [SerializeField] private LidarController _controller;
     [SerializeField] private LidarRaycastAbility _raycastAbility;
-    
-    [SerializeField] private float pointRadius = 0.05f;
-    [SerializeField] private bool drawConeOutline = true;
+
+    [SerializeField] private bool _activateDebug = false;
+    [SerializeField] private float _pointRadius = 0.05f;
 
     private void OnDrawGizmos()
     {
-        if (CanDraw() == false)
+        if (CanDraw() == false || !_activateDebug)
         {
             return;
         }
         
         Vector3 origin = _controller.StartPos;
-
-        DrawRayResults(origin);
-
-        if (drawConeOutline == true)
+        if (!Application.isPlaying || !_controller.IsOnScan)
         {
-            DrawConeOutline(origin);
+            _raycastAbility.Scan();
         }
+
+        DrawRayResultsInPlayMode(origin);
+        DrawConeOutline(origin);
     }
+
+    
 
     private bool CanDraw()
     {
@@ -41,7 +44,7 @@ public class LidarRayDebug : MonoBehaviour
         return true;
     }
 
-    private void DrawRayResults(Vector3 origin)
+    private void DrawRayResultsInPlayMode(Vector3 origin)
     {
         IReadOnlyList<LidarRayData> rayResults = _raycastAbility.RayResults;
 
@@ -55,6 +58,14 @@ public class LidarRayDebug : MonoBehaviour
             DrawSingleRayResult(origin, rayResults[i]);
         }
     }
+    
+    private void DrawRayResultsInEditMode(Vector3 origin)
+    {
+        foreach (var dir in _raycastAbility.EnumerateRayDirections())
+        {
+            DrawSingleDebugRay(origin, dir);
+        }
+    }
 
     private void DrawSingleRayResult(Vector3 origin, LidarRayData rayData)
     {
@@ -62,13 +73,36 @@ public class LidarRayDebug : MonoBehaviour
         {
             Gizmos.color = rayData.IsValidTarget ? Color.green : Color.yellow;
             Gizmos.DrawLine(origin, rayData.EndPoint);
-            Gizmos.DrawSphere(rayData.EndPoint, pointRadius);
+            Gizmos.DrawSphere(rayData.EndPoint, _pointRadius);
             return;
         }
 
         Gizmos.color = Color.red;
         Gizmos.DrawLine(origin, rayData.EndPoint);
-        Gizmos.DrawSphere(rayData.EndPoint, pointRadius);
+        Gizmos.DrawSphere(rayData.EndPoint, _pointRadius);
+    }
+    private void DrawSingleDebugRay(Vector3 origin, Vector3 direction)
+    {
+        bool isHit = Physics.Raycast(
+            origin,
+            direction,
+            out RaycastHit hit,
+            _controller.RayDistance,
+            _controller.HitMask,
+            QueryTriggerInteraction.Ignore);
+
+        if (isHit == true)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(origin, hit.point);
+            Gizmos.DrawSphere(hit.point, _pointRadius);
+            return;
+        }
+
+        Vector3 endPoint = origin + direction * _controller.RayDistance;
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(origin, endPoint);
+        Gizmos.DrawSphere(endPoint, _pointRadius);
     }
 
     private void DrawConeOutline(Vector3 origin)

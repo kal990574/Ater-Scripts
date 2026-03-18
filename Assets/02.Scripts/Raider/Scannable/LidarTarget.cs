@@ -22,7 +22,7 @@ public class LidarTarget : MonoBehaviour
 
     public LidarProgressSetting Settings => _settings;
     
-    public bool IsProgressComplete => _progress.IsActivated;
+    public bool IsProgressComplete => _progress == null ? false : _progress.IsActivated;
     public bool CanInteract => _progress.CanInteract;
     public float CurrentProgress => _progress.CurrentProgress;
     public float RequiredProgress => _progress.RequiredProgress;
