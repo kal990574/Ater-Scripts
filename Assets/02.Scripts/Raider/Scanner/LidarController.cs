@@ -1,13 +1,13 @@
+using _02.Scripts.Player;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class LidarController : MonoBehaviour
 {
     [SerializeField] private Transform _rayOrigin;
     [SerializeField] private Transform _shootPoint;
-    [FormerlySerializedAs("_setting")] [SerializeField] private LidarConfig config;
+    [SerializeField] private LidarConfig config;
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
     
     private readonly Dictionary<Type, LidarAbility> _abilities = new();
@@ -30,16 +30,22 @@ public class LidarController : MonoBehaviour
 
     public bool IsOnScan { get; private set; } = false;
 
+    private IPlayerInput _input;
+    private void Start()
+    {
+        _input = GetComponentInParent<IPlayerInput>();
+    }
+
     private void Update()
     {
-        if (Input.GetMouseButton(0))
+        if (_input.LmbPressInput)
         {
             float deltaTime = Time.deltaTime;
             UpdateScan(deltaTime);
             IsOnScan = true;
         }
 
-        if (Input.GetMouseButtonUp(0))
+        if (_input.LmbReleaseInput)
         {
             StopScan();
             IsOnScan = false;

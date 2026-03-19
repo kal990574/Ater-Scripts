@@ -7,20 +7,17 @@ public class LidarMinigame
     private readonly LidarProgressSetting _settings;
     private readonly IScanMinigame _minigame;
     private readonly LidarProgress _progress;
-    private readonly Action<ELidarTargetState> _changeState;
 
     private float _nextMinigameTriggerProgress;
 
     public LidarMinigame(
         LidarProgressSetting settings,
         IScanMinigame minigame,
-        LidarProgress progress,
-        Action<ELidarTargetState> changeState)
+        LidarProgress progress )
     {
         _settings = settings;
         _minigame = minigame;
         _progress = progress;
-        _changeState = changeState;
 
         ResetNextTrigger();
     }
@@ -53,7 +50,6 @@ public class LidarMinigame
     {
         if (_minigame == null)
         {
-            _changeState(ELidarTargetState.OnProgress);
             return;
         }
 
@@ -64,7 +60,6 @@ public class LidarMinigame
     {
         if (_minigame == null)
         {
-            _changeState(ELidarTargetState.OnProgress);
             return null;
         }
 
@@ -88,7 +83,7 @@ public class LidarMinigame
         _minigame?.Submit();
     }
 
-    public void CancelIfPlaying()
+    public void Cancel()
     {
         if (_minigame == null)
         {
@@ -98,14 +93,6 @@ public class LidarMinigame
         if (_minigame.IsPlaying == true && _minigame.IsFinished == false)
         {
             _minigame.Cancel();
-        }
-    }
-
-    public void ForceFail()
-    {
-        if (_minigame != null && _minigame.IsFinished == false)
-        {
-            _minigame.ForceFail();
         }
     }
 

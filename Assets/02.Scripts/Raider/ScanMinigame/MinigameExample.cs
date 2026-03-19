@@ -155,27 +155,6 @@ public class MinigameExample : MonoBehaviour, IScanMinigame
         }
     }
 
-    public void ForceFail()
-    {
-        if (_isFinished == true)
-        {
-            return;
-        }
-
-        _result = MinigameResult.Fail;
-        _isFinished = true;
-        _isPlaying = false;
-
-        if (_ui != null)
-        {
-            _ui.Hide();
-        }
-
-        if (_audioSource != null && _failClip != null)
-        {
-            _audioSource.PlayOneShot(_failClip);
-        }
-    }
     private void ShowSpinner()
     {
         _spinnerVisible = true;

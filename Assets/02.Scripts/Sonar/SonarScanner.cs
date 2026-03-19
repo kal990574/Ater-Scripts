@@ -24,7 +24,7 @@ namespace _02.Scripts.Sonar
         private void Update()
         {
             UpdateCoolDown();
-            if (_input.LmbInput)
+            if (_input.RmbPressInput)
             {
                 TryScan();
             }
