@@ -8,6 +8,8 @@ public class InventoryUI : MonoBehaviour
 
     [SerializeField] private Canvas _canvas;
 
+    private InventorySlotUI _selectedSlotUI;
+
     private void Start()
     {
         InventoryManager.Instance.Inventory.OnItemAdded += OnItemAdded;
@@ -22,6 +24,17 @@ public class InventoryUI : MonoBehaviour
     {
         GameObject slotObj = Instantiate(_slotUIPrefab, _slotContainer);
         InventorySlotUI slotUI = slotObj.GetComponent<InventorySlotUI>();
-        slotUI.Setup(slot, InventoryManager.Instance.Inventory.Count, _canvas);
+        slotUI.Setup(slot, InventoryManager.Instance.Inventory.Count, _canvas, this);
+    }
+
+    public void SelectSlot(InventorySlotUI slotUI)
+    {
+        // 이전 선택 해제
+        if (_selectedSlotUI != null)
+            _selectedSlotUI.Deselect();
+
+        // 새 슬롯 선택
+        _selectedSlotUI = slotUI;
+        _selectedSlotUI.Select();
     }
 }

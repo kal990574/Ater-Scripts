@@ -7,19 +7,22 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 {
     [SerializeField] private Image _itemIcon;
     [SerializeField] private TextMeshProUGUI _indexText;
+    [SerializeField] private Image _selected;
 
     private InventorySlot _slot;
     private Canvas _canvas;
     private GameObject _dragIcon;
+    private InventoryUI _inventoryUI;
 
     public InventorySlot Slot => _slot;
 
 
-    public void Setup(InventorySlot slot, int index, Canvas canvas)
+    public void Setup(InventorySlot slot, int index, Canvas canvas, InventoryUI inventoryUI)
     {
         _slot = slot;
-        _canvas = canvas;
         _indexText.text = index.ToString();
+        _canvas = canvas;
+        _inventoryUI = inventoryUI;
         Refresh();
     }
 
@@ -47,6 +50,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         else if (eventData.button == PointerEventData.InputButton.Left)
         {
             Debug.Log($"상세보기 : {_slot.Item} , 인덱스 : {_indexText.text}");
+            _inventoryUI.SelectSlot(this);
             ItemViewer.Instance.ShowItem(_slot.Item);
         }
     }
@@ -95,5 +99,14 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         draggedSlotUI.Refresh();
         Refresh();
+    }
+    public void Select()
+    {
+        _selected.gameObject.SetActive(true);
+    }
+
+    public void Deselect()
+    {
+        _selected.gameObject.SetActive(false);
     }
 }
