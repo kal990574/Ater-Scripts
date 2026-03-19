@@ -13,6 +13,8 @@ Shader "Custom/SonarScan"
         _ScanLineFrequency ("Scan Line Frequency", Float) = 50
         _TrailIntensity ("Trail Intensity", Float) = 0.3
         _TrailFadeRadius ("Trail Fade Radius", Float) = 0
+        _RingFillIntensity ("Ring Fill Intensity", Range(0, 1)) = 0.4
+        _RingOpacity ("Ring Opacity", Float) = 1
     }
 
     SubShader
@@ -53,6 +55,8 @@ Shader "Custom/SonarScan"
             float _ScanLineFrequency;
             float _TrailIntensity;
             float _TrailFadeRadius;
+            float _RingFillIntensity;
+            float _RingOpacity;
 
             struct Attributes
             {
@@ -144,7 +148,7 @@ Shader "Custom/SonarScan"
                 // _TrailFadeRadius 이하는 소멸, _ScanRadius 이상은 미도달
                 float inTrail = step(_TrailFadeRadius, dist) * step(dist, _ScanRadius);
 
-                // 꼬리 안쪽(소멸 경계)에서 바깥(링)으로 갈수록 강해짐.
+                // 꼬리 안쪽(소멸 경계)에서 바깥(링)으로 갈수록 강해짐
                 float gradient = saturate((dist - _TrailFadeRadius) / trailRange);
 
                 return inTrail * gradient * _TrailIntensity;
@@ -192,11 +196,14 @@ Shader "Custom/SonarScan"
                 float edge = SobelDepthEdge(uv);
                 float scanLine = ScanLinePattern(worldPos);
 
-                // 링 + 잔상 합성
-                float scanMask = saturate(ring + trail) * cone;
+                // 링: 영역 전체
+                float ringFill = ring * cone * _RingFillIntensity * _RingOpacity;
 
-                // 에지 + 스캔라인 합성
-                float finalEffect = scanMask * edge * scanLine;
+                // 윤곽선: 링은 edge, 잔상은 edge + scanline
+                float ringOutline = ring * cone * edge * _RingOpacity;
+                float trailOutline = trail * cone * edge * scanLine;
+
+                float finalEffect = saturate(ringFill + ringOutline + trailOutline);
 
                 half4 result = sceneColor + _ScanColor * finalEffect;
                 return result;
