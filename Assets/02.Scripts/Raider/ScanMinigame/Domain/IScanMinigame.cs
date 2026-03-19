@@ -2,7 +2,7 @@
 {
     bool IsPlaying { get; }
     bool IsFinished { get; }
-    MinigameResult Result { get; }
+    EMinigameResult Result { get; }
 
     void Begin();
     void Tick(float deltaTime);

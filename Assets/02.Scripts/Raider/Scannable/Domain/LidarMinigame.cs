@@ -56,7 +56,7 @@ public class LidarMinigame
         _minigame.Begin();
     }
 
-    public MinigameResult? Tick(float deltaTime)
+    public EMinigameResult? Tick(float deltaTime)
     {
         if (_minigame == null)
         {

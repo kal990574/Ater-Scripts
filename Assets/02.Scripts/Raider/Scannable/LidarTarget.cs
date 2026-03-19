@@ -150,7 +150,7 @@ public class LidarTarget : MonoBehaviour
     //미니게임 실행중
     public void TickMinigame(float deltaTime)
     {
-        MinigameResult? result = _minigame.Tick(deltaTime);
+        EMinigameResult? result = _minigame.Tick(deltaTime);
 
         if (result.HasValue == true)
         {
@@ -173,16 +173,16 @@ public class LidarTarget : MonoBehaviour
     
     
     //미니게임 종료시 결과 반영
-    public void ApplyMinigameResult(MinigameResult result)
+    public void ApplyMinigameResult(EMinigameResult result)
     {
         switch (result)
         {
-            case MinigameResult.Default:
+            case EMinigameResult.Default:
             {
                 ChangeState(ELidarTargetState.OnProgress);
                 break;
             }
-            case MinigameResult.Fail:
+            case EMinigameResult.Fail:
             {
                 _progress.Reduce(_settings.FailPenalty);
 
@@ -197,12 +197,12 @@ public class LidarTarget : MonoBehaviour
 
                 break;
             }
-            case MinigameResult.Success:
+            case EMinigameResult.Success:
             {
                 ChangeState(ELidarTargetState.OnProgress);
                 break;
             }
-            case MinigameResult.GreatSuccess:
+            case EMinigameResult.GreatSuccess:
             {
                 _progress.Add(_settings.GreatSuccessBonus);
 
@@ -226,7 +226,7 @@ public class LidarTarget : MonoBehaviour
         }
 
         _minigame.Cancel();
-        ApplyMinigameResult(MinigameResult.Fail);
+        ApplyMinigameResult(EMinigameResult.Fail);
     }
     #endregion
 
