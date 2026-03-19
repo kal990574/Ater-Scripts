@@ -41,4 +41,11 @@ public class Inventory
     {
         return _slots.Exists(slot => slot.Item?.ItemId == itemId);
     }
+
+    public void SwapItem(InventorySlot slotA, InventorySlot slotB)
+    {
+        ItemData temp = slotA.Item;
+        slotA.Set(slotB.Item);
+        slotB.Set(temp);
+    }
 }
