@@ -8,5 +8,4 @@
     void Tick(float deltaTime);
     void Submit();
     void Cancel();
-    void ForceFail();
 }

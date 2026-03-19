@@ -4,11 +4,6 @@ using UnityEngine.Serialization;
 
 public class LidarTarget : MonoBehaviour
 {
-    [FormerlySerializedAs("shader")]
-    [FormerlySerializedAs("_shaderModifier")]
-    [Header("Reference")] 
-    [SerializeField] private InteractTargetShaderModifier shaderModifier;
-    
     [Header("Settings")]
     [SerializeField] private LidarProgressSetting _settings;
 
@@ -59,7 +54,7 @@ public class LidarTarget : MonoBehaviour
         if (_minigameProvider != null)
         {
             _currentMinigame = _minigameProvider as IScanMinigame;
-            _minigame = new LidarMinigame(_settings, _currentMinigame, _progress, ChangeState);
+            _minigame = new LidarMinigame(_settings, _currentMinigame, _progress);
         }
         
         //필수
@@ -70,7 +65,7 @@ public class LidarTarget : MonoBehaviour
     [ContextMenu("리셋")]
     public void ResetAll()
     {
-        _minigame.CancelIfPlaying();            //미니게임 리셋
+        _minigame.Cancel();            //미니게임 리셋
         _progress.Reset();                      //진행도 리셋
         ChangeState(ELidarTargetState.Default); //스테이트 리셋
     }
@@ -173,7 +168,7 @@ public class LidarTarget : MonoBehaviour
     //미니게임 종료
     public void EndMinigame()
     {
-        _minigame.CancelIfPlaying();
+        _minigame.Cancel();
     }
     
     
@@ -230,7 +225,7 @@ public class LidarTarget : MonoBehaviour
             return;
         }
 
-        _minigame.ForceFail();
+        _minigame.Cancel();
         ApplyMinigameResult(MinigameResult.Fail);
     }
     #endregion
