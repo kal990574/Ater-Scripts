@@ -4,11 +4,6 @@ using UnityEngine.Serialization;
 
 public class LidarTarget : MonoBehaviour
 {
-    [FormerlySerializedAs("shader")]
-    [FormerlySerializedAs("_shaderModifier")]
-    [Header("Reference")] 
-    [SerializeField] private InteractTargetShaderModifier shaderModifier;
-    
     [Header("Settings")]
     [SerializeField] private LidarProgressSetting _settings;
 
