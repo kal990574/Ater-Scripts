@@ -33,7 +33,7 @@ public class AllInOneShaderController : MonoBehaviour
         {
             return propertyId;
         }
-
+        
         propertyId = Shader.PropertyToID(propertyName);
         propertyIdCache.Add(propertyName, propertyId);
         return propertyId;
@@ -62,4 +62,5 @@ public class AllInOneShaderController : MonoBehaviour
         materialPropertyBlock.SetVector(propertyId, value);
         targetRenderer.SetPropertyBlock(materialPropertyBlock);
     }
+    
 }
