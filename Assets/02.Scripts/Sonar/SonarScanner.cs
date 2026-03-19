@@ -18,7 +18,7 @@ namespace _02.Scripts.Sonar
 
         private void Start()
         {
-            _input = GetComponent<IPlayerInput>();
+            _input = GetComponentInParent<IPlayerInput>();
         }
 
         private void Update()
