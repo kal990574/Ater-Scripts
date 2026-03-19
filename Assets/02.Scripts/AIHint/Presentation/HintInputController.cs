@@ -19,6 +19,9 @@ namespace _02.Scripts.AIHint.Presentation
         [Header("녹음 설정")]
         [SerializeField] private int _maxRecordSeconds = 10;
         [SerializeField] private int _sampleRate = 16000;
+        
+        [Header("오디오 출력")]
+        [SerializeField] private AudioSource _audioSource;
 
         [Header("테스트")]
         [SerializeField] private KeyCode _testKey = KeyCode.T;
@@ -41,8 +44,9 @@ namespace _02.Scripts.AIHint.Presentation
             string systemPrompt = promptBuilder.BuildSystemPrompt(chapterData);
 
             var llm = new GPTLanguageModel(_openAIConfig, systemPrompt);
+            var tts = new ClovaTextToSpeech(_naverConfig);
 
-            _hintService = new AIHintService(stt, llm);
+            _hintService = new AIHintService(stt, llm, tts);
         }
 
         private void Update()
@@ -100,12 +104,8 @@ namespace _02.Scripts.AIHint.Presentation
             try
             {
                 var playerState = CollectPlayerState();
-                HintResponse response = await _hintService.ProcessHintAsync(wavData, playerState);
-
-                if (response.IsSuccess)
-                {
-                    Debug.Log($"[AIHint] 힌트: {response.HintText}");
-                }
+                HintResult result = await _hintService.ProcessHintAsync(wavData, playerState);
+                HandleHintResult(result);
             }
             catch (System.Exception e)
             {
@@ -116,7 +116,8 @@ namespace _02.Scripts.AIHint.Presentation
                 _isProcessing = false;
             }
         }
-
+        
+        // test
         private async UniTaskVoid TestHintWithText()
         {
             _isProcessing = true;
@@ -124,18 +125,25 @@ namespace _02.Scripts.AIHint.Presentation
 
             try
             {
+                // Step 1: LLM
                 var playerState = CollectPlayerState();
                 var request = new HintRequest(_testQuery, playerState);
                 HintResponse response = await _hintService.Llm.GenerateHintAsync(request);
 
-                if (response.IsSuccess)
+                if (!response.IsSuccess)
                 {
-                    Debug.Log($"[AIHint-Test] 힌트: {response.HintText}");
+                    Debug.LogWarning($"[AIHint-Test] LLM 실패: {response.HintText}");
+                    return;
                 }
-                else
-                {
-                    Debug.LogWarning($"[AIHint-Test] 실패: {response.HintText}");
-                }
+
+                Debug.Log($"[AIHint-Test] 힌트: {response.HintText}");
+
+                // Step 2: TTS
+                byte[] ttsAudio = await _hintService.Tts.SynthesizeAsync(response.HintText);
+                Debug.Log($"[AIHint-Test] TTS 완료: {ttsAudio.Length} bytes");
+
+                // Step 3: 재생
+                PlayHintAudio(ttsAudio);
             }
             catch (System.Exception e)
             {
@@ -145,6 +153,29 @@ namespace _02.Scripts.AIHint.Presentation
             {
                 _isProcessing = false;
             }
+        }
+
+        private void HandleHintResult(HintResult result)
+        {
+            if (!result.IsSuccess)
+            {
+                Debug.LogWarning($"[AIHint] 실패: {result.HintText}");
+                return;
+            }
+            
+            Debug.Log($"[AIHint] 힌트: {result.HintText}");
+
+            if (result.AudioData != null && result.AudioData.Length > 0)
+            {
+                PlayHintAudio(result.AudioData);
+            }
+        }
+
+        private void PlayHintAudio(byte[] wavData)
+        {
+            var clip = WavDecoder.Decode(wavData);
+            _audioSource.PlayOneShot(clip);
+            Debug.Log($"[AIHint] 음성 재생 시작({clip.length:F1}초");
         }
 
         private PlayerHintState CollectPlayerState()
