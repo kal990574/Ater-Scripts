@@ -99,6 +99,18 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         draggedSlotUI.Refresh();
         Refresh();
+
+        //_inventoryUI.SelectSlot(this);
+        //ItemViewer.Instance.ShowItem(_slot.Item);
+
+        if (_inventoryUI.SelectedSlotUI == this)
+        {
+            ItemViewer.Instance.ShowItem(_slot.Item);
+        }
+        else if (_inventoryUI.SelectedSlotUI == draggedSlotUI)
+        {
+            ItemViewer.Instance.ShowItem(draggedSlotUI.Slot.Item);
+        }
     }
     public void Select()
     {

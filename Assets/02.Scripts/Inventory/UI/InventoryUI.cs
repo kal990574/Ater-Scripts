@@ -10,6 +10,8 @@ public class InventoryUI : MonoBehaviour
 
     private InventorySlotUI _selectedSlotUI;
 
+    public InventorySlotUI SelectedSlotUI => _selectedSlotUI;
+
     private void Start()
     {
         InventoryManager.Instance.Inventory.OnItemAdded += OnItemAdded;
