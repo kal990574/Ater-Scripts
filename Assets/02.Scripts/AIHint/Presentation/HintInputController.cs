@@ -1,5 +1,9 @@
+using _02.Scripts.AIHint.Application.Services;
 using _02.Scripts.AIHint.Domain;
+using _02.Scripts.AIHint.Domain.Models;
+using _02.Scripts.AIHint.Infrastructure;
 using _02.Scripts.AIHint.Infrastructure.Naver;
+using _02.Scripts.AIHint.Infrastructure.OpenAI;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -7,27 +11,50 @@ namespace _02.Scripts.AIHint.Presentation
 {
     public class HintInputController : MonoBehaviour
     {
-        [Header("설정")] 
-        [SerializeField] private NaverCloudConfig _config;
+        [Header("설정")]
+        [SerializeField] private NaverCloudConfig _naverConfig;
+        [SerializeField] private OpenAIConfig _openAIConfig;
         [SerializeField] private KeyCode _pttKey = KeyCode.R;
 
-        [Header("녹음 설정")] 
+        [Header("녹음 설정")]
         [SerializeField] private int _maxRecordSeconds = 10;
         [SerializeField] private int _sampleRate = 16000;
 
-        private ISpeechToText _stt;
+        [Header("테스트")]
+        [SerializeField] private KeyCode _testKey = KeyCode.T;
+        [SerializeField] private string _testQuery = "금고 비밀번호가 뭐야?";
+
+        private AIHintService _hintService;
+        private IGameStateProvider _gameStateProvider;
         private AudioClip _recordingClip;
         private bool _isRecording;
         private bool _isProcessing;
 
         private void Start()
         {
-            _stt = new ClovaSpeechToText(_config);
+            _gameStateProvider = new DummyGameStateProvider();
+
+            var stt = new ClovaSpeechToText(_naverConfig);
+
+            var promptBuilder = new PromptBuilder();
+            var chapterData = LoadCurrentChapterData();
+            string systemPrompt = promptBuilder.BuildSystemPrompt(chapterData);
+
+            var llm = new GPTLanguageModel(_openAIConfig, systemPrompt);
+
+            _hintService = new AIHintService(stt, llm);
         }
 
         private void Update()
         {
             if (_isProcessing) return;
+
+            if (Input.GetKeyDown(_testKey))
+            {
+                TestHintWithText().Forget();
+                return;
+            }
+
             if (Input.GetKeyDown(_pttKey))
             {
                 StartRecording();
@@ -41,60 +68,105 @@ namespace _02.Scripts.AIHint.Presentation
         private void StartRecording()
         {
             if (_isRecording) return;
-
-            Debug.Log($"[STT] 마이크 장치 수: {Microphone.devices.Length}");
-            foreach (string device in Microphone.devices)
-            {
-                Debug.Log($"[STT] 마이크: {device}");
-            }
-
             _recordingClip = Microphone.Start(null, false, _maxRecordSeconds, _sampleRate);
 
             if (_recordingClip == null)
             {
-                Debug.LogError("[STT] 마이크 시작 실패. 마이크 권한을 확인하세요.");
+                Debug.LogError("[AIHint] 마이크 시작 실패. 마이크 권한을 확인하세요.");
                 return;
             }
 
             _isRecording = true;
-            Debug.Log($"[STT] 녹음 시작... clip: {_recordingClip.frequency}Hz, {_recordingClip.channels}ch, {_recordingClip.samples}samples");
+            Debug.Log("[AIHint] 녹음 시작...");
         }
 
         private async UniTaskVoid StopRecordingAndRecognize()
         {
             int lastPosition = Microphone.GetPosition(null);
-            bool isStillRecording = Microphone.IsRecording(null);
             Microphone.End(null);
             _isRecording = false;
             _isProcessing = true;
-
-            Debug.Log($"[STT] 녹음 종료. position: {lastPosition}, isRecording: {isStillRecording}, clip null: {_recordingClip == null}");
 
             if (lastPosition == 0)
             {
                 _isProcessing = false;
                 return;
             }
-            
+
             var samples = new float[lastPosition];
             _recordingClip.GetData(samples, 0);
-            
             byte[] wavData = WavEncoder.Encode(samples, _sampleRate);
-            Debug.Log($"[STT] WAV 변환 완료.. 크기: {wavData.Length}bytes");
 
             try
             {
-                string result = await _stt.RecognizeAsync(wavData);
-                Debug.Log($"[STT] 변환 결과: {result}");
+                var playerState = CollectPlayerState();
+                HintResponse response = await _hintService.ProcessHintAsync(wavData, playerState);
+
+                if (response.IsSuccess)
+                {
+                    Debug.Log($"[AIHint] 힌트: {response.HintText}");
+                }
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"[STT] 인식 실패: {e.Message}");
+                Debug.LogError($"[AIHint] 처리 실패: {e.Message}");
             }
             finally
             {
                 _isProcessing = false;
             }
+        }
+
+        private async UniTaskVoid TestHintWithText()
+        {
+            _isProcessing = true;
+            Debug.Log($"[AIHint-Test] 질문: {_testQuery}");
+
+            try
+            {
+                var playerState = CollectPlayerState();
+                var request = new HintRequest(_testQuery, playerState);
+                HintResponse response = await _hintService.Llm.GenerateHintAsync(request);
+
+                if (response.IsSuccess)
+                {
+                    Debug.Log($"[AIHint-Test] 힌트: {response.HintText}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[AIHint-Test] 실패: {response.HintText}");
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[AIHint-Test] 예외: {e.Message}");
+            }
+            finally
+            {
+                _isProcessing = false;
+            }
+        }
+
+        private PlayerHintState CollectPlayerState()
+        {
+            return new PlayerHintState(
+                _gameStateProvider.CurrentChapter,
+                _gameStateProvider.CurrentRoom,
+                _gameStateProvider.GetInventory(),
+                _gameStateProvider.GetSolvedPuzzles());
+        }
+
+        private ChapterData LoadCurrentChapterData()
+        {
+            var json = Resources.Load<TextAsset>("ChapterData/chapter_1");
+
+            if (json == null)
+            {
+                Debug.LogError("[AIHint] ChapterData JSON 로드 실패: Resources/ChapterData/chapter_1");
+                return new ChapterData();
+            }
+
+            return JsonUtility.FromJson<ChapterData>(json.text);
         }
     }
 }
