@@ -182,7 +182,6 @@ namespace _02.Scripts.AIHint.Presentation
         {
             return new PlayerHintState(
                 _gameStateProvider.CurrentChapter,
-                _gameStateProvider.CurrentRoom,
                 _gameStateProvider.GetInventory(),
                 _gameStateProvider.GetSolvedPuzzles());
         }

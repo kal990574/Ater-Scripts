@@ -6,7 +6,6 @@ namespace _02.Scripts.AIHint.Infrastructure
     public class DummyGameStateProvider : IGameStateProvider
     {
         public int CurrentChapter => 1;
-        public string CurrentRoom => "연구실_메인";
 
         public IReadOnlyList<string> GetInventory()
         {
