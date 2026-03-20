@@ -6,6 +6,7 @@ namespace _02.Scripts.Player
     public class PlayerMovement : MonoBehaviour
     {
         [SerializeField] private float _moveSpeed = 3.5f;
+        [SerializeField] [Range(0f, 1f)] private float _backwardSpeedMultiplier = 0.5f;
         [SerializeField] private float _gravity = -9.81f;
         
         private CharacterController _controller;
@@ -37,8 +38,10 @@ namespace _02.Scripts.Player
         {
             Vector2 input = _input.MoveInput;
             Vector3 moveDirection = transform.right * input.x + transform.forward * input.y;
+            
+            float speed = input.y < 0f ? _moveSpeed * _backwardSpeedMultiplier : _moveSpeed;
 
-            Vector3 velocity = moveDirection * _moveSpeed;
+            Vector3 velocity = moveDirection * speed;
             velocity.y = _verticalVelocity;
             
             _controller.Move(velocity * Time.deltaTime);
