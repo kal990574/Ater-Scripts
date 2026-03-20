@@ -38,11 +38,22 @@ namespace _02.Scripts.Enemy
 
         private IEnumerator DeactivateWhenNotVisible()
         {
-            while (_visibilityChecker.IsVisibleToPlayer())
+            float outOfSightTimer = 0f;
+
+            while (outOfSightTimer < _config.OutOfSightDuration)
             {
+                if (_visibilityChecker.IsVisibleToPlayer())
+                {
+                    outOfSightTimer = 0f;
+                }
+                else
+                {
+                    outOfSightTimer += Time.deltaTime;
+                }
+
                 yield return null;
             }
-            
+
             gameObject.SetActive(false);
             _deactivateCoroutine = null;
         }

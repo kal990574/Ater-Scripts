@@ -6,6 +6,7 @@ namespace _02.Scripts.Player
     public class PlayerMovement : MonoBehaviour
     {
         [SerializeField] private float _moveSpeed = 3.5f;
+        [SerializeField] [Range(0f, 1f)] private float _backwardSpeedMultiplier = 0.5f;
         [SerializeField] private float _gravity = -9.81f;
         
         private CharacterController _controller;
