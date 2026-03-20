@@ -1,4 +1,4 @@
-﻿public enum MinigameResult
+﻿public enum EQuickTimeEventResult
 {
     Default,        //실행중
     Fail,           //실패

@@ -40,9 +40,13 @@ public class LidarController : MonoBehaviour
     {
         if (_input.LmbPressInput)
         {
-            float deltaTime = Time.deltaTime;
-            UpdateScan(deltaTime);
+            UpdateScan(Time.deltaTime);
             IsOnScan = true;
+        }
+
+        if (_input.InteractInput)
+        {
+            QTEManager.Instance.SubmitCurrent();
         }
 
         if (_input.LmbReleaseInput)
