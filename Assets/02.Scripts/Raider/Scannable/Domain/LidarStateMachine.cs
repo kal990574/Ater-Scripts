@@ -64,6 +64,10 @@ public class LidarStateMachine
             {
                 return new LidarReturnState(_owner);
             }
+            case ELidarTargetState.OnMinigame:
+            {
+                return new LidarMinigameState(_owner);
+            }
             default:
                 {
                     throw new Exception("[LidarFSM] 작성하지 않은 스테이트");

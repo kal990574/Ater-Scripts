@@ -6,8 +6,13 @@ public class LidarTarget : MonoBehaviour
 {
     [Header("Settings")]
     [SerializeField] private LidarProgressSetting _settings;
+
+    [Header("Minigame 추후 추가 예정")]
+    [SerializeField] private MonoBehaviour _minigameProvider;
     
     private LidarProgress _progress;
+    private IScanMinigame _currentMinigame;
+    private LidarMinigame _minigame;
     private LidarStateMachine _fsm;
 
     public LidarProgressSetting Settings => _settings;
@@ -19,6 +24,7 @@ public class LidarTarget : MonoBehaviour
     public float ProgressRatio => _progress.ProgressRatio;
     
     public ELidarTargetState State => _fsm.CurrentStateType;
+    public IScanMinigame CurrentMinigame => _currentMinigame;
     
     public event Action<float> OnProgressChanged; //ratio전달
     public event Action OnScanComplete;
@@ -43,7 +49,14 @@ public class LidarTarget : MonoBehaviour
         _progress = new LidarProgress(_settings);
         _progress.OnProgressChanged += HandleProgressChanged;
         _progress.OnActivated += HandleActivated;
-
+        
+        //선택
+        if (_minigameProvider != null)
+        {
+            _currentMinigame = _minigameProvider as IScanMinigame;
+            _minigame = new LidarMinigame(_settings, _currentMinigame, _progress);
+        }
+        
         //필수
         _fsm = new LidarStateMachine(this);
         ChangeState(ELidarTargetState.Default, true);
@@ -52,6 +65,7 @@ public class LidarTarget : MonoBehaviour
     [ContextMenu("리셋")]
     public void ResetAll()
     {
+        _minigame.Cancel();            //미니게임 리셋
         _progress.Reset();                      //진행도 리셋
         ChangeState(ELidarTargetState.Default); //스테이트 리셋
     }
@@ -126,6 +140,95 @@ public class LidarTarget : MonoBehaviour
     }
     #endregion
     
+    #region Minigame
+    //미니게임 시작
+    public void BeginMinigame()
+    {
+        _minigame.BeginOrReturnToProgress();
+    }
+
+    //미니게임 실행중
+    public void TickMinigame(float deltaTime)
+    {
+        EMinigameResult? result = _minigame.Tick(deltaTime);
+
+        if (result.HasValue == true)
+        {
+            ApplyMinigameResult(result.Value);
+        }
+    }
+    
+    //미니게임 판정 : 추후 E키를 눌렀을때
+    public void SubmitMinigame()
+    {
+        _minigame.Submit(State);
+    }
+
+    
+    //미니게임 종료
+    public void EndMinigame()
+    {
+        _minigame.Cancel();
+    }
+    
+    
+    //미니게임 종료시 결과 반영
+    public void ApplyMinigameResult(EMinigameResult result)
+    {
+        switch (result)
+        {
+            case EMinigameResult.Default:
+            {
+                ChangeState(ELidarTargetState.OnProgress);
+                break;
+            }
+            case EMinigameResult.Fail:
+            {
+                _progress.Reduce(_settings.FailPenalty);
+
+                if (_progress.CurrentProgress > 0.0f)
+                {
+                    ChangeState(ELidarTargetState.OnReturn);
+                }
+                else
+                {
+                    ChangeState(ELidarTargetState.Default);
+                }
+
+                break;
+            }
+            case EMinigameResult.Success:
+            {
+                ChangeState(ELidarTargetState.OnProgress);
+                break;
+            }
+            case EMinigameResult.GreatSuccess:
+            {
+                _progress.Add(_settings.GreatSuccessBonus);
+
+                if (_progress.IsActivated == false)
+                {
+                    ChangeState(ELidarTargetState.OnProgress);
+                }
+
+                break;
+            }
+        }
+    }
+    
+    
+    //미니게임 도중 스캔이 중단될 경우
+    public void ForceFailCurrentMinigame()
+    {
+        if (State != ELidarTargetState.OnMinigame)
+        {
+            return;
+        }
+
+        _minigame.Cancel();
+        ApplyMinigameResult(EMinigameResult.Fail);
+    }
+    #endregion
 
     private void HandleProgressChanged(float ratio)
     {
