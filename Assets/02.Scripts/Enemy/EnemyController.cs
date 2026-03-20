@@ -26,8 +26,6 @@ namespace _02.Scripts.Enemy
 
         public void RequestDeactivate()
         {
-            _action.Stop();
-
             if (_deactivateCoroutine != null)
             {
                 StopCoroutine(_deactivateCoroutine);
@@ -38,22 +36,12 @@ namespace _02.Scripts.Enemy
 
         private IEnumerator DeactivateWhenNotVisible()
         {
-            float outOfSightTimer = 0f;
-
-            while (outOfSightTimer < _config.OutOfSightDuration)
+            while (_visibilityChecker.IsVisibleToPlayer())
             {
-                if (_visibilityChecker.IsVisibleToPlayer())
-                {
-                    outOfSightTimer = 0f;
-                }
-                else
-                {
-                    outOfSightTimer += Time.deltaTime;
-                }
-
                 yield return null;
             }
 
+            _action.Stop();
             gameObject.SetActive(false);
             _deactivateCoroutine = null;
         }

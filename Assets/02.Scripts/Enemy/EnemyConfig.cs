@@ -7,17 +7,9 @@ namespace _02.Scripts.Enemy
     {
         [Header("Chase")]
         [SerializeField] private float _chaseSpeed = 3f;
-        [SerializeField] private float _chaseTimeout = 15f;
+        [SerializeField] private float _chaseTimeout = 10f;
         
-        [Header("Kill")]
-        [SerializeField] private float _killRange = 1.5f;
-
-        [Header("Deactivation")]
-        [SerializeField] private float _outOfSightDuration = 2f;
-
         public float ChaseSpeed => _chaseSpeed;
         public float ChaseTimeout => _chaseTimeout;
-        public float KillRange => _killRange;
-        public float OutOfSightDuration => _outOfSightDuration;
     }
 }

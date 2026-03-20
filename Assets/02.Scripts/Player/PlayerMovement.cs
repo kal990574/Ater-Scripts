@@ -38,8 +38,10 @@ namespace _02.Scripts.Player
         {
             Vector2 input = _input.MoveInput;
             Vector3 moveDirection = transform.right * input.x + transform.forward * input.y;
+            
+            float speed = input.y < 0f ? _moveSpeed * _backwardSpeedMultiplier : _moveSpeed;
 
-            Vector3 velocity = moveDirection * _moveSpeed;
+            Vector3 velocity = moveDirection * speed;
             velocity.y = _verticalVelocity;
             
             _controller.Move(velocity * Time.deltaTime);
