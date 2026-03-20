@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MinigameUI : MonoBehaviour
+public class CircleTimingQTEUI : MonoBehaviour, ITimingQuickTimeEventView
 {
     [SerializeField] private Image _successZoneImage;
     [SerializeField] private Image _greatZoneImage;
@@ -12,24 +12,36 @@ public class MinigameUI : MonoBehaviour
     private const float MaxProgress = 100f;
     private const float FullCircleAngle = 360f;
 
-    public void Show(bool isShow)
+    public void Show()
     {
-        gameObject.SetActive(isShow);
+        gameObject.SetActive(true);
 
         if (_canvasGroup != null)
         {
-            _canvasGroup.alpha = isShow ? 1f : 0f;
-            _canvasGroup.interactable = isShow;
-            _canvasGroup.blocksRaycasts = isShow;
+            _canvasGroup.alpha = 1f;
+            _canvasGroup.interactable = true;
+            _canvasGroup.blocksRaycasts = true;
         }
     }
 
-    public void ResetAll()
+    public void Hide()
     {
-        SetSkillCheckUI(0f, 0f, 0f, 0f);
+        if (_canvasGroup != null)
+        {
+            _canvasGroup.alpha = 0f;
+            _canvasGroup.interactable = false;
+            _canvasGroup.blocksRaycasts = false;
+        }
+
+        gameObject.SetActive(false);
     }
 
-    public void SetSkillCheckUI(float successZoneSizeProgress, float greatZonePercent, float judgeZoneStartProgress, float needleProgress)
+    public void ResetView()
+    {
+        UpdateView(0f, 0f, 0f, 0f);
+    }
+
+    public void UpdateView(float successZoneSizeProgress, float greatZonePercent, float judgeZoneStartProgress, float needleProgress)
     {
         ChangeSuccessSize(successZoneSizeProgress);
         ChangeGreatRate(greatZonePercent);

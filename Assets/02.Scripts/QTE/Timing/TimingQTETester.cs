@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class MinigameTester : MonoBehaviour
+public class TimingQTETester : MonoBehaviour
 {
-    [SerializeField] private MinigameExample _skillCheck;
+    [SerializeField] private TimingQTERunner _skillCheck;
     [SerializeField] private KeyCode _spawnKey = KeyCode.F;
 
     [Header("Auto Trigger")]
@@ -11,22 +11,7 @@ public class MinigameTester : MonoBehaviour
 
     private float _timer;
 
-    private void Awake()
-    {
-        if (_skillCheck != null)
-        {
-            _skillCheck.OnSkillCheckEnded += HandleSkillCheckEnded;
-        }
-    }
-
-    private void OnDestroy()
-    {
-        if (_skillCheck != null)
-        {
-            _skillCheck.OnSkillCheckEnded -= HandleSkillCheckEnded;
-        }
-    }
-
+    
     private void Update()
     {
         // 수동 트리거
@@ -59,12 +44,5 @@ public class MinigameTester : MonoBehaviour
         {
             return;
         }
-
-        _skillCheck.StartSkillCheck();
-    }
-
-    private void HandleSkillCheckEnded(EMinigameResult result)
-    {
-        Debug.Log($"Skill Check Result : {result}");
     }
 }

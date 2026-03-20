@@ -1,37 +1,49 @@
 using System;
 using UnityEngine;
-using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
-public class LidarTarget : MonoBehaviour
+public class LidarTarget : MonoBehaviour, IQTEInvoker
 {
     [Header("Settings")]
     [SerializeField] private LidarProgressSetting _settings;
-
-    [Header("Minigame 추후 추가 예정")]
-    [SerializeField] private MonoBehaviour _minigameProvider;
     
     private LidarProgress _progress;
-    private IScanMinigame _currentMinigame;
-    private LidarMinigame _minigame;
     private LidarStateMachine _fsm;
-
+    
+    private float _currentQTEDelay;
+    public float CurrentQTEDelay => _currentQTEDelay;
+    
     public LidarProgressSetting Settings => _settings;
-    
-    public bool IsProgressComplete => _progress == null ? false : _progress.IsActivated;
-    public bool CanInteract => _progress.CanInteract;
-    public float CurrentProgress => _progress.CurrentProgress;
-    public float RequiredProgress => _progress.RequiredProgress;
-    public float ProgressRatio => _progress.ProgressRatio;
-    
+
+    public bool IsProgressComplete => _progress != null && _progress.IsActivated;
+    public bool CanInteract => _progress != null && _progress.CanInteract;
+    public float CurrentProgress => _progress != null ? _progress.CurrentProgress : 0.0f;
+    public float RequiredProgress => _progress != null ? _progress.RequiredProgress : 0.0f;
+    public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
+
     public ELidarTargetState State => _fsm.CurrentStateType;
-    public IScanMinigame CurrentMinigame => _currentMinigame;
-    
-    public event Action<float> OnProgressChanged; //ratio전달
+
+    public event Action<float> OnProgressChanged;
     public event Action OnScanComplete;
 
     private void Awake()
     {
         Init();
+        
+    }
+
+    private void OnDestroy()
+    {
+        if (_progress != null)
+        {
+            _progress.OnProgressChanged -= HandleProgressChanged;
+            _progress.OnActivated -= HandleActivated;
+        }
+
+        if (QTEManager.Instance != null)
+        {
+            QTEManager.Instance.CancelByOwner(this);
+        }
     }
 
     private void Update()
@@ -40,7 +52,7 @@ public class LidarTarget : MonoBehaviour
         {
             return;
         }
-        
+
         _fsm.Tick(Time.deltaTime);
     }
 
@@ -49,30 +61,26 @@ public class LidarTarget : MonoBehaviour
         _progress = new LidarProgress(_settings);
         _progress.OnProgressChanged += HandleProgressChanged;
         _progress.OnActivated += HandleActivated;
-        
-        //선택
-        if (_minigameProvider != null)
-        {
-            _currentMinigame = _minigameProvider as IScanMinigame;
-            _minigame = new LidarMinigame(_settings, _currentMinigame, _progress);
-        }
-        
-        //필수
+
+        SetQTEDelay();
         _fsm = new LidarStateMachine(this);
         ChangeState(ELidarTargetState.Default, true);
     }
+
+    
     
     [ContextMenu("리셋")]
     public void ResetAll()
     {
-        _minigame.Cancel();            //미니게임 리셋
-        _progress.Reset();                      //진행도 리셋
-        ChangeState(ELidarTargetState.Default); //스테이트 리셋
+        if (QTEManager.Instance != null)
+        {
+            QTEManager.Instance.CancelByOwner(this);
+        }
+
+        _progress.Reset();
+        ChangeState(ELidarTargetState.Default);
     }
 
-
-    #region Connector
-    //스캔시 1회 실행
     public void OnScanning(float deltaTime)
     {
         if (IsProgressComplete == true)
@@ -82,8 +90,7 @@ public class LidarTarget : MonoBehaviour
 
         _fsm.OnScanning(deltaTime);
     }
-    
-    //스캔 중간 종료시 1회실행
+
     public void OnScanLost()
     {
         if (IsProgressComplete == true)
@@ -93,35 +100,20 @@ public class LidarTarget : MonoBehaviour
 
         _fsm.OnScanLost();
     }
-    
-    #endregion
-    
-    #region FSM
+
     public void ChangeState(ELidarTargetState nextState, bool force = false)
     {
         _fsm.ChangeState(nextState, force);
     }
-    
+
     public void ChangeState(ELidarTargetState nextState)
     {
         ChangeState(nextState, false);
     }
-    #endregion
 
-    #region Progress
     public void AddProgress(float amount)
     {
         _progress.Add(amount);
-
-        if (_progress.IsActivated == true)
-        {
-            return;
-        }
-
-        // if (_minigame.ShouldEnterMinigame(State) == true)
-        // {
-        //     ChangeState(ELidarTargetState.OnMinigame);
-        // }
     }
 
     public void ReduceProgress(float amount)
@@ -138,97 +130,11 @@ public class LidarTarget : MonoBehaviour
             ChangeState(ELidarTargetState.Default);
         }
     }
-    #endregion
     
-    #region Minigame
-    //미니게임 시작
-    public void BeginMinigame()
+    public void SetQTEDelay()
     {
-        _minigame.BeginOrReturnToProgress();
+        _currentQTEDelay = Random.Range(_settings.MinMinigameInterval, _settings.MaxMinigameInterval);
     }
-
-    //미니게임 실행중
-    public void TickMinigame(float deltaTime)
-    {
-        EMinigameResult? result = _minigame.Tick(deltaTime);
-
-        if (result.HasValue == true)
-        {
-            ApplyMinigameResult(result.Value);
-        }
-    }
-    
-    //미니게임 판정 : 추후 E키를 눌렀을때
-    public void SubmitMinigame()
-    {
-        _minigame.Submit(State);
-    }
-
-    
-    //미니게임 종료
-    public void EndMinigame()
-    {
-        _minigame.Cancel();
-    }
-    
-    
-    //미니게임 종료시 결과 반영
-    public void ApplyMinigameResult(EMinigameResult result)
-    {
-        switch (result)
-        {
-            case EMinigameResult.Default:
-            {
-                ChangeState(ELidarTargetState.OnProgress);
-                break;
-            }
-            case EMinigameResult.Fail:
-            {
-                _progress.Reduce(_settings.FailPenalty);
-
-                if (_progress.CurrentProgress > 0.0f)
-                {
-                    ChangeState(ELidarTargetState.OnReturn);
-                }
-                else
-                {
-                    ChangeState(ELidarTargetState.Default);
-                }
-
-                break;
-            }
-            case EMinigameResult.Success:
-            {
-                ChangeState(ELidarTargetState.OnProgress);
-                break;
-            }
-            case EMinigameResult.GreatSuccess:
-            {
-                _progress.Add(_settings.GreatSuccessBonus);
-
-                if (_progress.IsActivated == false)
-                {
-                    ChangeState(ELidarTargetState.OnProgress);
-                }
-
-                break;
-            }
-        }
-    }
-    
-    
-    //미니게임 도중 스캔이 중단될 경우
-    public void ForceFailCurrentMinigame()
-    {
-        if (State != ELidarTargetState.OnMinigame)
-        {
-            return;
-        }
-
-        _minigame.Cancel();
-        ApplyMinigameResult(EMinigameResult.Fail);
-    }
-    #endregion
 
     private void HandleProgressChanged(float ratio)
     {

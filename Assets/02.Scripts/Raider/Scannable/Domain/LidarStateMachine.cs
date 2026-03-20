@@ -64,9 +64,13 @@ public class LidarStateMachine
             {
                 return new LidarReturnState(_owner);
             }
-            case ELidarTargetState.OnMinigame:
+            case ELidarTargetState.OnPlayQTE:
             {
-                return new LidarMinigameState(_owner);
+                return new LidarQTEState(_owner);
+            }
+            case ELidarTargetState.OnCompleted:
+            {
+                return new LidarCompleteState(_owner);
             }
             default:
                 {
