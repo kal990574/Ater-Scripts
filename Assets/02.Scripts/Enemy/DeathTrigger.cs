@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace _02.Scripts.Enemy
 {
-    public class EnemyKillZone : MonoBehaviour
+    public class DeathTrigger : MonoBehaviour
     {
         [SerializeField] private LayerMask _playerLayer;
 
