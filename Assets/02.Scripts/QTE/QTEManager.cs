@@ -1,38 +1,23 @@
-using _02.Scripts.Player;
 using System;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
+[DisallowMultipleComponent]
 public class QTEManager : MonoBehaviour
 {
-    //TOdo 현재는 타이밍 퀵타임 이벤트만 제작됨.
-    //이후엔 더 추가할것
     public static QTEManager Instance { get; private set; }
 
-    [SerializeField]private IPlayerInput _input;
-    
-    //모든 스킬체크 UI 보관 추후 lazyActive로 바뀔수 있음
+    [Header("Required References")]
     [SerializeField] private CircleTimingQTEUI _circleTimingQteUi;
-    
-    //QTE 세팅도 요청시 받아오도록 추후 수정
-    public TimingQuickTimeEventConfig QteConfig;
-    
+    [FormerlySerializedAs("QteConfig")]
+    [SerializeField] private TimingQuickTimeEventConfig _qteConfig;
+
     private IQuickTimeEvent _currentEvent;
     private IQTEInvoker _currentOwner;
     private Action<EQuickTimeEventResult> _onEnded;
-    
-    
-    public ITimingQuickTimeEventView TimingQuickTimeEventView => _circleTimingQteUi;
-    
-    public bool IsPlaying
-    {
-        get
-        {
-            return _currentEvent != null && _currentEvent.IsPlaying == true;
-        }
-    }
 
+    public ITimingQuickTimeEventView TimingQuickTimeEventView => _circleTimingQteUi;
+    public bool IsPlaying => _currentEvent != null && _currentEvent.IsPlaying;
     public IQTEInvoker CurrentOwner => _currentOwner;
     public IQuickTimeEvent CurrentEvent => _currentEvent;
 
@@ -45,7 +30,14 @@ public class QTEManager : MonoBehaviour
         }
 
         Instance = this;
-        
+
+        if (_circleTimingQteUi == null || _qteConfig == null)
+        {
+            Debug.LogError($"[{nameof(QTEManager)}] Required references are missing.", this);
+            enabled = false;
+            return;
+        }
+
         _circleTimingQteUi.Hide();
     }
 
@@ -56,31 +48,26 @@ public class QTEManager : MonoBehaviour
             return;
         }
 
-        if (_currentEvent.IsPlaying == true)
+        if (_currentEvent.IsPlaying)
         {
             _currentEvent.Tick(Time.deltaTime);
         }
 
-        if (_currentEvent.IsFinished == true)
+        if (_currentEvent.IsFinished)
         {
             EndCurrent(_currentEvent.Result);
         }
     }
 
-    public bool TryPlay(IQTEInvoker owner,  Action<EQuickTimeEventResult> onEnded)
+    public bool TryPlay(IQTEInvoker owner, Action<EQuickTimeEventResult> onEnded)
     {
-        if (owner == null)
-        {
-            return false;
-        }
-
-        if (IsPlaying == true)
+        if (owner == null || IsPlaying)
         {
             return false;
         }
 
         _currentOwner = owner;
-        _currentEvent = new TimingQTERunner(QteConfig, TimingQuickTimeEventView);
+        _currentEvent = new TimingQTERunner(_qteConfig, TimingQuickTimeEventView);
         _onEnded = onEnded;
 
         _currentEvent.Begin();
@@ -89,12 +76,7 @@ public class QTEManager : MonoBehaviour
 
     public void SubmitCurrent()
     {
-        if (_currentEvent == null)
-        {
-            return;
-        }
-
-        if (_currentEvent.IsPlaying == false)
+        if (_currentEvent == null || _currentEvent.IsPlaying == false)
         {
             return;
         }
@@ -110,26 +92,20 @@ public class QTEManager : MonoBehaviour
         }
 
         _currentEvent.Cancel();
-
-        if (_currentEvent.IsFinished == true)
+        if (_currentEvent.IsFinished)
         {
             EndCurrent(_currentEvent.Result);
         }
     }
-    
+
     public void ForceFailByOwner(IQTEInvoker owner)
     {
-        if (_currentEvent == null)
+        if (_currentEvent == null || ReferenceEquals(_currentOwner, owner) == false)
         {
             return;
         }
 
-        if (ReferenceEquals(_currentOwner, owner) == false)
-        {
-            return;
-        }
-
-        if (_currentEvent.IsPlaying == true)
+        if (_currentEvent.IsPlaying)
         {
             _currentEvent.Cancel();
         }
@@ -139,12 +115,7 @@ public class QTEManager : MonoBehaviour
 
     public void CancelByOwner(IQTEInvoker owner)
     {
-        if (_currentEvent == null)
-        {
-            return;
-        }
-
-        if (ReferenceEquals(_currentOwner, owner) == false)
+        if (_currentEvent == null || ReferenceEquals(_currentOwner, owner) == false)
         {
             return;
         }

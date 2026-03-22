@@ -2,29 +2,43 @@ using UnityEngine;
 
 public class TimingQTETester : MonoBehaviour
 {
-    [SerializeField] private TimingQTERunner _skillCheck;
+    [Header("Required References")]
+    [SerializeField] private CircleTimingQTEUI _timingView;
+    [SerializeField] private TimingQuickTimeEventConfig _config;
+
+    [Header("Input")]
     [SerializeField] private KeyCode _spawnKey = KeyCode.F;
 
     [Header("Auto Trigger")]
     [SerializeField] private bool _useAutoTrigger = true;
+    [Min(0.1f)]
     [SerializeField] private float _interval = 5f;
 
+    private TimingQTERunner _skillCheck;
     private float _timer;
 
-    
+    private void Awake()
+    {
+        if (_timingView == null || _config == null)
+        {
+            Debug.LogError($"[{nameof(TimingQTETester)}] Required references are missing.", this);
+            enabled = false;
+            return;
+        }
+
+        _skillCheck = new TimingQTERunner(_config, _timingView);
+    }
+
     private void Update()
     {
-        // 수동 트리거
-        if (Input.GetKeyDown(_spawnKey) == true)
+        if (Input.GetKeyDown(_spawnKey))
         {
             TryStartSkillCheck();
         }
 
-        // 자동 트리거
-        if (_useAutoTrigger == true)
+        if (_useAutoTrigger)
         {
             _timer += Time.deltaTime;
-
             if (_timer >= _interval)
             {
                 _timer = 0f;
@@ -35,14 +49,11 @@ public class TimingQTETester : MonoBehaviour
 
     private void TryStartSkillCheck()
     {
-        if (_skillCheck == null)
+        if (_skillCheck == null || _skillCheck.IsPlaying)
         {
             return;
         }
 
-        if (_skillCheck.IsPlaying == true)
-        {
-            return;
-        }
+        _skillCheck.Begin();
     }
 }
