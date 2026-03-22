@@ -2,38 +2,51 @@ using _02.Scripts.Player;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
+[DisallowMultipleComponent]
 public class LidarController : MonoBehaviour
 {
+    [Header("Required References")]
     [SerializeField] private Transform _rayOrigin;
     [SerializeField] private Transform _shootPoint;
-    [SerializeField] private LidarConfig config;
-    [SerializeField] private Vector3 _originOffset = Vector3.zero;
-    
-    private readonly Dictionary<Type, LidarAbility> _abilities = new();
-    
-    public LidarTarget CurrentTarget { get; private set; }
+    [FormerlySerializedAs("config")]
+    [SerializeField] private LidarConfig _config;
 
-    public float RayDistance => config.RayDistance;
-    public float ConeAngle => config.ConeAngle;
-    public int RingCount => config.RingCount;
-    public int RaysPerRing => config.RaysPerRing;
-    public LayerMask HitMask => config.HitMask;
-    
+    [Header("Optional Settings")]
+    [SerializeField] private Vector3 _originOffset = Vector3.zero;
+
+    private readonly Dictionary<Type, LidarAbility> _abilities = new();
+    private IPlayerInput _input;
+
+    public LidarTarget CurrentTarget { get; private set; }
     public Vector3 StartPos => _rayOrigin.position + _originOffset;
     public Transform ShootPoint => _shootPoint;
+    public bool IsOnScan { get; private set; }
+    public float RayDistance => _config.RayDistance;
+    public float ConeAngle => _config.ConeAngle;
+    public int RingCount => _config.RingCount;
+    public int RaysPerRing => _config.RaysPerRing;
+    public LayerMask HitMask => _config.HitMask;
 
-    //현재는 타겟을 스캔할때 나타남
-    //추후에는 호버중일때 80%투명도로 스캔 중일때 100%로 띄우기
     public event Action<LidarTarget> OnTargetFind;
     public event Action OnTargetLost;
 
-    public bool IsOnScan { get; private set; } = false;
-
-    private IPlayerInput _input;
-    private void Start()
+    private void Awake()
     {
+        if (_rayOrigin == null || _shootPoint == null || _config == null)
+        {
+            Debug.LogError($"[{nameof(LidarController)}] Required references are missing.", this);
+            enabled = false;
+            return;
+        }
+
         _input = GetComponentInParent<IPlayerInput>();
+        if (_input == null)
+        {
+            Debug.LogError($"[{nameof(LidarController)}] {nameof(IPlayerInput)} not found.", this);
+            enabled = false;
+        }
     }
 
     private void Update()
@@ -46,7 +59,7 @@ public class LidarController : MonoBehaviour
 
         if (_input.InteractInput)
         {
-            QTEManager.Instance.SubmitCurrent();
+            SubmitCurrentQte();
         }
 
         if (_input.LmbReleaseInput)
@@ -56,53 +69,6 @@ public class LidarController : MonoBehaviour
         }
     }
 
-    private void UpdateScan(float deltaTime)
-    {
-        LidarRaycastAbility raycastAbility = GetAbility<LidarRaycastAbility>();
-        raycastAbility.Scan();
-
-        LidarTarget previousTarget = CurrentTarget;
-        LidarTarget newTarget = ResolveTarget(raycastAbility.HitMap, StartPos, transform.forward);
-
-        HandleTargetChanged(previousTarget, newTarget);
-
-        CurrentTarget = newTarget;
-
-        if (CurrentTarget != null)
-        {
-            CurrentTarget.OnScanning(deltaTime);
-        }
-
-        GetAbility<LidarEffectAbility>().DrawLidarEffect(CurrentTarget);
-    }
-
-    
-    private void HandleTargetChanged(LidarTarget previous, LidarTarget current)
-    {
-        // Case 1: 새로 타겟을 찾은 경우
-        if (previous == null && current != null)
-        {
-            OnTargetFind?.Invoke(current);
-            return;
-        }
-
-        // Case 2: 타겟이 바뀐 경우
-        if (previous != null && current != null && previous != current)
-        {
-            OnTargetLost?.Invoke();
-            previous.OnScanLost();
-            OnTargetFind?.Invoke(current);
-            return;
-        }
-
-        // Case 3: 타겟을 잃은 경우
-        if (previous != null && current == null)
-        {
-            OnTargetLost?.Invoke();
-            previous.OnScanLost();
-        }
-    }
-    
     public void StopScan()
     {
         if (CurrentTarget != null)
@@ -111,7 +77,7 @@ public class LidarController : MonoBehaviour
             CurrentTarget.OnScanLost();
             CurrentTarget = null;
         }
-       
+
         GetAbility<LidarRaycastAbility>().ClearScanResults();
         GetAbility<LidarEffectAbility>().ResetLine();
     }
@@ -126,7 +92,6 @@ public class LidarController : MonoBehaviour
         }
 
         ability = GetComponentInChildren<T>();
-
         if (ability != null)
         {
             _abilities[type] = ability;
@@ -134,6 +99,58 @@ public class LidarController : MonoBehaviour
         }
 
         throw new Exception($"[LidarController] Ability {type.Name} not found on {gameObject.name}.");
+    }
+
+    private static void SubmitCurrentQte()
+    {
+        if (QTEManager.Instance == null)
+        {
+            return;
+        }
+
+        QTEManager.Instance.SubmitCurrent();
+    }
+
+    private void UpdateScan(float deltaTime)
+    {
+        LidarRaycastAbility raycastAbility = GetAbility<LidarRaycastAbility>();
+        raycastAbility.Scan();
+
+        LidarTarget previousTarget = CurrentTarget;
+        LidarTarget newTarget = ResolveTarget(raycastAbility.HitMap, StartPos, transform.forward);
+
+        HandleTargetChanged(previousTarget, newTarget);
+        CurrentTarget = newTarget;
+
+        if (CurrentTarget != null)
+        {
+            CurrentTarget.OnScanning(deltaTime);
+        }
+
+        GetAbility<LidarEffectAbility>().DrawLidarEffect(CurrentTarget);
+    }
+
+    private void HandleTargetChanged(LidarTarget previous, LidarTarget current)
+    {
+        if (previous == null && current != null)
+        {
+            OnTargetFind?.Invoke(current);
+            return;
+        }
+
+        if (previous != null && current != null && previous != current)
+        {
+            OnTargetLost?.Invoke();
+            previous.OnScanLost();
+            OnTargetFind?.Invoke(current);
+            return;
+        }
+
+        if (previous != null && current == null)
+        {
+            OnTargetLost?.Invoke();
+            previous.OnScanLost();
+        }
     }
 
     private LidarTarget ResolveTarget(IReadOnlyDictionary<LidarTarget, TargetHitData> hitMap, Vector3 origin, Vector3 forward)
@@ -183,7 +200,7 @@ public class LidarController : MonoBehaviour
                     continue;
                 }
 
-                if (Mathf.Approximately(centerScore, bestCenterScore) == true && data.ClosestDistance < bestClosestDistance)
+                if (Mathf.Approximately(centerScore, bestCenterScore) && data.ClosestDistance < bestClosestDistance)
                 {
                     bestTarget = candidate;
                     bestHitCount = data.HitCount;

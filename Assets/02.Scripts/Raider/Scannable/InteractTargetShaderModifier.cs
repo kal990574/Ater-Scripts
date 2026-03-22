@@ -3,24 +3,34 @@ using UnityEngine;
 
 public class InteractTargetShaderModifier : MonoBehaviour
 {
-    [Header("References")]
+    [Header("Required References")]
     [SerializeField] private AllInOneShaderController _shaderPropertyController;
     [SerializeField] private LidarTarget _target;
-
-    [Header("Shader Values")]
     [SerializeField] private InteractTargetShaderConfig _config;
 
+    [Header("Debug")]
+    [SerializeField] private float _currentHitBlend;
+
     private Tween _hitBlendTween;
-    private float _currentHitBlend;
-    private bool _isInitialized;
 
     private void Start()
     {
         CacheReferences();
         InitializeShaderController();
+
+        if (enabled == false || _config == null)
+        {
+            if (_config == null)
+            {
+                Debug.LogError($"[{nameof(InteractTargetShaderModifier)}] {nameof(InteractTargetShaderConfig)} is missing.", this);
+            }
+
+            enabled = false;
+            return;
+        }
+
         ApplyInitialShaderState();
         SubscribeTargetEvents();
-        _isInitialized = true;
     }
 
     private void OnDestroy()
@@ -67,7 +77,7 @@ public class InteractTargetShaderModifier : MonoBehaviour
         {
             return;
         }
-        
+
         _target.OnProgressChanged += OnTargetProgressChanged;
         _target.OnScanComplete += OnTargetScanComplete;
     }
@@ -96,7 +106,7 @@ public class InteractTargetShaderModifier : MonoBehaviour
     private void ApplyProgressState(float ratio)
     {
         SetBlendCutOffRatio(ratio);
-        UpdateOptionalEffects(1.0f- ratio);
+        UpdateOptionalEffects(1.0f - ratio);
         UpdateOutlineColor(ratio);
     }
 
@@ -124,18 +134,10 @@ public class InteractTargetShaderModifier : MonoBehaviour
         KillHitBlendTween();
 
         Sequence sequence = DOTween.Sequence();
-
-        sequence.Append(CreateHitBlendTween(_config.HitBlendPeak, _config.HitBlendDuration)
-            .SetEase(_config.HitBlendUpEase));
-
-        sequence.Append(CreateHitBlendTween(0.0f, _config.HitBlendDownDuration)
-            .SetEase(_config.HitBlendDownEase));
-
+        sequence.Append(CreateHitBlendTween(_config.HitBlendPeak, _config.HitBlendDuration).SetEase(_config.HitBlendUpEase));
+        sequence.Append(CreateHitBlendTween(0.0f, _config.HitBlendDownDuration).SetEase(_config.HitBlendDownEase));
         sequence.SetLink(gameObject, LinkBehaviour.KillOnDisable);
-        sequence.OnKill(() =>
-        {
-            _hitBlendTween = null;
-        });
+        sequence.OnKill(() => _hitBlendTween = null);
 
         _hitBlendTween = sequence;
     }
@@ -160,7 +162,7 @@ public class InteractTargetShaderModifier : MonoBehaviour
             return;
         }
 
-        if (_hitBlendTween.IsActive() == true)
+        if (_hitBlendTween.IsActive())
         {
             _hitBlendTween.Kill();
         }

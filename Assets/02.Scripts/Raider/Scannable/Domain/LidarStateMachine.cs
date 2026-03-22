@@ -1,19 +1,25 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class LidarStateMachine
 {
-    private readonly LidarTarget _owner;
     private readonly Dictionary<ELidarTargetState, ILidarTargetState> _states;
+    private readonly Dictionary<ELidarTargetState, Func<ILidarTargetState>> _stateFactories;
     private ILidarTargetState _currentState;
 
     public ELidarTargetState CurrentStateType => _currentState == null ? ELidarTargetState.Default : _currentState.StateType;
 
     public LidarStateMachine(LidarTarget owner)
     {
-        _owner = owner;
         _states = new Dictionary<ELidarTargetState, ILidarTargetState>();
+        _stateFactories = new Dictionary<ELidarTargetState, Func<ILidarTargetState>>
+        {
+            { ELidarTargetState.Default, () => new LidarDefaultState(owner) },
+            { ELidarTargetState.OnProgress, () => new LidarProgressState(owner) },
+            { ELidarTargetState.OnReturn, () => new LidarReturnState(owner) },
+            { ELidarTargetState.OnPlayQTE, () => new LidarQTEState(owner) },
+            { ELidarTargetState.OnCompleted, () => new LidarCompleteState(owner) }
+        };
     }
 
     public void ChangeState(ELidarTargetState nextState, bool force = false)
@@ -23,13 +29,14 @@ public class LidarStateMachine
             return;
         }
 
-        if (_states.ContainsKey(nextState) == false)
+        if (_states.TryGetValue(nextState, out ILidarTargetState next) == false)
         {
-            _states[nextState] = CreateState(nextState);
+            next = CreateState(nextState);
+            _states[nextState] = next;
         }
-        
+
         _currentState?.Exit();
-        _currentState = _states[nextState];
+        _currentState = next;
         _currentState.Enter();
     }
 
@@ -50,32 +57,11 @@ public class LidarStateMachine
 
     private ILidarTargetState CreateState(ELidarTargetState stateType)
     {
-        switch (stateType)
+        if (_stateFactories.TryGetValue(stateType, out Func<ILidarTargetState> factory) == false)
         {
-            case ELidarTargetState.Default:
-            {
-                return new LidarDefaultState(_owner);
-            }
-            case ELidarTargetState.OnProgress:
-            {
-                return new LidarProgressState(_owner);
-            }
-            case ELidarTargetState.OnReturn:
-            {
-                return new LidarReturnState(_owner);
-            }
-            case ELidarTargetState.OnPlayQTE:
-            {
-                return new LidarQTEState(_owner);
-            }
-            case ELidarTargetState.OnCompleted:
-            {
-                return new LidarCompleteState(_owner);
-            }
-            default:
-                {
-                    throw new Exception("[LidarFSM] 작성하지 않은 스테이트");
-                }
+            throw new Exception("[LidarFSM] 작성하지 않은 스테이트");
         }
+
+        return factory();
     }
 }

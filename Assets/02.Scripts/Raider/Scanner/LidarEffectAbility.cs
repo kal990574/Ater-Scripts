@@ -1,17 +1,24 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 public class LidarEffectAbility : LidarAbility
 {
+    [Header("Required References")]
     [SerializeField] private Transform _shootTransform;
     [SerializeField] private LineRenderer _lineRenderer;
-    [SerializeField] private LidarRaycastAbility raycastAbility;
-    
+
+    [Header("Optional References")]
+    [SerializeField] private LidarRaycastAbility _raycastAbility;
+
+    [Header("Settings")]
+    [Min(0f)]
     [SerializeField] private float _drawDelay = 0.5f;
-    
+
+    [Header("Debug")]
     [SerializeField] private float _lastDrawTime = -999.0f;
+
+    private readonly List<Collider> _colliders = new();
 
     protected override void Awake()
     {
@@ -22,9 +29,9 @@ public class LidarEffectAbility : LidarAbility
             _shootTransform = _controller.ShootPoint;
         }
 
-        if (raycastAbility == null && _controller != null)
+        if (_raycastAbility == null && _controller != null)
         {
-            raycastAbility = _controller.GetAbility<LidarRaycastAbility>();
+            _raycastAbility = _controller.GetAbility<LidarRaycastAbility>();
         }
 
         if (_lineRenderer != null)
@@ -61,12 +68,7 @@ public class LidarEffectAbility : LidarAbility
 
     private bool CanDrawEffect()
     {
-        if (_shootTransform == null)
-        {
-            return false;
-        }
-
-        if (_lineRenderer == null)
+        if (_shootTransform == null || _lineRenderer == null)
         {
             return false;
         }
@@ -82,21 +84,19 @@ public class LidarEffectAbility : LidarAbility
     private void DrawTargetLine(LidarTarget target)
     {
         Vector3 targetPoint = GetPointOnTargetSurface(target);
-
         SetLineColor(Color.green);
         SetLine(_shootTransform.position, targetPoint);
     }
 
     private void DrawRaycastLine()
     {
-        if (raycastAbility == null || raycastAbility.RayResults.Count == 0)
+        if (_raycastAbility == null || _raycastAbility.RayResults.Count == 0)
         {
             ResetLine();
             return;
         }
 
-        LidarRayData rayData = raycastAbility.RayResults[Random.Range(0, raycastAbility.RayResults.Count)];
-
+        LidarRayData rayData = _raycastAbility.RayResults[Random.Range(0, _raycastAbility.RayResults.Count)];
         SetLineColor(Color.red);
         SetLine(_shootTransform.position, rayData.EndPoint);
     }
@@ -108,12 +108,12 @@ public class LidarEffectAbility : LidarAbility
             return _shootTransform != null ? _shootTransform.position : Vector3.zero;
         }
 
-        List<Collider> colliderList = new List<Collider>();
-        target.GetComponentsInChildren(colliderList);
+        _colliders.Clear();
+        target.GetComponentsInChildren(_colliders);
 
-        if (colliderList.Count > 0)
+        if (_colliders.Count > 0)
         {
-            Collider targetCollider = colliderList[Random.Range(0, colliderList.Count)];
+            Collider targetCollider = _colliders[Random.Range(0, _colliders.Count)];
             Vector3 sampledPoint = SampleRandomSurfacePoint(targetCollider);
 
             if (sampledPoint != targetCollider.bounds.center)

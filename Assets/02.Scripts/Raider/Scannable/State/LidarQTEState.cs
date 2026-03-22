@@ -1,43 +1,38 @@
-﻿public class LidarQTEState : ILidarTargetState
+public class LidarQTEState : LidarTargetStateBase
 {
-    private readonly LidarTarget _owner;
-    
     private bool _hasResult;
     private EQuickTimeEventResult _result;
 
-    public ELidarTargetState StateType => ELidarTargetState.OnPlayQTE;
+    public override ELidarTargetState StateType => ELidarTargetState.OnPlayQTE;
 
-    public LidarQTEState(LidarTarget owner)
+    public LidarQTEState(LidarTarget owner) : base(owner)
     {
-        _owner = owner;
     }
 
-    public void Enter()
+    public override void Enter()
     {
         _hasResult = false;
         _result = EQuickTimeEventResult.Default;
-        
+
         if (QTEManager.Instance == null)
         {
-            _owner.ChangeState(ELidarTargetState.OnProgress);
+            Owner.ChangeState(ELidarTargetState.OnProgress);
             return;
         }
 
-        bool started = QTEManager.Instance.TryPlay(_owner, HandleQTEResult);
-       
+        bool started = QTEManager.Instance.TryPlay(Owner, HandleQTEResult);
         if (started == false)
         {
-            _owner.ChangeState(ELidarTargetState.OnProgress);
+            Owner.ChangeState(ELidarTargetState.OnProgress);
         }
-        
     }
 
-    public void Exit()
+    public override void Exit()
     {
-        _owner.SetQTEDelay();
+        Owner.SetQTEDelay();
     }
 
-    public void Tick(float deltaTime)
+    public override void Tick(float deltaTime)
     {
         if (_hasResult == false)
         {
@@ -47,11 +42,7 @@
         ApplyResultAndTransit();
     }
 
-    public void OnScanning(float deltaTime)
-    {
-    }
-
-    public void OnScanLost()
+    public override void OnScanLost()
     {
         if (QTEManager.Instance == null)
         {
@@ -60,7 +51,7 @@
             return;
         }
 
-        QTEManager.Instance.ForceFailByOwner(_owner);
+        QTEManager.Instance.ForceFailByOwner(Owner);
     }
 
     private void HandleQTEResult(EQuickTimeEventResult result)
@@ -76,53 +67,18 @@
         switch (_result)
         {
             case EQuickTimeEventResult.Default:
-            {
-                _owner.ChangeState(ELidarTargetState.OnProgress);
+                Owner.ChangeState(ELidarTargetState.OnProgress);
                 break;
-            }
             case EQuickTimeEventResult.Fail:
-            {
-                _owner.ReduceProgress(_owner.Settings.FailPenalty);
-
-                if (_owner.CurrentProgress <= 0.0f)
-                {
-                    _owner.ChangeState(ELidarTargetState.Default);
-                }
-                else
-                {
-                    _owner.ChangeState(ELidarTargetState.OnReturn);
-                }
-
+                Owner.HandleQteFailure();
                 break;
-            }
             case EQuickTimeEventResult.Success:
-            {
-                if (_owner.IsProgressComplete == true)
-                {
-                    _owner.ChangeState(ELidarTargetState.OnCompleted);
-                }
-                else
-                {
-                    _owner.ChangeState(ELidarTargetState.OnProgress);
-                }
-
+                Owner.TransitToProgressOrCompleted();
                 break;
-            }
             case EQuickTimeEventResult.GreatSuccess:
-            {
-                _owner.AddProgress(_owner.Settings.GreatSuccessBonus);
-
-                if (_owner.IsProgressComplete == true)
-                {
-                    _owner.ChangeState(ELidarTargetState.OnCompleted);
-                }
-                else
-                {
-                    _owner.ChangeState(ELidarTargetState.OnProgress);
-                }
-
+                Owner.ApplyGreatSuccessBonus();
+                Owner.TransitToProgressOrCompleted();
                 break;
-            }
         }
     }
 }

@@ -1,33 +1,14 @@
-﻿public class LidarDefaultState : ILidarTargetState
+public class LidarDefaultState : LidarTargetStateBase
 {
-    private readonly LidarTarget _owner;
+    public override ELidarTargetState StateType => ELidarTargetState.Default;
 
-    public ELidarTargetState StateType => ELidarTargetState.Default;
-
-    public LidarDefaultState(LidarTarget owner)
-    {
-        _owner = owner;
-    }
-
-    public void Enter()
+    public LidarDefaultState(LidarTarget owner) : base(owner)
     {
     }
 
-    public void Exit()
+    public override void OnScanning(float deltaTime)
     {
-    }
-
-    public void Tick(float deltaTime)
-    {
-    }
-
-    public void OnScanning(float deltaTime)
-    {
-        _owner.ChangeState(ELidarTargetState.OnProgress);
-        _owner.AddProgress(deltaTime);
-    }
-
-    public void OnScanLost()
-    {
+        Owner.ChangeState(ELidarTargetState.OnProgress);
+        Owner.ApplyScanProgress(deltaTime);
     }
 }

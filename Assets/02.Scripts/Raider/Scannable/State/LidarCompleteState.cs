@@ -1,31 +1,8 @@
-﻿public class LidarCompleteState : ILidarTargetState
+public class LidarCompleteState : LidarTargetStateBase
 {
-    private readonly LidarTarget _owner;
+    public override ELidarTargetState StateType => ELidarTargetState.OnCompleted;
 
-    public ELidarTargetState StateType => ELidarTargetState.OnCompleted;
-
-    public LidarCompleteState(LidarTarget owner)
-    {
-        _owner = owner;
-    }
-
-    public void Enter()
-    {
-    }
-
-    public void Exit()
-    {
-    }
-
-    public void Tick(float deltaTime)
-    {
-    }
-
-    public void OnScanning(float deltaTime)
-    {
-    }
-
-    public void OnScanLost()
+    public LidarCompleteState(LidarTarget owner) : base(owner)
     {
     }
 }

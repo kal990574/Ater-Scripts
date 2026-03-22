@@ -1,48 +1,36 @@
-﻿public class LidarProgressState : ILidarTargetState
+public class LidarProgressState : LidarTargetStateBase
 {
-    private readonly LidarTarget _owner;
     private float _elapsedTime;
 
-    public ELidarTargetState StateType => ELidarTargetState.OnProgress;
+    public override ELidarTargetState StateType => ELidarTargetState.OnProgress;
 
-    public LidarProgressState(LidarTarget owner)
+    public LidarProgressState(LidarTarget owner) : base(owner)
     {
-        _owner = owner;
     }
 
-    public void Enter()
+    public override void Enter()
     {
         _elapsedTime = 0.0f;
     }
 
-    public void Exit()
-    {
-    }
-
-    public void Tick(float deltaTime)
-    {
-    }
-
-    public void OnScanning(float deltaTime)
+    public override void OnScanning(float deltaTime)
     {
         _elapsedTime += deltaTime;
 
-        _owner.AddProgress(deltaTime);
-
-        if (_owner.IsProgressComplete == true)
+        Owner.ApplyScanProgress(deltaTime);
+        if (Owner.TryTransitToCompleted())
         {
-            _owner.ChangeState(ELidarTargetState.OnCompleted);
             return;
         }
 
-        if (_elapsedTime >= _owner.CurrentQTEDelay)
+        if (_elapsedTime >= Owner.CurrentQTEDelay)
         {
-            _owner.ChangeState(ELidarTargetState.OnPlayQTE);
+            Owner.ChangeState(ELidarTargetState.OnPlayQTE);
         }
     }
 
-    public void OnScanLost()
+    public override void OnScanLost()
     {
-        _owner.ChangeState(ELidarTargetState.OnReturn);
+        Owner.ChangeState(ELidarTargetState.OnReturn);
     }
 }

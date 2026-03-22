@@ -1,25 +1,47 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
+[RequireComponent(typeof(Renderer))]
 public class AllInOneShaderController : MonoBehaviour
 {
-    [SerializeField] private Renderer targetRenderer;
+    [Header("Required References")]
+    [FormerlySerializedAs("targetRenderer")]
+    [SerializeField] private Renderer _targetRenderer;
 
-    private MaterialPropertyBlock materialPropertyBlock;
-    private readonly Dictionary<string, int> propertyIdCache = new Dictionary<string, int>();
+    private MaterialPropertyBlock _materialPropertyBlock;
+    private readonly Dictionary<string, int> _propertyIdCache = new();
 
     public void Init()
     {
-        if (materialPropertyBlock == null)
+        if (_materialPropertyBlock == null)
         {
-            materialPropertyBlock = new MaterialPropertyBlock();
+            _materialPropertyBlock = new MaterialPropertyBlock();
         }
 
-        if (targetRenderer == null)
+        if (_targetRenderer == null)
         {
-            targetRenderer = GetComponent<Renderer>();
+            _targetRenderer = GetComponent<Renderer>();
         }
+    }
+
+    public void SetFloat(string propertyName, float value)
+    {
+        int propertyId = GetPropertyId(propertyName);
+        ApplyPropertyBlock(block => block.SetFloat(propertyId, value));
+    }
+
+    public void SetColor(string propertyName, Color value)
+    {
+        int propertyId = GetPropertyId(propertyName);
+        ApplyPropertyBlock(block => block.SetColor(propertyId, value));
+    }
+
+    public void SetVector(string propertyName, Vector4 value)
+    {
+        int propertyId = GetPropertyId(propertyName);
+        ApplyPropertyBlock(block => block.SetVector(propertyId, value));
     }
 
     private int GetPropertyId(string propertyName)
@@ -29,38 +51,34 @@ public class AllInOneShaderController : MonoBehaviour
             throw new ArgumentException($"[AllInOneController]Property name {propertyName} is not Validate.");
         }
 
-        if (propertyIdCache.TryGetValue(propertyName, out int propertyId))
+        if (_propertyIdCache.TryGetValue(propertyName, out int propertyId))
         {
             return propertyId;
         }
-        
+
         propertyId = Shader.PropertyToID(propertyName);
-        propertyIdCache.Add(propertyName, propertyId);
+        _propertyIdCache.Add(propertyName, propertyId);
         return propertyId;
     }
 
-    public void SetFloat(string propertyName, float value)
+    private void ApplyPropertyBlock(Action<MaterialPropertyBlock> apply)
     {
-        int propertyId = GetPropertyId(propertyName);
-        targetRenderer.GetPropertyBlock(materialPropertyBlock);
-        materialPropertyBlock.SetFloat(propertyId, value);
-        targetRenderer.SetPropertyBlock(materialPropertyBlock);
+        EnsureInitialized();
+        if (_targetRenderer == null)
+        {
+            throw new InvalidOperationException($"[{nameof(AllInOneShaderController)}] Renderer is missing.");
+        }
+
+        _targetRenderer.GetPropertyBlock(_materialPropertyBlock);
+        apply(_materialPropertyBlock);
+        _targetRenderer.SetPropertyBlock(_materialPropertyBlock);
     }
 
-    public void SetColor(string propertyName, Color value)
+    private void EnsureInitialized()
     {
-        int propertyId = GetPropertyId(propertyName);
-        targetRenderer.GetPropertyBlock(materialPropertyBlock);
-        materialPropertyBlock.SetColor(propertyId, value);
-        targetRenderer.SetPropertyBlock(materialPropertyBlock);
+        if (_materialPropertyBlock == null || _targetRenderer == null)
+        {
+            Init();
+        }
     }
-
-    public void SetVector(string propertyName, Vector4 value)
-    {
-        int propertyId = GetPropertyId(propertyName);
-        targetRenderer.GetPropertyBlock(materialPropertyBlock);
-        materialPropertyBlock.SetVector(propertyId, value);
-        targetRenderer.SetPropertyBlock(materialPropertyBlock);
-    }
-    
 }
