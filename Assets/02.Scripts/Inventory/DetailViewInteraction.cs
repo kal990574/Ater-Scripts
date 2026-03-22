@@ -1,28 +1,32 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class DetailViewInteraction : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IScrollHandler, IPointerClickHandler
 {
+    public event Action<bool> OnDragChanged;
+    public event Action<float> OnScrolled;
+    public event Action<Vector2, RectTransform> OnClicked;
     public void OnPointerDown(PointerEventData eventData)
     {
         if (eventData.button != PointerEventData.InputButton.Left) return;
-        ItemViewer.Instance.SetDragging(true);
+        OnDragChanged?.Invoke(true);
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
         if (eventData.button != PointerEventData.InputButton.Left) return;
-        ItemViewer.Instance.SetDragging(false);
+        OnDragChanged?.Invoke(false);
     }
 
     public void OnScroll(PointerEventData eventData)
     {
-        ItemViewer.Instance.Zoom(eventData.scrollDelta.y);
+        OnScrolled?.Invoke(eventData.scrollDelta.y);
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
         if (eventData.button != PointerEventData.InputButton.Left) return;
-        ItemViewer.Instance.TryInteract(eventData.position, GetComponent<RectTransform>());
+        OnClicked?.Invoke(eventData.position, GetComponent<RectTransform>());
     }
 }
