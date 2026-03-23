@@ -3,14 +3,15 @@ using UnityEngine.UI;
 
 public class CircleTimingQTEUI : MonoBehaviour, ITimingQuickTimeEventView
 {
+    private const float MaxProgress = 100f;
+    private const float FullCircleAngle = 360f;
+
+    [Header("Required References")]
     [SerializeField] private Image _successZoneImage;
     [SerializeField] private Image _greatZoneImage;
     [SerializeField] private Transform _judgeZoneTransform;
     [SerializeField] private Transform _needleTransform;
     [SerializeField] private CanvasGroup _canvasGroup;
-
-    private const float MaxProgress = 100f;
-    private const float FullCircleAngle = 360f;
 
     public void Show()
     {

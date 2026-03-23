@@ -1,26 +1,31 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Serialization;
 
 public class QuickTimeEventTester : MonoBehaviour
 {
-    [Header("References")]
+    [Header("Required References")]
     [SerializeField] private CircleTimingQTEUI _timingView;
+    [FormerlySerializedAs("config")]
+    [SerializeField] private TimingQuickTimeEventConfig _config;
 
     [Header("Input")]
     [SerializeField] private KeyCode _submitKey = KeyCode.Space;
     [SerializeField] private KeyCode _startKey = KeyCode.F;
     [SerializeField] private KeyCode _cancelKey = KeyCode.Escape;
 
-    [FormerlySerializedAs("_settings")]
-    [Header("Timing QTE Settings")]
-    [SerializeField] private TimingQuickTimeEventConfig config;
-
     private IQuickTimeEvent _currentEvent;
     private TimingQTERunner _timingEvent;
 
     private void Awake()
     {
-        _timingEvent = new TimingQTERunner(config, _timingView);
+        if (_timingView == null || _config == null)
+        {
+            Debug.LogError($"[{nameof(QuickTimeEventTester)}] Required references are missing.", this);
+            enabled = false;
+            return;
+        }
+
+        _timingEvent = new TimingQTERunner(_config, _timingView);
         _timingEvent.OnEnded += HandleEnded;
     }
 
@@ -34,7 +39,7 @@ public class QuickTimeEventTester : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(_startKey) == true)
+        if (Input.GetKeyDown(_startKey))
         {
             StartTimingQte();
         }
@@ -44,16 +49,16 @@ public class QuickTimeEventTester : MonoBehaviour
             return;
         }
 
-        if (_currentEvent.IsPlaying == true)
+        if (_currentEvent.IsPlaying)
         {
             _currentEvent.Tick(Time.deltaTime);
 
-            if (Input.GetKeyDown(_submitKey) == true)
+            if (Input.GetKeyDown(_submitKey))
             {
                 _currentEvent.Submit();
             }
 
-            if (Input.GetKeyDown(_cancelKey) == true)
+            if (Input.GetKeyDown(_cancelKey))
             {
                 _currentEvent.Cancel();
             }
@@ -62,7 +67,7 @@ public class QuickTimeEventTester : MonoBehaviour
 
     public void StartTimingQte()
     {
-        if (_currentEvent != null && _currentEvent.IsPlaying == true)
+        if (_currentEvent != null && _currentEvent.IsPlaying)
         {
             return;
         }

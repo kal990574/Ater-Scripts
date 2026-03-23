@@ -28,6 +28,11 @@ public class TimingQTERunner : IQuickTimeEvent
 
     public void Begin()
     {
+        if (_config == null)
+        {
+            throw new InvalidOperationException($"[{nameof(TimingQTERunner)}] Config is missing.");
+        }
+
         IsPlaying = true;
         IsFinished = false;
         Result = EQuickTimeEventResult.Default;
@@ -35,15 +40,8 @@ public class TimingQTERunner : IQuickTimeEvent
         _previousNeedleProgress = 0f;
         _needleProgress = 0f;
 
-        _successZoneSizeProgress = UnityEngine.Random.Range(
-            _config.SuccessZoneSizeRange.x,
-            _config.SuccessZoneSizeRange.y
-        );
-
-        _greatZonePercent = UnityEngine.Random.Range(
-            _config.GreatZonePercentRange.x,
-            _config.GreatZonePercentRange.y
-        );
+        _successZoneSizeProgress = UnityEngine.Random.Range(_config.SuccessZoneSizeRange.x, _config.SuccessZoneSizeRange.y);
+        _greatZonePercent = UnityEngine.Random.Range(_config.GreatZonePercentRange.x, _config.GreatZonePercentRange.y);
 
         float maxStartProgress = MaxProgress - _successZoneSizeProgress;
         _successZoneStartProgress = UnityEngine.Random.Range(0f, maxStartProgress);
@@ -75,13 +73,12 @@ public class TimingQTERunner : IQuickTimeEvent
             return;
         }
 
-        EQuickTimeEventResult result = JudgeCurrentNeedleProgress();
-        End(result);
+        End(JudgeCurrentNeedleProgress());
     }
 
     public void Cancel()
     {
-        if (IsPlaying == false && IsFinished == true)
+        if (IsPlaying == false && IsFinished)
         {
             return;
         }
@@ -93,14 +90,13 @@ public class TimingQTERunner : IQuickTimeEvent
     {
         float delta = _config.NeedleSpeedPerSecond * deltaTime;
 
-        if (_config.RotateClockwise == true)
+        if (_config.RotateClockwise)
         {
             _needleProgress += delta;
+            return;
         }
-        else
-        {
-            _needleProgress -= delta;
-        }
+
+        _needleProgress -= delta;
     }
 
     private void CheckMissedSuccessZone()
@@ -108,7 +104,7 @@ public class TimingQTERunner : IQuickTimeEvent
         float successEndProgress = _successZoneStartProgress + _successZoneSizeProgress;
         bool hasPassedSuccessEnd = HasProgressPassed(_previousNeedleProgress, _needleProgress, successEndProgress);
 
-        if (hasPassedSuccessEnd == true)
+        if (hasPassedSuccessEnd)
         {
             End(EQuickTimeEventResult.Fail);
         }
@@ -117,7 +113,6 @@ public class TimingQTERunner : IQuickTimeEvent
     private EQuickTimeEventResult JudgeCurrentNeedleProgress()
     {
         float currentProgress = GetNormalizedProgress(_needleProgress);
-
         float successStart = _successZoneStartProgress;
         float successEnd = _successZoneStartProgress + _successZoneSizeProgress;
 
@@ -128,12 +123,12 @@ public class TimingQTERunner : IQuickTimeEvent
         bool isInSuccess = IsProgressInRange(currentProgress, successStart, successEnd);
         bool isInGreat = IsProgressInRange(currentProgress, greatStart, greatEnd);
 
-        if (isInGreat == true)
+        if (isInGreat)
         {
             return EQuickTimeEventResult.GreatSuccess;
         }
 
-        if (isInSuccess == true)
+        if (isInSuccess)
         {
             return EQuickTimeEventResult.Success;
         }
@@ -143,7 +138,7 @@ public class TimingQTERunner : IQuickTimeEvent
 
     private void End(EQuickTimeEventResult result)
     {
-        if (IsPlaying == false && IsFinished == true)
+        if (IsPlaying == false && IsFinished)
         {
             return;
         }
@@ -172,14 +167,12 @@ public class TimingQTERunner : IQuickTimeEvent
             _successZoneSizeProgress,
             _greatZonePercent,
             _successZoneStartProgress,
-            GetNormalizedProgress(_needleProgress)
-        );
+            GetNormalizedProgress(_needleProgress));
     }
 
     private float GetNormalizedProgress(float progress)
     {
         progress %= MaxProgress;
-
         if (progress < 0f)
         {
             progress += MaxProgress;
@@ -208,7 +201,7 @@ public class TimingQTERunner : IQuickTimeEvent
         float currentNormalized = GetNormalizedProgress(currentProgress);
         float targetNormalized = GetNormalizedProgress(targetProgress);
 
-        if (_config.RotateClockwise == true)
+        if (_config.RotateClockwise)
         {
             if (previousNormalized <= currentNormalized)
             {
