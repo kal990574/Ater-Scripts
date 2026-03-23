@@ -1,7 +1,7 @@
 using _02.Scripts.AIHint.Application.Services;
-using _02.Scripts.AIHint.Domain;
 using _02.Scripts.AIHint.Domain.Models;
-using _02.Scripts.AIHint.Infrastructure;
+using _02.Scripts.Core;
+using _02.Scripts.Core.Domain;
 using _02.Scripts.AIHint.Infrastructure.Naver;
 using _02.Scripts.AIHint.Infrastructure.OpenAI;
 using Cysharp.Threading.Tasks;
@@ -35,7 +35,7 @@ namespace _02.Scripts.AIHint.Presentation
 
         private void Start()
         {
-            _gameStateProvider = new DummyGameStateProvider();
+            _gameStateProvider = ServiceLocator.Get<IGameStateProvider>();
 
             var stt = new ClovaSpeechToText(_naverConfig);
 
@@ -182,7 +182,6 @@ namespace _02.Scripts.AIHint.Presentation
         {
             return new PlayerHintState(
                 _gameStateProvider.CurrentChapter,
-                _gameStateProvider.CurrentRoom,
                 _gameStateProvider.GetInventory(),
                 _gameStateProvider.GetSolvedPuzzles());
         }
