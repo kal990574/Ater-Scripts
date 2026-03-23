@@ -11,6 +11,11 @@ namespace _02.Scripts.Core
             _services[typeof(T)] = service;
         }
 
+        public static void Unregister<T>(T service) where T : class
+        {
+            _services.Remove(typeof(T));
+        }
+
         public static T Get<T>() where T : class
         {
             if (_services.TryGetValue(typeof(T), out var service))

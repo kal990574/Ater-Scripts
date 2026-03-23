@@ -12,7 +12,7 @@ namespace _02.Scripts.Core.Presentation
         private void Awake()
         {
             DontDestroyOnLoad(gameObject);
-            // 실제 챕터 연동
+            // 실제 챕터 연동할 부분
             var chapterSceneMap = new Dictionary<int, string> { { 1, "PlayerScene" } };
             
             var gameManager = new GameManager(chapterSceneMap);
