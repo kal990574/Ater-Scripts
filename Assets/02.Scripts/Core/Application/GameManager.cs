@@ -11,7 +11,7 @@ namespace _02.Scripts.Core.Application
         private readonly Dictionary<int, string> _chapterSceneMap;
 
         public GameState CurrentState { get; private set; } = GameState.Playing;
-        public int CurrentChapter { get; private set; }
+        public int CurrentChapter { get; private set; } = 1;
         
         public event Action<GameState> OnGameStateChanged;
 
