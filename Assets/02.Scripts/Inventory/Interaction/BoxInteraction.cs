@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class BoxInteraction : MonoBehaviour, IInteractable
 {
-    [SerializeField] private GameObject _rewardObject;  // 열쇠 오브젝트 (처음엔 비활성화)
+    [SerializeField] private GameObject _rewardObject;
 
     private bool _isOpened = false;
 
@@ -12,7 +12,6 @@ public class BoxInteraction : MonoBehaviour, IInteractable
 
         _isOpened = true;
 
-        // 상자 열기 → 열쇠 오브젝트 활성화
         _rewardObject.SetActive(true);
 
         Debug.Log("상자 열림");

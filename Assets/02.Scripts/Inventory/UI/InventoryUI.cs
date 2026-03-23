@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class InventoryUI : MonoBehaviour
 {
-    //ItemViewer와 InventoryItmeUIContainer를 관리한다./
+    //ItemViewer와 InventoryItmeUIContainer를 관리한다.
     [SerializeField] private InventoryItemContainerUI _inventoryItemContainer;
     [SerializeField] private ItemViewerUI _itemViewer;
     [SerializeField] private DetailViewInteraction _detailViewInteraction;
@@ -24,7 +24,6 @@ public class InventoryUI : MonoBehaviour
         _detailViewInteraction.OnClicked += _itemViewer.TryInteract;
 
         Refresh();
-        //RestoreSelection();
     }
 
     private void OnDisable()
@@ -68,17 +67,6 @@ public class InventoryUI : MonoBehaviour
     private void HandleSwapRequested(int index1, int index2)
     {
         InventoryManager.Instance.SwapItem(index1, index2);
-
-        int selected = InventoryManager.Instance.SelectedIndex;
-
-        if (selected == -1)
-        {
-            InventoryManager.Instance.SelectItem(index2);
-        }
-        else if (selected == index1 || selected == index2)
-        {
-            InventoryManager.Instance.SelectItem(selected);
-        }
     }
 
     private void HandleSelectionChanged(int index)

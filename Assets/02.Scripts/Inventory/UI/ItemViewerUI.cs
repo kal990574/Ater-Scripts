@@ -6,7 +6,6 @@ using UnityEngine.InputSystem;
 //아이템의 정보 확인 및 / 조사하기 기능
 public class ItemViewerUI : MonoBehaviour
 {
-    //todo : 싱글톤은 매니저만
 
     [SerializeField] private Transform _itemRoot;
     [SerializeField] private Camera _itemViewerCamera;

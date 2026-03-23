@@ -11,8 +11,7 @@ public class InventoryManager : MonoBehaviour
     private List<ItemData> _playerInventory = new List<ItemData>();
     public IReadOnlyList<ItemData> ReadonlyPlayerInventory => _playerInventory;
 
-    // todo : 인벤토리 껐다가 키는 기능
-    private bool IsInventoryUIOn = false;
+    private bool _isInventoryUIOn = false;
 
     private int _selectedIndex = -1;
     public int SelectedIndex => _selectedIndex;
@@ -43,12 +42,6 @@ public class InventoryManager : MonoBehaviour
         AddItem(_table.GetItem(1));
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Tab))
-            ToggleInventory();
-    }
-
     public void ClearSelection()
     {
         _selectedIndex = -1;
@@ -56,8 +49,8 @@ public class InventoryManager : MonoBehaviour
 
     public void ToggleInventory()
     {
-        IsInventoryUIOn = !IsInventoryUIOn;
-        OnInventoryToggled?.Invoke(IsInventoryUIOn);
+        _isInventoryUIOn = !_isInventoryUIOn;
+        OnInventoryToggled?.Invoke(_isInventoryUIOn);
     }
 
     public void SelectItem(int index)
@@ -104,6 +97,16 @@ public class InventoryManager : MonoBehaviour
         var temp = _playerInventory[index1];
         _playerInventory[index1] = _playerInventory[index2];
         _playerInventory[index2] = temp;
+
         OnDataChanged?.Invoke();
+
+        if (_selectedIndex == -1)
+        {
+            SelectItem(index2);
+        }
+        else if (_selectedIndex == index1 || _selectedIndex == index2)
+        {
+            SelectItem(_selectedIndex);
+        }
     }
 }
