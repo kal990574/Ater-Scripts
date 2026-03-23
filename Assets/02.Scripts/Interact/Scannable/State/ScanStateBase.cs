@@ -1,10 +1,10 @@
-public abstract class LidarTargetStateBase : ILidarTargetState
+public abstract class ScanStateBase : IScanState
 {
-    protected readonly LidarTarget Owner;
+    protected readonly ScannableObject Owner;
 
-    public abstract ELidarTargetState StateType { get; }
+    public abstract EScannableState StateType { get; }
 
-    protected LidarTargetStateBase(LidarTarget owner)
+    protected ScanStateBase(ScannableObject owner)
     {
         Owner = owner;
     }

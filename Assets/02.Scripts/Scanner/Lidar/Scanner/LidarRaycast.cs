@@ -3,12 +3,12 @@ using UnityEngine;
 
 public class LidarRaycast
 {
-    private readonly Dictionary<LidarTarget, TargetHitData> _hitMap = new();
+    private readonly Dictionary<ScannableObject, TargetHitData> _hitMap = new();
     private readonly List<LidarRayData> _rayResults = new();
     private readonly LidarScanFeature _scanFeature;
     private readonly LidarScanConfigSO _config;
     
-    public IReadOnlyDictionary<LidarTarget, TargetHitData> HitMap => _hitMap;
+    public IReadOnlyDictionary<ScannableObject, TargetHitData> HitMap => _hitMap;
     public IReadOnlyList<LidarRayData> RayResults => _rayResults;
 
     public LidarRaycast(LidarScanFeature scanFeature)
@@ -83,7 +83,7 @@ public class LidarRaycast
             return;
         }
 
-        LidarTarget target = hit.collider.GetComponentInParent<LidarTarget>();
+        ScannableObject target = hit.collider.GetComponentInParent<ScannableObject>();
 
         if (IsInvalidTarget(target))
         {
@@ -97,7 +97,7 @@ public class LidarRaycast
     }
 
     //LidarTarget이면서 추상화가 되어있는 것
-    private bool IsInvalidTarget(LidarTarget target)
+    private bool IsInvalidTarget(ScannableObject target)
     {
         if (target == null)
         {
@@ -134,7 +134,7 @@ public class LidarRaycast
                 false));
     }
 
-    private void HandleValidTargetHit(Vector3 origin, Vector3 direction, RaycastHit hit, LidarTarget target)
+    private void HandleValidTargetHit(Vector3 origin, Vector3 direction, RaycastHit hit, ScannableObject target)
     {
         _rayResults.Add(
             new LidarRayData(
@@ -147,7 +147,7 @@ public class LidarRaycast
         UpdateTargetHitData(origin, hit, target);
     }
 
-    private void UpdateTargetHitData(Vector3 origin, RaycastHit hit, LidarTarget target)
+    private void UpdateTargetHitData(Vector3 origin, RaycastHit hit, ScannableObject target)
     {
         float distance = Vector3.Distance(origin, hit.point);
 

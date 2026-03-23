@@ -7,7 +7,7 @@ public class LidarScanProgressUI : MonoBehaviour
     [SerializeField] private Slider _slider;
     [SerializeField] private LidarScanFeature scanFeature;
 
-    private LidarTarget _currentTarget;
+    private ScannableObject _currentTarget;
 
     private void Awake()
     {
@@ -39,7 +39,7 @@ public class LidarScanProgressUI : MonoBehaviour
         UnbindCurrentTarget();
     }
 
-    public void SetTarget(LidarTarget target)
+    public void SetTarget(ScannableObject target)
     {
         if (target == null)
         {

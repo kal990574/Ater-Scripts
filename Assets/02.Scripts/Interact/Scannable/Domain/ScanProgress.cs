@@ -1,8 +1,8 @@
 ﻿using System;
 using UnityEngine;
-public class LidarProgress
+public class ScanProgress
 {
-    private readonly LidarProgressSetting _settings;
+    private readonly ScanProgressSetting _settings;
 
     private float _currentProgress;
     private float _progressSinceLastMinigame;
@@ -19,7 +19,7 @@ public class LidarProgress
     public event Action<float> OnProgressChanged;
     public event Action OnActivated;
 
-    public LidarProgress(LidarProgressSetting settings)
+    public ScanProgress(ScanProgressSetting settings)
     {
         _settings = settings;
         Reset();

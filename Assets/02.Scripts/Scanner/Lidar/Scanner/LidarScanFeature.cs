@@ -22,7 +22,7 @@ public class LidarScanFeature : MonoBehaviour
     private LidarEffect _lidarEffect;
     private LidarRaycast _lidarRay;
     
-    public LidarTarget CurrentTarget { get; private set; }
+    public ScannableObject CurrentTarget { get; private set; }
     
     //프로퍼티
     public LidarEffect LidarEffect => _lidarEffect;
@@ -34,7 +34,7 @@ public class LidarScanFeature : MonoBehaviour
     public bool IsOnScan { get; private set; }
 
     //이벤트
-    public event Action<LidarTarget> OnTargetFind;
+    public event Action<ScannableObject> OnTargetFind;
     public event Action OnTargetLost;
     
 
@@ -97,8 +97,8 @@ public class LidarScanFeature : MonoBehaviour
         
         _lidarRay.Scan();
 
-        LidarTarget previousTarget = CurrentTarget;
-        LidarTarget newTarget = ResolveTarget(_lidarRay.HitMap, StartPos, transform.forward);
+        ScannableObject previousTarget = CurrentTarget;
+        ScannableObject newTarget = ResolveTarget(_lidarRay.HitMap, StartPos, transform.forward);
 
         HandleTargetChanged(previousTarget, newTarget);
         CurrentTarget = newTarget;
@@ -111,7 +111,7 @@ public class LidarScanFeature : MonoBehaviour
         LidarEffect.DrawLidarEffect(_lidarRay.RayResults,CurrentTarget);
     }
 
-    private void HandleTargetChanged(LidarTarget previous, LidarTarget current)
+    private void HandleTargetChanged(ScannableObject previous, ScannableObject current)
     {
         if (previous == null && current != null)
         {
@@ -134,18 +134,18 @@ public class LidarScanFeature : MonoBehaviour
         }
     }
 
-    private LidarTarget ResolveTarget(IReadOnlyDictionary<LidarTarget, TargetHitData> hitMap, Vector3 origin, Vector3 forward)
+    private ScannableObject ResolveTarget(IReadOnlyDictionary<ScannableObject, TargetHitData> hitMap, Vector3 origin, Vector3 forward)
     {
-        LidarTarget bestTarget = null;
+        ScannableObject bestTarget = null;
         bool hasBest = false;
 
         int bestHitCount = int.MinValue;
         float bestCenterScore = float.MinValue;
         float bestClosestDistance = float.MaxValue;
 
-        foreach (KeyValuePair<LidarTarget, TargetHitData> pair in hitMap)
+        foreach (KeyValuePair<ScannableObject, TargetHitData> pair in hitMap)
         {
-            LidarTarget candidate = pair.Key;
+            ScannableObject candidate = pair.Key;
             TargetHitData data = pair.Value;
 
             Vector3 toRepresentativePoint = (data.RepresentativePoint - origin).normalized;

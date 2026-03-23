@@ -2,25 +2,25 @@ using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class LidarTarget : MonoBehaviour, IQTEInvoker
+public class ScannableObject : MonoBehaviour, IQTEInvoker
 {
     [Header("Required References")]
-    [SerializeField] private LidarProgressSetting _settings;
+    [SerializeField] private ScanProgressSetting _settings;
 
     [Header("Debug")]
     [SerializeField] private float _currentQTEDelay;
 
-    private LidarProgress _progress;
-    private LidarStateMachine _fsm;
+    private ScanProgress _progress;
+    private ScanStateMachine _fsm;
 
     public float CurrentQTEDelay => _currentQTEDelay;
-    public LidarProgressSetting Settings => _settings;
+    public ScanProgressSetting Settings => _settings;
     public bool IsProgressComplete => _progress != null && _progress.IsActivated;
     public bool CanInteract => _progress != null && _progress.CanInteract;
     public float CurrentProgress => _progress != null ? _progress.CurrentProgress : 0.0f;
     public float RequiredProgress => _progress != null ? _progress.RequiredProgress : 0.0f;
     public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
-    public ELidarTargetState State => _fsm.CurrentStateType;
+    public EScannableState State => _fsm.CurrentStateType;
 
     public event Action<float> OnProgressChanged;
     public event Action OnScanComplete;
@@ -58,7 +58,7 @@ public class LidarTarget : MonoBehaviour, IQTEInvoker
     {
         if (_settings == null)
         {
-            Debug.LogError($"[{nameof(LidarTarget)}] {nameof(LidarProgressSetting)} is missing.", this);
+            Debug.LogError($"[{nameof(ScannableObject)}] {nameof(ScanProgressSetting)} is missing.", this);
             enabled = false;
             return;
         }
@@ -69,13 +69,13 @@ public class LidarTarget : MonoBehaviour, IQTEInvoker
             _progress.OnActivated -= HandleActivated;
         }
 
-        _progress = new LidarProgress(_settings);
+        _progress = new ScanProgress(_settings);
         _progress.OnProgressChanged += HandleProgressChanged;
         _progress.OnActivated += HandleActivated;
 
         SetQTEDelay();
-        _fsm = new LidarStateMachine(this);
-        ChangeState(ELidarTargetState.Default, true);
+        _fsm = new ScanStateMachine(this);
+        ChangeState(EScannableState.Default, true);
     }
 
     [ContextMenu("Reset")]
@@ -88,7 +88,7 @@ public class LidarTarget : MonoBehaviour, IQTEInvoker
 
         _progress?.Reset();
         SetQTEDelay();
-        ChangeState(ELidarTargetState.Default, true);
+        ChangeState(EScannableState.Default, true);
     }
 
     public void OnScanning(float deltaTime)
@@ -111,12 +111,12 @@ public class LidarTarget : MonoBehaviour, IQTEInvoker
         _fsm.OnScanLost();
     }
 
-    public void ChangeState(ELidarTargetState nextState, bool force = false)
+    public void ChangeState(EScannableState nextState, bool force = false)
     {
         _fsm.ChangeState(nextState, force);
     }
 
-    public void ChangeState(ELidarTargetState nextState)
+    public void ChangeState(EScannableState nextState)
     {
         ChangeState(nextState, false);
     }
@@ -150,7 +150,7 @@ public class LidarTarget : MonoBehaviour, IQTEInvoker
     public void HandleQteFailure()
     {
         ReduceProgress(_settings.FailPenalty);
-        ChangeState(CurrentProgress <= 0.0f ? ELidarTargetState.Default : ELidarTargetState.OnReturn);
+        ChangeState(CurrentProgress <= 0.0f ? EScannableState.Default : EScannableState.OnReturn);
     }
 
     public bool TryTransitToCompleted()
@@ -160,20 +160,20 @@ public class LidarTarget : MonoBehaviour, IQTEInvoker
             return false;
         }
 
-        ChangeState(ELidarTargetState.OnCompleted);
+        ChangeState(EScannableState.OnCompleted);
         return true;
     }
 
     public void TransitToProgressOrCompleted()
     {
-        ChangeState(IsProgressComplete ? ELidarTargetState.OnCompleted : ELidarTargetState.OnProgress);
+        ChangeState(IsProgressComplete ? EScannableState.OnCompleted : EScannableState.OnProgress);
     }
 
     public void TransitToDefaultIfEmpty()
     {
         if (CurrentProgress <= 0.0f)
         {
-            ChangeState(ELidarTargetState.Default);
+            ChangeState(EScannableState.Default);
         }
     }
 

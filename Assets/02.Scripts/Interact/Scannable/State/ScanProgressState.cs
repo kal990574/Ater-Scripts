@@ -1,10 +1,10 @@
-public class LidarProgressState : LidarTargetStateBase
+public class ScanProgressState : ScanStateBase
 {
     private float _elapsedTime;
 
-    public override ELidarTargetState StateType => ELidarTargetState.OnProgress;
+    public override EScannableState StateType => EScannableState.OnProgress;
 
-    public LidarProgressState(LidarTarget owner) : base(owner)
+    public ScanProgressState(ScannableObject owner) : base(owner)
     {
     }
 
@@ -25,12 +25,12 @@ public class LidarProgressState : LidarTargetStateBase
 
         if (_elapsedTime >= Owner.CurrentQTEDelay)
         {
-            Owner.ChangeState(ELidarTargetState.OnPlayQTE);
+            Owner.ChangeState(EScannableState.OnPlayQTE);
         }
     }
 
     public override void OnScanLost()
     {
-        Owner.ChangeState(ELidarTargetState.OnReturn);
+        Owner.ChangeState(EScannableState.OnReturn);
     }
 }

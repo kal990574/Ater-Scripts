@@ -1,4 +1,4 @@
-﻿public enum ELidarTargetState
+﻿public enum EScannableState
 {
     Default,        //스캔중이지 않으며 진행도가 0인상태
     OnProgress,     //현재 스캔중인 상태 진행도 증가

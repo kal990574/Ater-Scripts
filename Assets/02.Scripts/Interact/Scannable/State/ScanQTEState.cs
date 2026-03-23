@@ -1,11 +1,11 @@
-public class LidarQTEState : LidarTargetStateBase
+public class ScanQTEState : ScanStateBase
 {
     private bool _hasResult;
     private EQuickTimeEventResult _result;
 
-    public override ELidarTargetState StateType => ELidarTargetState.OnPlayQTE;
+    public override EScannableState StateType => EScannableState.OnPlayQTE;
 
-    public LidarQTEState(LidarTarget owner) : base(owner)
+    public ScanQTEState(ScannableObject owner) : base(owner)
     {
     }
 
@@ -16,14 +16,14 @@ public class LidarQTEState : LidarTargetStateBase
 
         if (QTEManager.Instance == null)
         {
-            Owner.ChangeState(ELidarTargetState.OnProgress);
+            Owner.ChangeState(EScannableState.OnProgress);
             return;
         }
 
         bool started = QTEManager.Instance.TryPlay(Owner, HandleQTEResult);
         if (started == false)
         {
-            Owner.ChangeState(ELidarTargetState.OnProgress);
+            Owner.ChangeState(EScannableState.OnProgress);
         }
     }
 
@@ -67,7 +67,7 @@ public class LidarQTEState : LidarTargetStateBase
         switch (_result)
         {
             case EQuickTimeEventResult.Default:
-                Owner.ChangeState(ELidarTargetState.OnProgress);
+                Owner.ChangeState(EScannableState.OnProgress);
                 break;
             case EQuickTimeEventResult.Fail:
                 Owner.HandleQteFailure();

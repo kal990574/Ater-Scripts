@@ -1,6 +1,6 @@
-﻿public interface ILidarTargetState
+﻿public interface IScanState
 {
-    ELidarTargetState StateType { get; }
+    EScannableState StateType { get; }
 
     void Enter();
     void Exit();

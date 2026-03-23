@@ -3,9 +3,16 @@ using UnityEngine;
 
 public class InteractTargetShaderModifier : MonoBehaviour
 {
+    public const string TEXTURE_BLENDING_CUTOFF_NAME = "_BlendingMaskCutoffWhite";
+    public const string OUTLINE_COLOR_NAME = "_OutlineColor";
+    public const string OUTLINE_THICKNESS_NAME = "_OutlineThickness";
+    public const string GLITCH_AMOUNT_NAME = "_GlitchAmount";
+    public const string DISTORTION_AMOUNT_NAME = "_VertexDistortionAmount";
+    public const string HIT_BLEND_NAME = "_HitBlend";
+    
     [Header("Required References")]
     [SerializeField] private AllInOneShaderController _shaderPropertyController;
-    [SerializeField] private LidarTarget _target;
+    [SerializeField] private ScannableObject _target;
     [SerializeField] private InteractTargetShaderConfig _config;
 
     [Header("Debug")]
@@ -48,7 +55,7 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
         if (_target == null)
         {
-            _target = GetComponentInParent<LidarTarget>();
+            _target = GetComponentInParent<ScannableObject>();
         }
     }
 
@@ -172,28 +179,28 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void SetOutlineColor(Color value)
     {
-        _shaderPropertyController.SetColor(_config.OutlineColorName, value);
+        _shaderPropertyController.SetColor(OUTLINE_COLOR_NAME, value);
     }
 
     private void SetBlendCutOffRatio(float value)
     {
-        _shaderPropertyController.SetFloat(_config.TextureBlendingCutoffName, value);
+        _shaderPropertyController.SetFloat(TEXTURE_BLENDING_CUTOFF_NAME, value);
     }
 
     private void SetGlitchAmount(float ratio)
     {
         float glitchAmount = _config.GlitchAmountPower * ratio;
-        _shaderPropertyController.SetFloat(_config.GlitchAmountName, glitchAmount);
+        _shaderPropertyController.SetFloat(GLITCH_AMOUNT_NAME, glitchAmount);
     }
 
     private void SetDistortionAmount(float ratio)
     {
         float distortionAmount = _config.DistortionAmountPower * ratio;
-        _shaderPropertyController.SetFloat(_config.DistortionAmountName, distortionAmount);
+        _shaderPropertyController.SetFloat(DISTORTION_AMOUNT_NAME, distortionAmount);
     }
 
     private void SetHitBlend(float value)
     {
-        _shaderPropertyController.SetFloat(_config.HitBlendName, value);
+        _shaderPropertyController.SetFloat(HIT_BLEND_NAME, value);
     }
 }
