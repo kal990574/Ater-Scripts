@@ -14,11 +14,15 @@ public class InventoryManager : MonoBehaviour
     // todo : 인벤토리 껐다가 키는 기능
     private bool IsInventoryUIOn = false;
 
+    private int _selectedIndex = -1;
+    public int SelectedIndex => _selectedIndex;
+
     public int Count => _playerInventory.Count;
 
     public event Action<bool> OnInventoryToggled;
 
     public event Action OnDataChanged;
+    public event Action<int> OnSelectionChanged;
 
 
 
@@ -45,10 +49,22 @@ public class InventoryManager : MonoBehaviour
             ToggleInventory();
     }
 
+    public void ClearSelection()
+    {
+        _selectedIndex = -1;
+    }
+
     public void ToggleInventory()
     {
         IsInventoryUIOn = !IsInventoryUIOn;
         OnInventoryToggled?.Invoke(IsInventoryUIOn);
+    }
+
+    public void SelectItem(int index)
+    {
+        if (index < 0 || index >= _playerInventory.Count) return;
+        _selectedIndex = index;
+        OnSelectionChanged?.Invoke(index);
     }
 
     public bool AddItem(ItemData item)

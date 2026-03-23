@@ -9,10 +9,7 @@ public class InventoryItemContainerUI : MonoBehaviour
     [SerializeField] private Transform _slotContainer;
     [SerializeField] private Canvas _canvas;
 
-
-    private InventorySlotUI _selectedSlotUI;
-
-    public event Action<ItemData> OnSlotClicked;
+    public event Action<int> OnSlotClicked;
     public event Action<int, int> OnSwapRequested;
 
 
@@ -32,8 +29,6 @@ public class InventoryItemContainerUI : MonoBehaviour
             obj.transform.SetParent(null); // 즉시 _slotContainer 계층에서 제거
         }
 
-        _selectedSlotUI = null;
-
         // 새 슬롯 생성 (_slotContainer에는 새 슬롯만 존재)
         for (int i = 0; i < items.Count; i++)
         {
@@ -51,36 +46,27 @@ public class InventoryItemContainerUI : MonoBehaviour
         }
     }
 
+    public void SelectSlotAt(int index)
+    {
+        for (int i = 0; i < _slotContainer.childCount; i++)
+        {
+            _slotContainer.GetChild(i).GetComponent<InventorySlotUI>().Deselect();
+        }
+
+        if (index < 0 || index >= _slotContainer.childCount) return;
+
+        InventorySlotUI slotUI = _slotContainer.GetChild(index).GetComponent<InventorySlotUI>();
+        if (slotUI == null) return;
+        slotUI.Select();
+    }
+
     private void HandleSlotClicked(InventorySlotUI slotUI)
     {
-        if(_selectedSlotUI != null)
-        {
-            _selectedSlotUI.Deselect();
-        }
-        _selectedSlotUI = slotUI;
-        _selectedSlotUI.Select();
-
-        OnSlotClicked?.Invoke(slotUI.ItemData);
+        OnSlotClicked?.Invoke(slotUI.Index);
     }
 
     private void HandleSlotDropped(InventorySlotUI dragged, InventorySlotUI target)
     {
         OnSwapRequested?.Invoke(dragged.Index, target.Index);
-    }
-
-
-    public void SelectSlotAt(int index)
-    {
-        InventorySlotUI slotUI = _slotContainer.GetChild(index).GetComponent<InventorySlotUI>();
-
-        if (slotUI == null) return;
-
-        if (_selectedSlotUI != null)
-        {
-            _selectedSlotUI.Deselect();
-        }
-
-        _selectedSlotUI = slotUI;
-        _selectedSlotUI.Select();
     }
 }

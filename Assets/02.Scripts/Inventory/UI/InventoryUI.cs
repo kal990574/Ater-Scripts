@@ -16,6 +16,7 @@ public class InventoryUI : MonoBehaviour
     private void OnEnable()
     {
         InventoryManager.Instance.OnDataChanged += Refresh;
+        InventoryManager.Instance.OnSelectionChanged += HandleSelectionChanged;
         _inventoryItemContainer.OnSlotClicked += HandleSlotClicked;
         _inventoryItemContainer.OnSwapRequested += HandleSwapRequested;
         _detailViewInteraction.OnDragChanged += _itemViewer.SetDragging;
@@ -23,38 +24,73 @@ public class InventoryUI : MonoBehaviour
         _detailViewInteraction.OnClicked += _itemViewer.TryInteract;
 
         Refresh();
+        //RestoreSelection();
     }
 
     private void OnDisable()
     {
         InventoryManager.Instance.OnDataChanged -= Refresh;
+        InventoryManager.Instance.OnSelectionChanged -= HandleSelectionChanged;
         _inventoryItemContainer.OnSlotClicked -= HandleSlotClicked;
         _inventoryItemContainer.OnSwapRequested -= HandleSwapRequested;
         _detailViewInteraction.OnDragChanged -= _itemViewer.SetDragging;
         _detailViewInteraction.OnScrolled -= _itemViewer.Zoom;
         _detailViewInteraction.OnClicked -= _itemViewer.TryInteract;
+
+        InventoryManager.Instance.ClearSelection();
     }
 
     public void Refresh()
     {
         _inventoryItemContainer.Refresh(InventoryManager.Instance.ReadonlyPlayerInventory);
+        RestoreSelection();
     }
 
-    private void HandleSlotClicked(ItemData itemData)
+    private void RestoreSelection()
     {
-        _itemViewer.ShowItem(itemData);
+        int index = InventoryManager.Instance.SelectedIndex;
+
+        if (index < 0) return;
+
+        if (index >= InventoryManager.Instance.ReadonlyPlayerInventory.Count) return;
+
+        _inventoryItemContainer.SelectSlotAt(index);
+        _itemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
+    }
+
+
+
+    private void HandleSlotClicked(int index)
+    {
+        InventoryManager.Instance.SelectItem(index);
     }
 
     private void HandleSwapRequested(int index1, int index2)
     {
         InventoryManager.Instance.SwapItem(index1, index2);
-        _inventoryItemContainer.SelectSlotAt(index2);
-        _itemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index2]);
+
+        int selected = InventoryManager.Instance.SelectedIndex;
+
+        if (selected == -1)
+        {
+            InventoryManager.Instance.SelectItem(index2);
+        }
+        else if (selected == index1 || selected == index2)
+        {
+            InventoryManager.Instance.SelectItem(selected);
+        }
+    }
+
+    private void HandleSelectionChanged(int index)
+    {
+        _inventoryItemContainer.SelectSlotAt(index);
+        _itemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
     }
 
     private void OnDestroy()
     {
         InventoryManager.Instance.OnInventoryToggled -= SetInventoryActive;
+
     }
 
     private void SetInventoryActive(bool isOn)
