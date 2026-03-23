@@ -17,6 +17,8 @@ public class ItemViewerUI : MonoBehaviour
     [SerializeField] private float _minZoom = 100f;
     [SerializeField] private float _maxZoom = 500f;
 
+    private Vector3 _initialCameraLocalPosition;
+
     private GameObject _currentItem;
 
     private bool _isDragging;
@@ -25,6 +27,7 @@ public class ItemViewerUI : MonoBehaviour
 
     private void Start()
     {
+        _initialCameraLocalPosition = _itemViewerCamera.transform.localPosition;
         _itemViewerCamera.transform.LookAt(_itemRoot);
     }
 
@@ -57,10 +60,7 @@ public class ItemViewerUI : MonoBehaviour
             _currentItem.SetActive(false);
 
         _itemRoot.rotation = Quaternion.identity;
-
-        //Vector3 pos = _itemViewerCamera.transform.localPosition;
-        //pos.z = -(_minZoom + _maxZoom) / 2f;
-        //_itemViewerCamera.transform.localPosition = pos;
+        _itemViewerCamera.transform.localPosition = _initialCameraLocalPosition;
 
         _currentItem = GetOrCreate(itemData);
         _descriptionText.text = itemData.Description;
