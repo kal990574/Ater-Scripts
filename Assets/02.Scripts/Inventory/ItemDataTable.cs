@@ -1,14 +1,18 @@
 using NUnit.Framework;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "ItemDataTable", menuName = "Inventory/ItemDataTable")]
 public class ItemDataTable : ScriptableObject
 {
-    public List<ItemData> ItemDatas = new();
+    [SerializeField]private List<ItemData> _itemDatas = new();
 
-    public ItemData GetItem(string itemId)
+    public ItemData GetItem(int itemId)
     {
-        return ItemDatas.Find(item => item.ItemId == itemId);
+        ItemData origin = _itemDatas.Find(item => item.ItemId == itemId);
+        if (origin == null) return null;
+
+        return origin.Clone();
     }
 }
