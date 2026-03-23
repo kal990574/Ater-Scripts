@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class ScannableObject : MonoBehaviour
+public class ScannableObject : MonoBehaviour,IScannable
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
@@ -12,7 +12,6 @@ public class ScannableObject : MonoBehaviour
     public ScanProgressSetting Settings => _settings;
     public bool IsProgressComplete => _progress != null && _progress.IsActivated;
     public float CurrentProgress => _progress != null ? _progress.CurrentProgress : 0.0f;
-    public float RequiredProgress => _progress != null ? _progress.RequiredProgress : 0.0f;
     public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
     public EScannableState State => _fsm.CurrentStateType;
 
@@ -29,7 +28,7 @@ public class ScannableObject : MonoBehaviour
         if (_progress != null)
         {
             _progress.OnProgressChanged -= HandleProgressChanged;
-            _progress.OnActivated -= HandleActivated;
+            _progress.OnActivated -= OnScanCompleted;
         }
     }
 
@@ -55,12 +54,12 @@ public class ScannableObject : MonoBehaviour
         if (_progress != null)
         {
             _progress.OnProgressChanged -= HandleProgressChanged;
-            _progress.OnActivated -= HandleActivated;
+            _progress.OnActivated -= OnScanCompleted;
         }
 
         _progress = new ScanProgress(_settings);
         _progress.OnProgressChanged += HandleProgressChanged;
-        _progress.OnActivated += HandleActivated;
+        _progress.OnActivated += OnScanCompleted;
 
         _fsm = new ScanStateMachine(this);
         ChangeState(EScannableState.Default, true);
@@ -73,6 +72,11 @@ public class ScannableObject : MonoBehaviour
         ChangeState(EScannableState.Default, true);
     }
 
+    public void OnScanStarted()
+    {
+        OnScanComplete?.Invoke();
+    }
+
     public void OnScanning(float deltaTime)
     {
         if (IsProgressComplete)
@@ -83,14 +87,19 @@ public class ScannableObject : MonoBehaviour
         _fsm.OnScanning(deltaTime);
     }
 
-    public void OnScanLost()
+    public void OnScanStopped()
     {
         if (IsProgressComplete)
         {
             return;
         }
 
-        _fsm.OnScanLost();
+        _fsm.OnScanStopped();
+    }
+   
+    public void OnScanCompleted()
+    {
+        OnScanComplete?.Invoke();
     }
 
     public void ChangeState(EScannableState nextState, bool force = false)
@@ -102,7 +111,8 @@ public class ScannableObject : MonoBehaviour
     {
         ChangeState(nextState, false);
     }
-
+    
+    
     public void AddProgress(float amount)
     {
         _progress.Add(amount);
@@ -111,6 +121,11 @@ public class ScannableObject : MonoBehaviour
     public void ReduceProgress(float amount)
     {
         _progress.Reduce(amount);
+    }
+    
+    private void HandleProgressChanged(float ratio)
+    {
+        OnProgressChanged?.Invoke(ratio);
     }
 
     public void ReduceProgressByReturn(float deltaTime)
@@ -146,15 +161,5 @@ public class ScannableObject : MonoBehaviour
         }
 
         ChangeState(EScannableState.OnHold);
-    }
-
-    private void HandleProgressChanged(float ratio)
-    {
-        OnProgressChanged?.Invoke(ratio);
-    }
-
-    private void HandleActivated()
-    {
-        OnScanComplete?.Invoke();
     }
 }

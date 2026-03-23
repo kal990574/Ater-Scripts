@@ -50,7 +50,7 @@ public class ScanStateMachine
         _currentState?.OnScanning(deltaTime);
     }
 
-    public void OnScanLost()
+    public void OnScanStopped()
     {
         _currentState?.OnScanLost();
     }
