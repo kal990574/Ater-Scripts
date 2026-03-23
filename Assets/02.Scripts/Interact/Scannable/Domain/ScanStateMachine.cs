@@ -17,7 +17,7 @@ public class ScanStateMachine
             { EScannableState.Default, () => new ScanDefaultState(owner) },
             { EScannableState.OnProgress, () => new ScanProgressState(owner) },
             { EScannableState.OnReturn, () => new ScanReturnState(owner) },
-            { EScannableState.OnPlayQTE, () => new ScanQTEState(owner) },
+            { EScannableState.OnHold, () => new ScanHoldState(owner) },
             { EScannableState.OnCompleted, () => new ScanCompleteState(owner) }
         };
     }
@@ -59,7 +59,7 @@ public class ScanStateMachine
     {
         if (_stateFactories.TryGetValue(stateType, out Func<IScanState> factory) == false)
         {
-            throw new Exception("[LidarFSM] 작성하지 않은 스테이트");
+            throw new Exception("[LidarFSM] Invalid state.");
         }
 
         return factory();

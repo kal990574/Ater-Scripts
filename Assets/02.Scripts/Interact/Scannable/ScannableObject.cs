@@ -1,22 +1,16 @@
 using System;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
-public class ScannableObject : MonoBehaviour, IQTEInvoker
+public class ScannableObject : MonoBehaviour
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
 
-    [Header("Debug")]
-    [SerializeField] private float _currentQTEDelay;
-
     private ScanProgress _progress;
     private ScanStateMachine _fsm;
 
-    public float CurrentQTEDelay => _currentQTEDelay;
     public ScanProgressSetting Settings => _settings;
     public bool IsProgressComplete => _progress != null && _progress.IsActivated;
-    public bool CanInteract => _progress != null && _progress.CanInteract;
     public float CurrentProgress => _progress != null ? _progress.CurrentProgress : 0.0f;
     public float RequiredProgress => _progress != null ? _progress.RequiredProgress : 0.0f;
     public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
@@ -36,11 +30,6 @@ public class ScannableObject : MonoBehaviour, IQTEInvoker
         {
             _progress.OnProgressChanged -= HandleProgressChanged;
             _progress.OnActivated -= HandleActivated;
-        }
-
-        if (QTEManager.Instance != null)
-        {
-            QTEManager.Instance.CancelByOwner(this);
         }
     }
 
@@ -73,7 +62,6 @@ public class ScannableObject : MonoBehaviour, IQTEInvoker
         _progress.OnProgressChanged += HandleProgressChanged;
         _progress.OnActivated += HandleActivated;
 
-        SetQTEDelay();
         _fsm = new ScanStateMachine(this);
         ChangeState(EScannableState.Default, true);
     }
@@ -81,13 +69,7 @@ public class ScannableObject : MonoBehaviour, IQTEInvoker
     [ContextMenu("Reset")]
     public void ResetAll()
     {
-        if (QTEManager.Instance != null)
-        {
-            QTEManager.Instance.CancelByOwner(this);
-        }
-
         _progress?.Reset();
-        SetQTEDelay();
         ChangeState(EScannableState.Default, true);
     }
 
@@ -134,23 +116,15 @@ public class ScannableObject : MonoBehaviour, IQTEInvoker
     public void ReduceProgressByReturn(float deltaTime)
     {
         _progress.Reduce(_settings.ReturnSpeed * deltaTime);
-        TransitToDefaultIfEmpty();
+        if (CurrentProgress <= 0.0f)
+        {
+            ChangeState(EScannableState.Default);
+        }
     }
 
     public void ApplyScanProgress(float deltaTime)
     {
         AddProgress(deltaTime);
-    }
-
-    public void ApplyGreatSuccessBonus()
-    {
-        AddProgress(_settings.GreatSuccessBonus);
-    }
-
-    public void HandleQteFailure()
-    {
-        ReduceProgress(_settings.FailPenalty);
-        ChangeState(CurrentProgress <= 0.0f ? EScannableState.Default : EScannableState.OnReturn);
     }
 
     public bool TryTransitToCompleted()
@@ -164,22 +138,14 @@ public class ScannableObject : MonoBehaviour, IQTEInvoker
         return true;
     }
 
-    public void TransitToProgressOrCompleted()
+    public void PauseScanning()
     {
-        ChangeState(IsProgressComplete ? EScannableState.OnCompleted : EScannableState.OnProgress);
-    }
-
-    public void TransitToDefaultIfEmpty()
-    {
-        if (CurrentProgress <= 0.0f)
+        if (IsProgressComplete)
         {
-            ChangeState(EScannableState.Default);
+            return;
         }
-    }
 
-    public void SetQTEDelay()
-    {
-        _currentQTEDelay = Random.Range(_settings.MinMinigameInterval, _settings.MaxMinigameInterval);
+        ChangeState(EScannableState.OnHold);
     }
 
     private void HandleProgressChanged(float ratio)
