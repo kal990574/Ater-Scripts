@@ -63,7 +63,7 @@ public class LidarScanFeature : MonoBehaviour
             bool shouldNotifyScanLost = _qte == null || _qte.HandleStop(CurrentTarget);
             if (shouldNotifyScanLost)
             {
-                CurrentTarget.OnScanLost();
+                CurrentTarget.OnScanStopped();
             }
 
             CurrentTarget = null;
@@ -122,7 +122,7 @@ public class LidarScanFeature : MonoBehaviour
             OnTargetLost?.Invoke();
             if (shouldNotifyScanLost)
             {
-                previous.OnScanLost();
+                previous.OnScanStopped();
             }
 
             OnTargetFind?.Invoke(current);
@@ -134,7 +134,7 @@ public class LidarScanFeature : MonoBehaviour
             OnTargetLost?.Invoke();
             if (shouldNotifyScanLost)
             {
-                previous.OnScanLost();
+                previous.OnScanStopped();
             }
         }
     }
