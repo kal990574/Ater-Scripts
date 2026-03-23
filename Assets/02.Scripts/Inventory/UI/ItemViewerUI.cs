@@ -130,4 +130,13 @@ public class ItemViewerUI : MonoBehaviour
             _currentItem.SetActive(false);
         }
     }
+
+    public void Hide()
+    {
+        if (_currentItem != null)
+        {
+            _currentItem.SetActive(false);
+        }
+        _descriptionText.text = string.Empty;
+    }
 }

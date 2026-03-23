@@ -71,6 +71,12 @@ public class InventoryUI : MonoBehaviour
 
     private void HandleSelectionChanged(int index)
     {
+        if(index < 0)
+        {
+            _itemViewer.Hide();
+            return;
+        }
+
         _inventoryItemContainer.SelectSlotAt(index);
         _itemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
     }

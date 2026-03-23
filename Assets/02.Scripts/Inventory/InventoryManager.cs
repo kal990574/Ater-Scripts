@@ -72,14 +72,26 @@ public class InventoryManager : MonoBehaviour
     }
 
     //인벤토리 인덱스로 삭제한다
-    public bool RemoveItem(int number)
+    public void RemoveItem(int index)
     {
-        if (number < 0 || number >= _playerInventory.Count)
-            return false;
+        _playerInventory.RemoveAt(index);
 
-        _playerInventory.RemoveAt(number);
+        if (_playerInventory.Count == 0)
+        {
+            _selectedIndex = -1;
+        }
+
+        else if (_selectedIndex > index)
+        {
+            _selectedIndex--;
+        }
+        else if (_selectedIndex >= _playerInventory.Count)
+        {
+            _selectedIndex = _playerInventory.Count - 1;
+        }
+
         OnDataChanged?.Invoke();
-        return true;
+        OnSelectionChanged?.Invoke(_selectedIndex);
     }
 
     public bool HasItem(int itemId)
