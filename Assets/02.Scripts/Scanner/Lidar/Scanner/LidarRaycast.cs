@@ -1,20 +1,20 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LidarRaycast : MonoBehaviour
+public class LidarRaycast
 {
-    //타겟 감지용
     private readonly Dictionary<LidarTarget, TargetHitData> _hitMap = new();
-    //레이 연출용
     private readonly List<LidarRayData> _rayResults = new();
-    [SerializeField]private LidarScanFeature _scanFeature;
+    private readonly LidarScanFeature _scanFeature;
+    private readonly LidarScanConfigSO _config;
     
     public IReadOnlyDictionary<LidarTarget, TargetHitData> HitMap => _hitMap;
     public IReadOnlyList<LidarRayData> RayResults => _rayResults;
 
-    public void Init(LidarScanFeature scanFeature)
+    public LidarRaycast(LidarScanFeature scanFeature)
     {
         _scanFeature = scanFeature;
+        _config =  scanFeature.Config;
     }
     
     public void Scan()
@@ -42,18 +42,18 @@ public class LidarRaycast : MonoBehaviour
     //주어진 설정으로 레이의 발사 방향 저장
     public IEnumerable<Vector3> EnumerateRayDirections()
     {
-        Quaternion rotation = transform.rotation;
+        Quaternion rotation = _scanFeature.transform.rotation;
 
         yield return rotation * Vector3.forward;
 
-        for (int ringIndex = 1; ringIndex <= _scanFeature.RingCount; ringIndex++)
+        for (int ringIndex = 1; ringIndex <= _config.RingCount; ringIndex++)
         {
-            float ringT = (float)ringIndex / _scanFeature.RingCount;
-            float currentAngle = _scanFeature.ConeAngle * ringT;
+            float ringT = (float)ringIndex / _config.RingCount;
+            float currentAngle = _config.ConeAngle * ringT;
 
-            for (int rayIndex = 0; rayIndex < _scanFeature.RaysPerRing; rayIndex++)
+            for (int rayIndex = 0; rayIndex < _config.RaysPerRing; rayIndex++)
             {
-                float yaw = (360.0f / _scanFeature.RaysPerRing) * rayIndex;
+                float yaw = (360.0f / _config.RaysPerRing) * rayIndex;
                 Vector3 direction = GetConeDirection(rotation, currentAngle, yaw);
                 yield return direction;
             }
@@ -74,7 +74,7 @@ public class LidarRaycast : MonoBehaviour
     private void CastRay(Vector3 origin, Vector3 direction)
     {
         bool isHit = Physics.Raycast(origin, direction, out RaycastHit hit,
-            _scanFeature.RayDistance, _scanFeature.HitMask, QueryTriggerInteraction.Ignore);
+            _config.RayDistance, _config.HitMask, QueryTriggerInteraction.Ignore);
 
         if (isHit == false)
         {
@@ -118,8 +118,8 @@ public class LidarRaycast : MonoBehaviour
             new LidarRayData(
                 direction,
                 false,
-                origin + direction * _scanFeature.RayDistance,
-                _scanFeature.RayDistance,
+                origin + direction * _config.RayDistance,
+                _config.RayDistance,
                 false));
     }
 

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace _02.Scripts.Sonar
 {
-    [CreateAssetMenu(fileName = "SonarScanConfig",  menuName = "Ater/Sonar/SonarScanConfig")]
+    [CreateAssetMenu(fileName = "SonarScanConfig",  menuName = "Ater/Scanner/SonarScanConfig")]
     public class SonarScanConfig : ScriptableObject
     {
         [SerializeField] private float _scanRadius = 15f;

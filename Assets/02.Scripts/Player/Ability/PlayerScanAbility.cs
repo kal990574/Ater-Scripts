@@ -4,28 +4,25 @@ using System;
 using UnityEngine;
 
 //소나와 라이더 스캔 관장
-public class PlayerScanner : MonoBehaviour
+public class PlayerScanAbility : PlayerAbility
 {
-    private IPlayerInput _input;
-    
     [SerializeField] private LidarScanFeature _lidarScanFeature;
     [SerializeField] private SonarScanFeature _sonarScanFeature;
-
-    private void Awake()
+    private IPlayerInput _input;
+    private void Start()
     {
-        _input = GetComponentInParent<IPlayerInput>();
-        if (_input == null)
-        {
-            Debug.LogError($"[{nameof(LidarScanFeature)}] {nameof(IPlayerInput)} not found.", this);
-            enabled = false;
-        }
-        
+        _input = _owner.Input;
         _lidarScanFeature.Initialize();
         _sonarScanFeature.Initialize();
     }
 
     private void Update()
     {
+        if (_owner.InteractMode != PlayerInteractMode.Scan)
+        {
+            return;
+        }
+
         //소나
         if (_input.RmbPressInput)
         {

@@ -2,38 +2,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class LidarEffect : MonoBehaviour
+public class LidarEffect
 {
-    [Header("Required References")]
-    [SerializeField] private LidarScanFeature _scanFeature;
-    [SerializeField] private Transform _shootTransform;
-    [SerializeField] private LineRenderer _lineRenderer;
+    private readonly LidarScanFeature _scanFeature;
+    private readonly Transform _muzzle;
+    private readonly LineRenderer _lineRenderer;
+    private readonly LidarScanConfigSO _config;
     
-
-    [Header("Settings")]
-    [Min(0f)]
-    [SerializeField] private float _drawDelay = 0.5f;
-
-    [Header("Debug")]
-    [SerializeField] private float _lastDrawTime = -999.0f;
-
     private readonly List<Collider> _colliders = new();
-
-    public void Init(LidarScanFeature scanFeature)
+    private float _lastDrawTime = -999.0f;
+    
+    public LidarEffect(LidarScanFeature scanFeature)
     {
         _scanFeature = scanFeature;
+        _muzzle = scanFeature.Muzzle;
+        _lineRenderer = scanFeature.LineRenderer;
+        _config = scanFeature.Config;
         
-        if (_shootTransform == null && _scanFeature != null)
-        {
-            _shootTransform = _scanFeature.ShootPoint;
-        }
-
-        if (_lineRenderer != null)
-        {
-            _lineRenderer.useWorldSpace = true;
-            _lineRenderer.positionCount = 2;
-        }
-
+        Debug.Log($"LineRenderer Object: {_lineRenderer.gameObject.name}", _lineRenderer);
+        Debug.Log($"Instance ID: {_lineRenderer.GetInstanceID()}", _lineRenderer);
         ClearLine();
     }
 
@@ -62,12 +49,12 @@ public class LidarEffect : MonoBehaviour
 
     private bool CanDrawEffect()
     {
-        if (_shootTransform == null || _lineRenderer == null)
+        if (_muzzle == null || _lineRenderer == null)
         {
             return false;
         }
 
-        if (Time.time < _lastDrawTime + _drawDelay)
+        if (Time.time < _lastDrawTime + _config.DrawDelay)
         {
             return false;
         }
@@ -79,7 +66,7 @@ public class LidarEffect : MonoBehaviour
     {
         Vector3 targetPoint = GetPointOnTargetSurface(target);
         SetLineColor(Color.green);
-        SetLine(_shootTransform.position, targetPoint);
+        SetLine(_muzzle.position, targetPoint);
     }
 
     private void DrawRaycastLine(IReadOnlyList<LidarRayData> rayDatas)
@@ -92,14 +79,15 @@ public class LidarEffect : MonoBehaviour
 
         LidarRayData rayData = rayDatas[Random.Range(0, rayDatas.Count)];
         SetLineColor(Color.red);
-        SetLine(_shootTransform.position, rayData.EndPoint);
+        SetLine(_muzzle.position, rayData.EndPoint);
+        Debug.Log(rayData.EndPoint.ToString());
     }
 
     private Vector3 GetPointOnTargetSurface(LidarTarget target)
     {
         if (target == null)
         {
-            return _shootTransform != null ? _shootTransform.position : Vector3.zero;
+            return _muzzle != null ? _muzzle.position : Vector3.zero;
         }
 
         _colliders.Clear();
@@ -115,7 +103,7 @@ public class LidarEffect : MonoBehaviour
                 return sampledPoint;
             }
 
-            return targetCollider.ClosestPoint(_shootTransform.position);
+            return targetCollider.ClosestPoint(_muzzle.position);
         }
 
         return target.transform.position;
@@ -149,24 +137,47 @@ public class LidarEffect : MonoBehaviour
 
     private void SetLine(Vector3 startPoint, Vector3 endPoint)
     {
-        _lineRenderer.SetPosition(0, startPoint);
-        _lineRenderer.SetPosition(1, endPoint);
-    }
-
-    private void ClearLine()
-    {
-        if (_lineRenderer == null || _shootTransform == null)
+        if (_lineRenderer == null)
         {
             return;
         }
 
-        Vector3 origin = _shootTransform.position;
-        SetLine(origin, origin);
+        _lineRenderer.enabled = true;
+        _lineRenderer.SetPosition(0, startPoint);
+        _lineRenderer.SetPosition(1, endPoint);
+        
+        Debug.Log($"drawLine : startPoint : {startPoint}, endPoint : {endPoint}");
+    }
+
+    private void ClearLine()
+    {
+        if (_lineRenderer == null)
+        {
+            return;
+        }
+
+        _lineRenderer.enabled = false;
+
+        if (_muzzle == null)
+        {
+            return;
+        }
+
+        Vector3 origin = _muzzle.position;
+        _lineRenderer.SetPosition(0, origin);
+        _lineRenderer.SetPosition(1, origin);
     }
 
     private void SetLineColor(Color color)
     {
+        if (_lineRenderer == null)
+        {
+            return;
+        }
+
         _lineRenderer.startColor = color;
         _lineRenderer.endColor = color;
+        
+        
     }
 }

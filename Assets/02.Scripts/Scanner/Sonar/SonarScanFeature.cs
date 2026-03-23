@@ -5,11 +5,13 @@ namespace _02.Scripts.Sonar
 {
     public class SonarScanFeature : MonoBehaviour
     {
+        [Header("References")]
         [SerializeField] private SonarScanConfig _config;
         [SerializeField] private SonarCameraFeedback _cameraFeedback;
         [SerializeField] private Transform _cameraTarget;
         [SerializeField] private SonarScanEffect _effect;
         
+       
         private float _cooldownTimer;
         
         public bool IsReady => _cooldownTimer <= 0f;
@@ -17,6 +19,12 @@ namespace _02.Scripts.Sonar
 
         public void Initialize()
         {
+            if (_config == null)
+            {
+                Debug.LogError($"[{nameof(SonarScanFeature)}] Sonar Config is Missing.", this);
+                return;
+            }
+            
             if (TryGetComponent(out SonarScanEffect effect))
             {
                 _effect = effect;

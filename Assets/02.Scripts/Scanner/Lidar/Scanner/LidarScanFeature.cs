@@ -1,65 +1,66 @@
-using _02.Scripts.Player;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-[DisallowMultipleComponent]
+
 public class LidarScanFeature : MonoBehaviour
 {
     [Header("Required References")]
-    [SerializeField] private Transform _rayOrigin;
-    [SerializeField] private Transform _shootPoint;
-    [SerializeField] private LidarConfig _config;
+    [SerializeField] private LidarScanConfigSO _config;
     
-    [SerializeField] private LidarEffect _lidarEffect;
-    [SerializeField] private LidarRaycast _lidarRay;
+    [SerializeField] private Transform _rayOrigin;
+    [SerializeField] private Transform muzzle;
+    [SerializeField] private LineRenderer _lineRenderer;
+
+    
+    
 
     [Header("Optional Settings")]
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
     
-
+    //캐싱
+    private LidarEffect _lidarEffect;
+    private LidarRaycast _lidarRay;
+    
     public LidarTarget CurrentTarget { get; private set; }
-    public Vector3 StartPos => _rayOrigin.position + _originOffset;
-    public Transform ShootPoint => _shootPoint;
+    
+    //프로퍼티
+    public LidarEffect LidarEffect => _lidarEffect;
+    public LidarRaycast LidarRay => _lidarRay;
+    public LidarScanConfigSO Config => _config;
+    public Vector3 StartPos => _rayOrigin.position + _originOffset; //레이가 시작하는 위치
+    public Transform Muzzle => muzzle;                              //총구위치
+    public LineRenderer LineRenderer => _lineRenderer;              //라인 렌더러
     public bool IsOnScan { get; private set; }
-    public float RayDistance => _config.RayDistance;
-    public float ConeAngle => _config.ConeAngle;
-    public int RingCount => _config.RingCount;
-    public int RaysPerRing => _config.RaysPerRing;
-    public LayerMask HitMask => _config.HitMask;
 
+    //이벤트
     public event Action<LidarTarget> OnTargetFind;
     public event Action OnTargetLost;
     
 
     public void Initialize()
     {
-        if (_rayOrigin == null || _shootPoint == null || _config == null)
+        if (_config == null)
         {
-            Debug.LogError($"[{nameof(LidarScanFeature)}] Required references are missing.", this);
-            enabled = false;
+            Debug.LogError($"[{nameof(LidarScanFeature)}] Lidar Config is Missing.", this);
+            return;
         }
 
-        if (TryGetComponent(out LidarEffect lidarEffect))
-        {
-            _lidarEffect = lidarEffect;
-            _lidarEffect.Init(this);
-        }
-        else
-        {
-            Debug.LogError($"[Lidar] Missing Reference : LidarEffect");
-        }
         
-        if (TryGetComponent(out LidarRaycast lidarRay))
+        if (_lineRenderer == null)
         {
-            _lidarRay = lidarRay;
-            _lidarRay.Init(this);
+            Debug.LogError($"[{nameof(LidarEffect)}] LineRenderer reference is missing.");
+            return;
         }
-        else
-        {
-            Debug.LogError($"[Lidar] Missing Reference : LidarRaycast");
-        }
+        Debug.Log($"LineRenderer Object: {_lineRenderer.gameObject.name}", _lineRenderer);
+        Debug.Log($"Instance ID: {_lineRenderer.GetInstanceID()}", _lineRenderer);
+        _lineRenderer.useWorldSpace = true;
+        _lineRenderer.positionCount = 2;
+        _lineRenderer.enabled = false;
+        
+        _lidarRay = new(this);
+        _lidarEffect = new(this);
+            
     }
     
     public void StopScan()
@@ -72,11 +73,11 @@ public class LidarScanFeature : MonoBehaviour
         }
 
         _lidarRay.ClearScanResults();
-        _lidarEffect.ResetLine();
+        LidarEffect.ResetLine();
         IsOnScan = false;
     }
 
-    //이것도 여기있으면 안됨. 
+    //이것도 여기있으면 안됨. 나중에 수정할것
     public void SubmitCurrentQte()
     {
         if (QTEManager.Instance == null)
@@ -107,7 +108,7 @@ public class LidarScanFeature : MonoBehaviour
             CurrentTarget.OnScanning(deltaTime);
         }
         
-        _lidarEffect.DrawLidarEffect(_lidarRay.RayResults,CurrentTarget);
+        LidarEffect.DrawLidarEffect(_lidarRay.RayResults,CurrentTarget);
     }
 
     private void HandleTargetChanged(LidarTarget previous, LidarTarget current)

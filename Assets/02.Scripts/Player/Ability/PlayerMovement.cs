@@ -3,24 +3,28 @@ using UnityEngine;
 namespace _02.Scripts.Player
 {
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerMovement : MonoBehaviour
+    public class PlayerMovement : PlayerAbility
     {
-        [SerializeField] private float _moveSpeed = 3.5f;
-        [SerializeField] [Range(0f, 1f)] private float _backwardSpeedMultiplier = 0.5f;
-        [SerializeField] private float _gravity = -9.81f;
-        
         private CharacterController _controller;
         private IPlayerInput _input;
+        private PlayerConfigSO _config;
         private float _verticalVelocity;
 
         private void Start()
         {
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<IPlayerInput>();
+            
+            _config = _owner.Config;
         }
 
         private void Update()
         {
+            if (!_owner.CanMove)
+            {
+                return;
+            }
+            
             ApplyGravity();
             Move();
         }
@@ -31,7 +35,7 @@ namespace _02.Scripts.Player
             {
                 _verticalVelocity = -2f;
             }
-            _verticalVelocity += _gravity * Time.deltaTime;
+            _verticalVelocity += _config.Gravity * Time.deltaTime;
         }
 
         private void Move()
@@ -39,7 +43,7 @@ namespace _02.Scripts.Player
             Vector2 input = _input.MoveInput;
             Vector3 moveDirection = transform.right * input.x + transform.forward * input.y;
             
-            float speed = input.y < 0f ? _moveSpeed * _backwardSpeedMultiplier : _moveSpeed;
+            float speed = input.y < 0f ? _config.MoveSpeed *  _config.BackwardSpeedMultiplier :  _config.MoveSpeed;
 
             Vector3 velocity = moveDirection * speed;
             velocity.y = _verticalVelocity;
