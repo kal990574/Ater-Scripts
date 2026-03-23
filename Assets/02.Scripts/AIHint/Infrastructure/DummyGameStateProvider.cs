@@ -1,4 +1,4 @@
-using _02.Scripts.AIHint.Domain;
+using _02.Scripts.Core.Domain;
 using System.Collections.Generic;
 
 namespace _02.Scripts.AIHint.Infrastructure

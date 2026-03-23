@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace _02.Scripts.AIHint.Domain
+namespace _02.Scripts.Core.Domain
 {
     public interface IGameStateProvider
     {

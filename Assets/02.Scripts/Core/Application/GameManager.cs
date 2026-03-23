@@ -1,6 +1,5 @@
-using _02.Scripts.Core.Domain;
-using System;                                                                                                                                                                  
-using System.Collections.Generic;                                                                                                                                              
+using System;
+using System.Collections.Generic;
 using _02.Scripts.Core.Domain;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -33,6 +32,8 @@ namespace _02.Scripts.Core.Application
         public void PauseGame()
         {
             if (CurrentState != GameState.Playing) return;
+
+            CurrentState = GameState.Paused;
             Time.timeScale = 0f;
             OnGameStateChanged?.Invoke(GameState.Paused);
         }
