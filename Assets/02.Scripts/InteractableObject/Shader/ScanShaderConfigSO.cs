@@ -2,15 +2,9 @@ using DG.Tweening;
 using System;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ShaderConfig", menuName = "Ater/Interact/ShaderConfig")]
-public class InteractTargetShaderConfig : ScriptableObject
+[CreateAssetMenu(fileName = "ShaderConfig", menuName = "Ater/Shader/Scan")]
+public class ScanShaderConfigSO : ScriptableObject
 {
-    [Header("Outline")]
-    [ColorUsage(true, true)] public Color AbstractOutlineColor = Color.white;
-    [ColorUsage(true, true)] public Color OnHoverOutlineColor = Color.white;
-    [ColorUsage(true, true)] public Color OnSonarCheckedOutlineColor = Color.white;
-    [Min(0f)] public float OutlineThickPower = 2f;
-    
     [Header("Glitch")]
     public bool ActiveGlitch;
     [Min(0f)] public float GlitchAmountPower = 0.1f;

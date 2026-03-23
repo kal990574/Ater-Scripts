@@ -9,12 +9,12 @@ public class InteractTargetShaderModifier : MonoBehaviour
     public const string GLITCH_AMOUNT_NAME = "_GlitchAmount";
     public const string DISTORTION_AMOUNT_NAME = "_VertexDistortionAmount";
     public const string HIT_BLEND_NAME = "_HitBlend";
-    
     [Header("Required References")]
     [SerializeField] private AllInOneShaderController _shaderPropertyController;
     [SerializeField] private ScannableObject _target;
-    [SerializeField] private InteractTargetShaderConfig _config;
-
+    [SerializeField] private ScanShaderConfigSO _scanConfig;
+    [SerializeField] private OutlineShaderConfigSO _oultineConfig;
+    
     [Header("Debug")]
     [SerializeField] private float _currentHitBlend;
 
@@ -25,11 +25,11 @@ public class InteractTargetShaderModifier : MonoBehaviour
         CacheReferences();
         InitializeShaderController();
 
-        if (enabled == false || _config == null)
+        if (enabled == false || _scanConfig == null)
         {
-            if (_config == null)
+            if (_scanConfig == null)
             {
-                Debug.LogError($"[{nameof(InteractTargetShaderModifier)}] {nameof(InteractTargetShaderConfig)} is missing.", this);
+                Debug.LogError($"[{nameof(InteractTargetShaderModifier)}] {nameof(ScanShaderConfigSO)} is missing.", this);
             }
 
             enabled = false;
@@ -73,7 +73,8 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void ApplyInitialShaderState()
     {
-        SetOutlineColor(_config.AbstractOutlineColor);
+        SetOutlineColor(_oultineConfig.AbstractOutlineColor);
+        SetOutlineThickness(false);
         ApplyProgressState(0.0f);
         SetHitBlend(0.0f);
     }
@@ -119,12 +120,12 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void UpdateOptionalEffects(float inverseRatio)
     {
-        if (_config.ActiveGlitch)
+        if (_scanConfig.ActiveGlitch)
         {
             SetGlitchAmount(inverseRatio);
         }
 
-        if (_config.ActiveDistortion)
+        if (_scanConfig.ActiveDistortion)
         {
             SetDistortionAmount(inverseRatio);
         }
@@ -132,7 +133,7 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void UpdateOutlineColor(float ratio)
     {
-        Color outlineColor = Color.Lerp(_config.AbstractOutlineColor, _config.OnHoverOutlineColor, ratio);
+        Color outlineColor = Color.Lerp(_oultineConfig.AbstractOutlineColor, _oultineConfig.OnHoverOutlineColor, ratio);
         SetOutlineColor(outlineColor);
     }
 
@@ -141,8 +142,8 @@ public class InteractTargetShaderModifier : MonoBehaviour
         KillHitBlendTween();
 
         Sequence sequence = DOTween.Sequence();
-        sequence.Append(CreateHitBlendTween(_config.HitBlendPeak, _config.HitBlendDuration).SetEase(_config.HitBlendUpEase));
-        sequence.Append(CreateHitBlendTween(0.0f, _config.HitBlendDownDuration).SetEase(_config.HitBlendDownEase));
+        sequence.Append(CreateHitBlendTween(_scanConfig.HitBlendPeak, _scanConfig.HitBlendDuration).SetEase(_scanConfig.HitBlendUpEase));
+        sequence.Append(CreateHitBlendTween(0.0f, _scanConfig.HitBlendDownDuration).SetEase(_scanConfig.HitBlendDownEase));
         sequence.SetLink(gameObject, LinkBehaviour.KillOnDisable);
         sequence.OnKill(() => _hitBlendTween = null);
 
@@ -189,18 +190,23 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void SetGlitchAmount(float ratio)
     {
-        float glitchAmount = _config.GlitchAmountPower * ratio;
+        float glitchAmount = _scanConfig.GlitchAmountPower * ratio;
         _shaderPropertyController.SetFloat(GLITCH_AMOUNT_NAME, glitchAmount);
     }
 
     private void SetDistortionAmount(float ratio)
     {
-        float distortionAmount = _config.DistortionAmountPower * ratio;
+        float distortionAmount = _scanConfig.DistortionAmountPower * ratio;
         _shaderPropertyController.SetFloat(DISTORTION_AMOUNT_NAME, distortionAmount);
     }
 
     private void SetHitBlend(float value)
     {
         _shaderPropertyController.SetFloat(HIT_BLEND_NAME, value);
+    }
+
+    public void SetOutlineThickness(bool show)
+    {
+        _shaderPropertyController.SetOutlineEnabled(show);
     }
 }

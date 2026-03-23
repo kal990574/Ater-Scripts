@@ -4,7 +4,7 @@ using UnityEngine;
 
 //인풋을 통해 상호작용
 //호버, 얻기, 사용하기, 놓기
-public class PlayerInteractAbility : PlayerAbility
+public class PlayerInventoryAbility : PlayerAbility
 {
     private IPlayerInput _input;
     

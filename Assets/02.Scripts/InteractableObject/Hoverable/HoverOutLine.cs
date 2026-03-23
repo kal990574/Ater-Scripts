@@ -1,12 +1,17 @@
-public class HoverOutLine : IHoverable
+using UnityEngine;
+public class HoverOutLine : MonoBehaviour, IHoverable
 {
+    [SerializeField] private InteractTargetShaderModifier _shaderPropertyController;
+    
+    [ContextMenu("hover")]
     public void OnHoverEnter()
     {
-        throw new System.NotImplementedException();
+        _shaderPropertyController.SetOutlineThickness(true);
     }
 
+    [ContextMenu("unhover")]
     public void OnHoverExit()
     {
-        throw new System.NotImplementedException();
+        _shaderPropertyController.SetOutlineThickness(false);
     }
 }

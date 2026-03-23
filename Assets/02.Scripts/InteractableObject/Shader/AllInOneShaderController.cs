@@ -6,8 +6,13 @@ using UnityEngine.Serialization;
 [RequireComponent(typeof(Renderer))]
 public class AllInOneShaderController : MonoBehaviour
 {
+    private const string OUTLINE_TYPE_PROPERTY_NAME = "_OutlineType";
+    private const string OUTLINE_TYPE_NONE_KEYWORD = "_OUTLINETYPE_NONE";
+    private const string OUTLINE_TYPE_SIMPLE_KEYWORD = "_OUTLINETYPE_SIMPLE";
+    private const string OUTLINE_TYPE_CONSTANT_KEYWORD = "_OUTLINETYPE_CONSTANT";
+    private const string OUTLINE_TYPE_FADE_WITH_DISTANCE_KEYWORD = "_OUTLINETYPE_FADEWITHDISTANCE";
+
     [Header("Required References")]
-    [FormerlySerializedAs("targetRenderer")]
     [SerializeField] private Renderer _targetRenderer;
 
     private MaterialPropertyBlock _materialPropertyBlock;
@@ -42,6 +47,35 @@ public class AllInOneShaderController : MonoBehaviour
     {
         int propertyId = GetPropertyId(propertyName);
         ApplyPropertyBlock(block => block.SetVector(propertyId, value));
+    }
+
+    public void SetOutlineEnabled(bool enabled)
+    {
+        EnsureInitialized();
+        if (_targetRenderer == null)
+        {
+            throw new InvalidOperationException($"[{nameof(AllInOneShaderController)}] Renderer is missing.");
+        }
+
+        Material[] materials = _targetRenderer.materials;
+        float outlineType = enabled ? 1.0f : 0.0f;
+        string enabledKeyword = enabled ? OUTLINE_TYPE_SIMPLE_KEYWORD : OUTLINE_TYPE_NONE_KEYWORD;
+        string disabledKeyword = enabled ? OUTLINE_TYPE_NONE_KEYWORD : OUTLINE_TYPE_SIMPLE_KEYWORD;
+
+        for (int i = 0; i < materials.Length; i++)
+        {
+            Material material = materials[i];
+            if (material == null || material.HasProperty(OUTLINE_TYPE_PROPERTY_NAME) == false)
+            {
+                continue;
+            }
+
+            material.SetFloat(OUTLINE_TYPE_PROPERTY_NAME, outlineType);
+            material.DisableKeyword(disabledKeyword);
+            material.DisableKeyword(OUTLINE_TYPE_CONSTANT_KEYWORD);
+            material.DisableKeyword(OUTLINE_TYPE_FADE_WITH_DISTANCE_KEYWORD);
+            material.EnableKeyword(enabledKeyword);
+        }
     }
 
     private int GetPropertyId(string propertyName)
