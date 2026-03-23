@@ -5,8 +5,8 @@ using UnityEngine;
 public class LidarRayDebug : MonoBehaviour
 {
     [Header("Required References")]
-    [SerializeField] private LidarController _controller;
-    [SerializeField] private LidarRaycastAbility _raycastAbility;
+    [SerializeField] private LidarScanFeature scanFeature;
+    [SerializeField] private LidarRaycast raycast;
 
     [Header("Debug")]
     [SerializeField] private bool _activateDebug;
@@ -20,10 +20,10 @@ public class LidarRayDebug : MonoBehaviour
             return;
         }
 
-        Vector3 origin = _controller.StartPos;
-        if (Application.isPlaying == false || _controller.IsOnScan == false)
+        Vector3 origin = scanFeature.StartPos;
+        if (Application.isPlaying == false || scanFeature.IsOnScan == false)
         {
-            _raycastAbility.Scan();
+            raycast.Scan();
         }
 
         DrawRayResultsInPlayMode(origin);
@@ -32,12 +32,12 @@ public class LidarRayDebug : MonoBehaviour
 
     private bool CanDraw()
     {
-        return _controller != null && _raycastAbility != null;
+        return scanFeature != null && raycast != null;
     }
 
     private void DrawRayResultsInPlayMode(Vector3 origin)
     {
-        IReadOnlyList<LidarRayData> rayResults = _raycastAbility.RayResults;
+        IReadOnlyList<LidarRayData> rayResults = raycast.RayResults;
         if (rayResults == null || rayResults.Count == 0)
         {
             return;
@@ -66,7 +66,7 @@ public class LidarRayDebug : MonoBehaviour
 
     private void DrawConeOutline(Vector3 origin)
     {
-        int outlineSegments = Mathf.Max(12, _controller.RaysPerRing);
+        int outlineSegments = Mathf.Max(12, scanFeature.RaysPerRing);
         Gizmos.color = Color.cyan;
 
         Vector3 previousPoint = Vector3.zero;
@@ -74,7 +74,7 @@ public class LidarRayDebug : MonoBehaviour
 
         foreach (Vector3 direction in EnumerateOutlineDirections(outlineSegments))
         {
-            Vector3 point = origin + direction * _controller.RayDistance;
+            Vector3 point = origin + direction * scanFeature.RayDistance;
 
             if (hasPreviousPoint)
             {
@@ -94,7 +94,7 @@ public class LidarRayDebug : MonoBehaviour
         for (int segmentIndex = 0; segmentIndex <= segmentCount; segmentIndex++)
         {
             float yaw = (360.0f / segmentCount) * segmentIndex;
-            Vector3 direction = _raycastAbility.GetConeDirection(rotation, _controller.ConeAngle, yaw);
+            Vector3 direction = raycast.GetConeDirection(rotation, scanFeature.ConeAngle, yaw);
             yield return direction;
         }
     }

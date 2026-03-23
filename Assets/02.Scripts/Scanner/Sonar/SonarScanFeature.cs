@@ -3,34 +3,30 @@ using _02.Scripts.Player;
 
 namespace _02.Scripts.Sonar
 {
-    public class SonarScanner : MonoBehaviour
+    public class SonarScanFeature : MonoBehaviour
     {
         [SerializeField] private SonarScanConfig _config;
-        [SerializeField] private SonarScanEffect _effect;
         [SerializeField] private SonarCameraFeedback _cameraFeedback;
         [SerializeField] private Transform _cameraTarget;
-
-        private IPlayerInput _input;
+        [SerializeField] private SonarScanEffect _effect;
+        
         private float _cooldownTimer;
         
         public bool IsReady => _cooldownTimer <= 0f;
         public float CooldownProgress => _cooldownTimer > 0f ? 1f - (_cooldownTimer / _config.Cooldown) : 1f;
 
-        private void Start()
+        public void Initialize()
         {
-            _input = GetComponentInParent<IPlayerInput>();
-        }
-
-        private void Update()
-        {
-            UpdateCoolDown();
-            if (_input.RmbPressInput)
+            if (TryGetComponent(out SonarScanEffect effect))
             {
-                TryScan();
+                _effect = effect;
+                _effect.Init(_config);
             }
+            _cooldownTimer = 0;
         }
-
-        private void UpdateCoolDown()
+        
+        
+        public void UpdateCoolDown()
         {
             if (_cooldownTimer > 0f)
             {
@@ -38,7 +34,7 @@ namespace _02.Scripts.Sonar
             }
         }
 
-        private void TryScan()
+        public void TryScan()
         {
             if (!IsReady) return;
             if (_effect.IsScanning) return;

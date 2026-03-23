@@ -5,19 +5,19 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
-public class LidarController : MonoBehaviour
+public class LidarScanFeature : MonoBehaviour
 {
     [Header("Required References")]
     [SerializeField] private Transform _rayOrigin;
     [SerializeField] private Transform _shootPoint;
-    [FormerlySerializedAs("config")]
     [SerializeField] private LidarConfig _config;
+    
+    [SerializeField] private LidarEffect _lidarEffect;
+    [SerializeField] private LidarRaycast _lidarRay;
 
     [Header("Optional Settings")]
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
-
-    private readonly Dictionary<Type, LidarAbility> _abilities = new();
-    private IPlayerInput _input;
+    
 
     public LidarTarget CurrentTarget { get; private set; }
     public Vector3 StartPos => _rayOrigin.position + _originOffset;
@@ -31,44 +31,37 @@ public class LidarController : MonoBehaviour
 
     public event Action<LidarTarget> OnTargetFind;
     public event Action OnTargetLost;
+    
 
-    private void Awake()
+    public void Initialize()
     {
         if (_rayOrigin == null || _shootPoint == null || _config == null)
         {
-            Debug.LogError($"[{nameof(LidarController)}] Required references are missing.", this);
-            enabled = false;
-            return;
-        }
-
-        _input = GetComponentInParent<IPlayerInput>();
-        if (_input == null)
-        {
-            Debug.LogError($"[{nameof(LidarController)}] {nameof(IPlayerInput)} not found.", this);
+            Debug.LogError($"[{nameof(LidarScanFeature)}] Required references are missing.", this);
             enabled = false;
         }
+
+        if (TryGetComponent(out LidarEffect lidarEffect))
+        {
+            _lidarEffect = lidarEffect;
+            _lidarEffect.Init(this);
+        }
+        else
+        {
+            Debug.LogError($"[Lidar] Missing Reference : LidarEffect");
+        }
+        
+        if (TryGetComponent(out LidarRaycast lidarRay))
+        {
+            _lidarRay = lidarRay;
+            _lidarRay.Init(this);
+        }
+        else
+        {
+            Debug.LogError($"[Lidar] Missing Reference : LidarRaycast");
+        }
     }
-
-    private void Update()
-    {
-        if (_input.LmbPressInput)
-        {
-            UpdateScan(Time.deltaTime);
-            IsOnScan = true;
-        }
-
-        if (_input.InteractInput)
-        {
-            SubmitCurrentQte();
-        }
-
-        if (_input.LmbReleaseInput)
-        {
-            StopScan();
-            IsOnScan = false;
-        }
-    }
-
+    
     public void StopScan()
     {
         if (CurrentTarget != null)
@@ -78,30 +71,13 @@ public class LidarController : MonoBehaviour
             CurrentTarget = null;
         }
 
-        GetAbility<LidarRaycastAbility>().ClearScanResults();
-        GetAbility<LidarEffectAbility>().ResetLine();
+        _lidarRay.ClearScanResults();
+        _lidarEffect.ResetLine();
+        IsOnScan = false;
     }
 
-    public T GetAbility<T>() where T : LidarAbility
-    {
-        Type type = typeof(T);
-
-        if (_abilities.TryGetValue(type, out LidarAbility ability))
-        {
-            return ability as T;
-        }
-
-        ability = GetComponentInChildren<T>();
-        if (ability != null)
-        {
-            _abilities[type] = ability;
-            return ability as T;
-        }
-
-        throw new Exception($"[LidarController] Ability {type.Name} not found on {gameObject.name}.");
-    }
-
-    private static void SubmitCurrentQte()
+    //이것도 여기있으면 안됨. 
+    public void SubmitCurrentQte()
     {
         if (QTEManager.Instance == null)
         {
@@ -111,13 +87,17 @@ public class LidarController : MonoBehaviour
         QTEManager.Instance.SubmitCurrent();
     }
 
-    private void UpdateScan(float deltaTime)
+    public void UpdateScan(float deltaTime)
     {
-        LidarRaycastAbility raycastAbility = GetAbility<LidarRaycastAbility>();
-        raycastAbility.Scan();
+        if (!IsOnScan)
+        {
+            IsOnScan = true;
+        }
+        
+        _lidarRay.Scan();
 
         LidarTarget previousTarget = CurrentTarget;
-        LidarTarget newTarget = ResolveTarget(raycastAbility.HitMap, StartPos, transform.forward);
+        LidarTarget newTarget = ResolveTarget(_lidarRay.HitMap, StartPos, transform.forward);
 
         HandleTargetChanged(previousTarget, newTarget);
         CurrentTarget = newTarget;
@@ -126,8 +106,8 @@ public class LidarController : MonoBehaviour
         {
             CurrentTarget.OnScanning(deltaTime);
         }
-
-        GetAbility<LidarEffectAbility>().DrawLidarEffect(CurrentTarget);
+        
+        _lidarEffect.DrawLidarEffect(_lidarRay.RayResults,CurrentTarget);
     }
 
     private void HandleTargetChanged(LidarTarget previous, LidarTarget current)

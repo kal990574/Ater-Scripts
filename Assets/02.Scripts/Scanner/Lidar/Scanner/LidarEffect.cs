@@ -2,14 +2,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class LidarEffectAbility : LidarAbility
+public class LidarEffect : MonoBehaviour
 {
     [Header("Required References")]
+    [SerializeField] private LidarScanFeature _scanFeature;
     [SerializeField] private Transform _shootTransform;
     [SerializeField] private LineRenderer _lineRenderer;
-
-    [Header("Optional References")]
-    [SerializeField] private LidarRaycastAbility _raycastAbility;
+    
 
     [Header("Settings")]
     [Min(0f)]
@@ -20,18 +19,13 @@ public class LidarEffectAbility : LidarAbility
 
     private readonly List<Collider> _colliders = new();
 
-    protected override void Awake()
+    public void Init(LidarScanFeature scanFeature)
     {
-        base.Awake();
-
-        if (_shootTransform == null && _controller != null)
+        _scanFeature = scanFeature;
+        
+        if (_shootTransform == null && _scanFeature != null)
         {
-            _shootTransform = _controller.ShootPoint;
-        }
-
-        if (_raycastAbility == null && _controller != null)
-        {
-            _raycastAbility = _controller.GetAbility<LidarRaycastAbility>();
+            _shootTransform = _scanFeature.ShootPoint;
         }
 
         if (_lineRenderer != null)
@@ -43,7 +37,7 @@ public class LidarEffectAbility : LidarAbility
         ClearLine();
     }
 
-    public void DrawLidarEffect(LidarTarget target)
+    public void DrawLidarEffect(IReadOnlyList<LidarRayData> rayDatas, LidarTarget target)
     {
         if (CanDrawEffect() == false)
         {
@@ -58,7 +52,7 @@ public class LidarEffectAbility : LidarAbility
             return;
         }
 
-        DrawRaycastLine();
+        DrawRaycastLine(rayDatas);
     }
 
     public void ResetLine()
@@ -88,15 +82,15 @@ public class LidarEffectAbility : LidarAbility
         SetLine(_shootTransform.position, targetPoint);
     }
 
-    private void DrawRaycastLine()
+    private void DrawRaycastLine(IReadOnlyList<LidarRayData> rayDatas)
     {
-        if (_raycastAbility == null || _raycastAbility.RayResults.Count == 0)
+        if (rayDatas == null || rayDatas.Count == 0)
         {
             ResetLine();
             return;
         }
 
-        LidarRayData rayData = _raycastAbility.RayResults[Random.Range(0, _raycastAbility.RayResults.Count)];
+        LidarRayData rayData = rayDatas[Random.Range(0, rayDatas.Count)];
         SetLineColor(Color.red);
         SetLine(_shootTransform.position, rayData.EndPoint);
     }

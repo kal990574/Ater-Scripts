@@ -1,13 +1,13 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.Rendering;
 
 namespace _02.Scripts.Sonar
 {
     public class SonarScanEffect : MonoBehaviour
     {
-        [SerializeField] private SonarScanConfig _config;
         [SerializeField] private Material _scanMaterial;
-
+        
         [SerializeField] private float _ringWidth = 2f;
         [SerializeField] private Color _scanColor = new(0.4f, 0.7f, 1.0f, 1.0f);
         [SerializeField] private float _edgeThreshold = 0.1f;
@@ -30,6 +30,8 @@ namespace _02.Scripts.Sonar
         private static readonly int _ringFillIntensityId = Shader.PropertyToID("_RingFillIntensity");
         private static readonly int _ringOpacityId = Shader.PropertyToID("_RingOpacity");
 
+        
+        private SonarScanConfig _config;
         private float _currentRadius;
         private float _trailFadeRadius;
         private float _ringOpacity;
@@ -37,8 +39,22 @@ namespace _02.Scripts.Sonar
         private Vector3 _scanOrigin;
         private Vector3 _scanDirection;
         private Coroutine _scanCoroutine;
-
         public bool IsScanning => _isScanning;
+
+        public void Init(SonarScanConfig config = null)
+        {
+            if (config != null)
+            {
+                _config = config;
+            }
+
+            _currentRadius = 0f;
+            _trailFadeRadius = 0f;
+            _ringOpacity = 0f;
+            _isScanning = false;
+            UpdateMaterialProperties();
+            _scanCoroutine = null;
+        }
 
         public void Play(Vector3 origin, Vector3 direction)
         {
@@ -99,6 +115,8 @@ namespace _02.Scripts.Sonar
             UpdateMaterialProperties();
             _scanCoroutine = null;
         }
+        
+        
 
         private void UpdateMaterialProperties()
         {

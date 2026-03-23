@@ -5,35 +5,35 @@ public class LidarScanProgressUI : MonoBehaviour
 {
     [Header("Required References")]
     [SerializeField] private Slider _slider;
-    [SerializeField] private LidarController _controller;
+    [SerializeField] private LidarScanFeature scanFeature;
 
     private LidarTarget _currentTarget;
 
     private void Awake()
     {
-        if (_controller == null)
+        if (scanFeature == null)
         {
-            _controller = FindFirstObjectByType<LidarController>();
+            scanFeature = FindFirstObjectByType<LidarScanFeature>();
         }
 
-        if (_controller == null || _slider == null)
+        if (scanFeature == null || _slider == null)
         {
             enabled = false;
             gameObject.SetActive(false);
             return;
         }
 
-        _controller.OnTargetFind += SetTarget;
-        _controller.OnTargetLost += ResetTarget;
+        scanFeature.OnTargetFind += SetTarget;
+        scanFeature.OnTargetLost += ResetTarget;
         gameObject.SetActive(false);
     }
 
     private void OnDestroy()
     {
-        if (_controller != null)
+        if (scanFeature != null)
         {
-            _controller.OnTargetFind -= SetTarget;
-            _controller.OnTargetLost -= ResetTarget;
+            scanFeature.OnTargetFind -= SetTarget;
+            scanFeature.OnTargetLost -= ResetTarget;
         }
 
         UnbindCurrentTarget();
