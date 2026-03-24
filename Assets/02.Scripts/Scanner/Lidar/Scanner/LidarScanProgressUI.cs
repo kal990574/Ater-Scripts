@@ -7,7 +7,7 @@ public class LidarScanProgressUI : MonoBehaviour
     [SerializeField] private Slider _slider;
     [SerializeField] private LidarScanFeature scanFeature;
 
-    private ScannableObject _currentTarget;
+    private InteractScanObject _currentTarget;
 
     private void Awake()
     {
@@ -39,7 +39,7 @@ public class LidarScanProgressUI : MonoBehaviour
         UnbindCurrentTarget();
     }
 
-    public void SetTarget(ScannableObject target)
+    public void SetTarget(InteractScanObject target)
     {
         if (target == null)
         {
@@ -56,7 +56,7 @@ public class LidarScanProgressUI : MonoBehaviour
 
         UnbindCurrentTarget();
         _currentTarget = target;
-        _currentTarget.OnProgressChanged += Refresh;
+        _currentTarget.OnScanProgressChanged += Refresh;
         Refresh(_currentTarget.ProgressRatio);
         gameObject.SetActive(true);
     }
@@ -80,7 +80,7 @@ public class LidarScanProgressUI : MonoBehaviour
             return;
         }
 
-        _currentTarget.OnProgressChanged -= Refresh;
+        _currentTarget.OnScanProgressChanged -= Refresh;
         _currentTarget = null;
     }
 }

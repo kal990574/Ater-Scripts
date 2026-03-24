@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class ScannableObject : MonoBehaviour,IScannable
+public class InteractScanObject : MonoBehaviour,IInteractScan
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
@@ -15,7 +15,7 @@ public class ScannableObject : MonoBehaviour,IScannable
     public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
     public EScannableState State => _fsm.CurrentStateType;
 
-    public event Action<float> OnProgressChanged;
+    public event Action<float> OnScanProgressChanged;
     public event Action OnScanComplete;
 
     private void Awake()
@@ -46,7 +46,7 @@ public class ScannableObject : MonoBehaviour,IScannable
     {
         if (_settings == null)
         {
-            Debug.LogError($"[{nameof(ScannableObject)}] {nameof(ScanProgressSetting)} is missing.", this);
+            Debug.LogError($"[{nameof(InteractScanObject)}] {nameof(ScanProgressSetting)} is missing.", this);
             enabled = false;
             return;
         }
@@ -125,7 +125,7 @@ public class ScannableObject : MonoBehaviour,IScannable
     
     private void HandleProgressChanged(float ratio)
     {
-        OnProgressChanged?.Invoke(ratio);
+        OnScanProgressChanged?.Invoke(ratio);
     }
 
     public void ReduceProgressByReturn(float deltaTime)

@@ -3,13 +3,13 @@ using UnityEngine;
 
 public class LidarRaycast
 {
-    private readonly Dictionary<ScannableObject, TargetHitData> _hitMap = new();
+    private readonly Dictionary<InteractScanObject, TargetHitData> _hitMap = new();
     private readonly List<LidarRayData> _rayResults = new();
     private readonly LidarScanFeature _scanFeature;
     private readonly LidarScanConfigSO _config;
     private readonly IRaycastService _raycastService;
 
-    public IReadOnlyDictionary<ScannableObject, TargetHitData> HitMap => _hitMap;
+    public IReadOnlyDictionary<InteractScanObject, TargetHitData> HitMap => _hitMap;
     public IReadOnlyList<LidarRayData> RayResults => _rayResults;
 
     public LidarRaycast(LidarScanFeature scanFeature, IRaycastService raycastService = null)
@@ -81,7 +81,7 @@ public class LidarRaycast
             return;
         }
 
-        ScannableObject target = hit.Collider.GetComponentInParent<ScannableObject>();
+        InteractScanObject target = hit.Collider.GetComponentInParent<InteractScanObject>();
 
         if (IsInvalidTarget(target))
         {
@@ -92,7 +92,7 @@ public class LidarRaycast
         HandleValidTargetHit(origin, direction, hit, target);
     }
 
-    private static bool IsInvalidTarget(ScannableObject target)
+    private static bool IsInvalidTarget(InteractScanObject target)
     {
         if (target == null)
         {
@@ -125,7 +125,7 @@ public class LidarRaycast
                 false));
     }
 
-    private void HandleValidTargetHit(Vector3 origin, Vector3 direction, RaycastResult hit, ScannableObject target)
+    private void HandleValidTargetHit(Vector3 origin, Vector3 direction, RaycastResult hit, InteractScanObject target)
     {
         _rayResults.Add(
             new LidarRayData(
@@ -138,7 +138,7 @@ public class LidarRaycast
         UpdateTargetHitData(origin, hit, target);
     }
 
-    private void UpdateTargetHitData(Vector3 origin, RaycastResult hit, ScannableObject target)
+    private void UpdateTargetHitData(Vector3 origin, RaycastResult hit, InteractScanObject target)
     {
         float distance = Vector3.Distance(origin, hit.Point);
 

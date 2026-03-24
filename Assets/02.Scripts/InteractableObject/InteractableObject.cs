@@ -4,8 +4,8 @@ using UnityEngine;
 //각종 효과를 관리함
 public class InteractableObject : MonoBehaviour
 {
-    private IScannable _scannable;
-    private IHoverable _hoverable;
+    private IInteractScan _interactScan;
+    private IInteractTarget _interactTarget;
     private ICarryable _carryable;
     private IUseable _useable;
 }

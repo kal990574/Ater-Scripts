@@ -11,9 +11,11 @@ public class InteractTargetShaderModifier : MonoBehaviour
     public const string HIT_BLEND_NAME = "_HitBlend";
     [Header("Required References")]
     [SerializeField] private AllInOneShaderController _shaderPropertyController;
-    [SerializeField] private ScannableObject _target;
     [SerializeField] private ScanShaderConfigSO _scanConfig;
     [SerializeField] private OutlineShaderConfigSO _oultineConfig;
+    
+    private IInteractScan _interactScan;
+    private IInteractTarget _interactTarget;
     
     [Header("Debug")]
     [SerializeField] private float _currentHitBlend;
@@ -53,9 +55,14 @@ public class InteractTargetShaderModifier : MonoBehaviour
             _shaderPropertyController = GetComponentInChildren<AllInOneShaderController>();
         }
 
-        if (_target == null)
+        if (_interactScan == null)
         {
-            _target = GetComponentInParent<ScannableObject>();
+            _interactScan = GetComponentInParent<InteractScanObject>();
+        }
+
+        if (_interactTarget == null)
+        {
+            _interactTarget = GetComponentInParent<IInteractTarget>();
         }
     }
 
@@ -74,34 +81,40 @@ public class InteractTargetShaderModifier : MonoBehaviour
     private void ApplyInitialShaderState()
     {
         SetOutlineColor(_oultineConfig.AbstractOutlineColor);
-        SetOutlineThickness(false);
+        ShowOutline(false);
         ApplyProgressState(0.0f);
         SetHitBlend(0.0f);
     }
 
     private void SubscribeTargetEvents()
     {
-        if (_target == null)
+        if (_interactScan != null)
         {
-            return;
+            _interactScan.OnScanProgressChanged += OnScanTargetProgressChanged;
+            _interactScan.OnScanComplete += OnTargetScanComplete;
         }
 
-        _target.OnProgressChanged += OnTargetProgressChanged;
-        _target.OnScanComplete += OnTargetScanComplete;
+        if (_interactTarget != null)
+        {
+            _interactTarget.OnTargetDetected += ShowOutline;
+        }
     }
 
     private void UnsubscribeTargetEvents()
     {
-        if (_target == null)
+        if (_interactScan != null)
         {
-            return;
+            _interactScan.OnScanProgressChanged -= OnScanTargetProgressChanged;
+            _interactScan.OnScanComplete -= OnTargetScanComplete;
         }
 
-        _target.OnProgressChanged -= OnTargetProgressChanged;
-        _target.OnScanComplete -= OnTargetScanComplete;
+        if (_interactTarget != null)
+        {
+            _interactTarget.OnTargetDetected -= ShowOutline;
+        }
     }
 
-    private void OnTargetProgressChanged(float ratio)
+    private void OnScanTargetProgressChanged(float ratio)
     {
         ApplyProgressState(ratio);
     }
@@ -205,8 +218,9 @@ public class InteractTargetShaderModifier : MonoBehaviour
         _shaderPropertyController.SetFloat(HIT_BLEND_NAME, value);
     }
 
-    public void SetOutlineThickness(bool show)
+    private void ShowOutline(bool show)
     {
+        Debug.Log($"아웃라인 {show}");
         _shaderPropertyController.SetOutlineEnabled(show);
     }
 }

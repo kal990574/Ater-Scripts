@@ -4,27 +4,23 @@ using UnityEngine;
 public class PlayerDetectAbility : PlayerAbility
 {
     [SerializeField] private Camera _camera;
-    [SerializeField] private InteractRaycastConfigSO interactConfig;
- 
+    [SerializeField] private RaycastSetting _query = new(5f, ~0, QueryTriggerInteraction.Ignore);
+    
     private PlayerTargetDetector _playerTargetDetector;
     private IInteractTarget _currentTarget;
+    
+    public IInteractTarget CurrentTarget => _currentTarget;
 
     private void Start()
     {
         _camera = Camera.main;
         _playerTargetDetector = new PlayerTargetDetector(
             new RaycastService(),
-            interactConfig.Query);
+            _query);
     }
 
     private void Update()
     {
-        if (_owner.InteractMode != PlayerInteractMode.Item)
-        {
-            ClearCurrentHoverTarget();
-            return;
-        }
-
         IInteractTarget nextInteractTarget = _playerTargetDetector.Detect(_camera.transform.position, _camera.transform.forward);
         if (ReferenceEquals(_currentTarget, nextInteractTarget))
         {
@@ -34,6 +30,10 @@ public class PlayerDetectAbility : PlayerAbility
         _currentTarget?.OnTargetDetectExit();
         _currentTarget = nextInteractTarget;
         _currentTarget?.OnTargetDetectEnter();
+        if (_currentTarget != null)
+        {
+            Debug.Log($"감지 {_currentTarget}");
+        }
     }
 
     private void OnDisable()
