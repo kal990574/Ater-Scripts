@@ -7,6 +7,7 @@ public class PlayerDetectAbility : PlayerAbility
 
     private PlayerTargetDetector _playerTargetDetector;
     private InteractController _currentTarget;
+
     public InteractController CurrentTarget => _currentTarget;
 
     private void Start()
