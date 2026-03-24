@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 
 [Serializable]
+
 public class ItemData
 {
     [Header("기본 정보")]

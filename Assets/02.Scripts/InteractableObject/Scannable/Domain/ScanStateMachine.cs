@@ -9,7 +9,7 @@ public class ScanStateMachine
 
     public EScannableState CurrentStateType => _currentState == null ? EScannableState.Default : _currentState.StateType;
 
-    public ScanStateMachine(InteractScanObject owner)
+    public ScanStateMachine(ScannableObject owner)
     {
         _states = new Dictionary<EScannableState, IScanState>();
         _stateFactories = new Dictionary<EScannableState, Func<IScanState>>

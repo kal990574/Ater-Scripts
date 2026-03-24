@@ -22,7 +22,7 @@ public class LidarEffect
         ClearLine();
     }
 
-    public void DrawLidarEffect(IReadOnlyList<LidarRayData> rayDatas, InteractScanObject target)
+    public void DrawLidarEffect(IReadOnlyList<LidarRayData> rayDatas, ScannableObject target)
     {
         if (CanDrawEffect() == false)
         {
@@ -60,7 +60,7 @@ public class LidarEffect
         return true;
     }
 
-    private void DrawTargetLine(InteractScanObject target)
+    private void DrawTargetLine(ScannableObject target)
     {
         Vector3 targetPoint = GetPointOnTargetSurface(target);
         SetLineColor(Color.green);
@@ -78,10 +78,9 @@ public class LidarEffect
         LidarRayData rayData = rayDatas[Random.Range(0, rayDatas.Count)];
         SetLineColor(Color.red);
         SetLine(_muzzle.position, rayData.EndPoint);
-        Debug.Log(rayData.EndPoint.ToString());
     }
 
-    private Vector3 GetPointOnTargetSurface(InteractScanObject target)
+    private Vector3 GetPointOnTargetSurface(ScannableObject target)
     {
         if (target == null)
         {

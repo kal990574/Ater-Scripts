@@ -18,7 +18,7 @@ public class LidarScanFeature : MonoBehaviour
     private LidarRaycast _lidarRay;
     private LidarScanQTE _qte;
 
-    public InteractScanObject CurrentTarget { get; private set; }
+    public ScannableObject CurrentTarget { get; private set; }
 
     public LidarEffect LidarEffect => _lidarEffect;
     public LidarRaycast LidarRay => _lidarRay;
@@ -28,7 +28,7 @@ public class LidarScanFeature : MonoBehaviour
     public LineRenderer LineRenderer => _lineRenderer;
     public bool IsOnScan { get; private set; }
 
-    public event Action<InteractScanObject> OnTargetFind;
+    public event Action<ScannableObject> OnTargetFind;
     public event Action OnTargetLost;
 
     public void Initialize()
@@ -93,8 +93,8 @@ public class LidarScanFeature : MonoBehaviour
 
         _lidarRay.Scan();
 
-        InteractScanObject previousTarget = CurrentTarget;
-        InteractScanObject newTarget = ResolveTarget(_lidarRay.HitMap, StartPos, transform.forward);
+        ScannableObject previousTarget = CurrentTarget;
+        ScannableObject newTarget = ResolveTarget(_lidarRay.HitMap, StartPos, transform.forward);
 
         bool shouldNotifyScanLost = _qte == null || _qte.HandleTargetChanged(previousTarget, newTarget);
         HandleTargetChanged(previousTarget, newTarget, shouldNotifyScanLost);
@@ -109,7 +109,7 @@ public class LidarScanFeature : MonoBehaviour
         LidarEffect.DrawLidarEffect(_lidarRay.RayResults, CurrentTarget);
     }
 
-    private void HandleTargetChanged(InteractScanObject previous, InteractScanObject current, bool shouldNotifyScanLost)
+    private void HandleTargetChanged(ScannableObject previous, ScannableObject current, bool shouldNotifyScanLost)
     {
         if (previous == null && current != null)
         {
@@ -139,18 +139,18 @@ public class LidarScanFeature : MonoBehaviour
         }
     }
 
-    private InteractScanObject ResolveTarget(IReadOnlyDictionary<InteractScanObject, TargetHitData> hitMap, Vector3 origin, Vector3 forward)
+    private ScannableObject ResolveTarget(IReadOnlyDictionary<ScannableObject, TargetHitData> hitMap, Vector3 origin, Vector3 forward)
     {
-        InteractScanObject bestTarget = null;
+        ScannableObject bestTarget = null;
         bool hasBest = false;
 
         int bestHitCount = int.MinValue;
         float bestCenterScore = float.MinValue;
         float bestClosestDistance = float.MaxValue;
 
-        foreach (KeyValuePair<InteractScanObject, TargetHitData> pair in hitMap)
+        foreach (KeyValuePair<ScannableObject, TargetHitData> pair in hitMap)
         {
-            InteractScanObject candidate = pair.Key;
+            ScannableObject candidate = pair.Key;
             TargetHitData data = pair.Value;
 
             Vector3 toRepresentativePoint = (data.RepresentativePoint - origin).normalized;

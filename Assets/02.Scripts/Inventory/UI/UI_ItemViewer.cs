@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 //아이템의 정보 확인 및 / 조사하기 기능
-public class ItemViewerUI : MonoBehaviour
+public class UI_ItemViewer : MonoBehaviour
 {
 
     [SerializeField] private Transform _itemRoot;
@@ -53,7 +53,7 @@ public class ItemViewerUI : MonoBehaviour
             _itemViewerCamera.transform.position = newPos;
         }
     }
-    public void ShowItem(ItemData itemData)
+    public void ShowItem(ItemData itemDataSo)
     {
         if (_currentItem != null)
             _currentItem.SetActive(false);
@@ -61,8 +61,8 @@ public class ItemViewerUI : MonoBehaviour
         _itemRoot.rotation = Quaternion.identity;
         _itemViewerCamera.transform.localPosition = _initialCameraLocalPosition;
 
-        _currentItem = GetOrCreate(itemData);
-        _descriptionText.text = itemData.Description;
+        _currentItem = GetOrCreate(itemDataSo);
+        _descriptionText.text = itemDataSo.Description;
     }
 
 
@@ -89,18 +89,18 @@ public class ItemViewerUI : MonoBehaviour
         interactPoint?.OnClick();
     }
 
-    private GameObject GetOrCreate(ItemData itemData)
+    private GameObject GetOrCreate(ItemData itemDataSo)
     {
-        if (_cache.TryGetValue(itemData.ItemId, out GameObject cached))
+        if (_cache.TryGetValue(itemDataSo.ItemId, out GameObject cached))
         {
             cached.SetActive(true);
             return cached;
         }
 
-        GameObject obj = Instantiate(itemData.Prefab, _itemRoot, false);
+        GameObject obj = Instantiate(itemDataSo.Prefab, _itemRoot, false);
         obj.transform.localPosition = Vector3.zero;
         SetLayerRecursively(obj, _itemRoot.gameObject.layer);
-        _cache[itemData.ItemId] = obj;
+        _cache[itemDataSo.ItemId] = obj;
         return obj;
     }
     private void HandleRotate()

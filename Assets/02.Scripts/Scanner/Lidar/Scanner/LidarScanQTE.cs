@@ -6,7 +6,7 @@ public class LidarScanQTE : IQTEInvoker
 {
     private readonly LidarScanQTESettings _settings;
 
-    private InteractScanObject _currentTarget;
+    private ScannableObject _currentTarget;
     private float _elapsedTime;
     private float _nextTriggerTime;
     private bool _isQteActive;
@@ -18,7 +18,7 @@ public class LidarScanQTE : IQTEInvoker
     }
 
     //QTE 도중 타겟변경 감지
-    public bool HandleTargetChanged(InteractScanObject previousTarget, InteractScanObject newTarget)
+    public bool HandleTargetChanged(ScannableObject previousTarget, ScannableObject newTarget)
     {
         if (ReferenceEquals(previousTarget, newTarget))
         {
@@ -41,7 +41,7 @@ public class LidarScanQTE : IQTEInvoker
         return shouldNotifyScanLost;
     }
 
-    public bool HandleStop(InteractScanObject currentTarget)
+    public bool HandleStop(ScannableObject currentTarget)
     {
         if (_isQteActive == false || currentTarget == null || ReferenceEquals(_currentTarget, currentTarget) == false)
         {
@@ -61,7 +61,7 @@ public class LidarScanQTE : IQTEInvoker
     }
     
     //현재 타겟의 QTE 시간 업데이트 및 시간이 된 경우 QTE 발동
-    public void UpdateCurrentTarget(InteractScanObject target, float deltaTime)
+    public void UpdateCurrentTarget(ScannableObject target, float deltaTime)
     {
         if (target == null || _settings == null || _isQteActive)
         {
@@ -134,7 +134,7 @@ public class LidarScanQTE : IQTEInvoker
     }
 
     //QTE가 가능한지 체크후 가능하다면 플레이
-    private void TryStartQte(InteractScanObject target)
+    private void TryStartQte(ScannableObject target)
     {
         if (QTEManager.Instance == null)
         {

@@ -1,7 +1,8 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 
-public class InteractScanObject : MonoBehaviour,IInteractScan
+public class ScannableObject : MonoBehaviour,IScannableObject
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
@@ -14,9 +15,15 @@ public class InteractScanObject : MonoBehaviour,IInteractScan
     public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
     public EScannableState State => _fsm.CurrentStateType;
 
+    
     public event Action<float> OnScanProgressChanged; //ratio전달
     public event Action OnScanComplete;
-
+    
+    [Header("Scene Event")]
+    public UnityEvent ScanStartEvent;
+    public UnityEvent ScanEndEvent;
+    public UnityEvent ScanCompletEvent;
+    
     private void Awake()
     {
         Init();
@@ -45,7 +52,7 @@ public class InteractScanObject : MonoBehaviour,IInteractScan
     {
         if (_settings == null)
         {
-            Debug.LogError($"[{nameof(InteractScanObject)}] {nameof(ScanProgressSetting)} is missing.", this);
+            Debug.LogError($"[{nameof(ScannableObject)}] {nameof(ScanProgressSetting)} is missing.", this);
             enabled = false;
             return;
         }
@@ -74,6 +81,7 @@ public class InteractScanObject : MonoBehaviour,IInteractScan
     public void OnScanStarted()
     {
         OnScanComplete?.Invoke();
+        ScanStartEvent?.Invoke();
     }
 
     public void OnScanning(float deltaTime)
@@ -94,11 +102,13 @@ public class InteractScanObject : MonoBehaviour,IInteractScan
         }
 
         _fsm.OnScanStopped();
+        ScanEndEvent?.Invoke();
     }
    
     public void OnScanCompleted()
     {
         OnScanComplete?.Invoke();
+        ScanCompletEvent?.Invoke();
     }
 
     public void ChangeState(EScannableState nextState, bool force = false)

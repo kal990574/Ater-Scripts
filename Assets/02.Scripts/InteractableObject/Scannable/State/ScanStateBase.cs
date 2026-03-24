@@ -1,10 +1,10 @@
 public abstract class ScanStateBase : IScanState
 {
-    protected readonly InteractScanObject Owner;
+    protected readonly ScannableObject Owner;
 
     public abstract EScannableState StateType { get; }
 
-    protected ScanStateBase(InteractScanObject owner)
+    protected ScanStateBase(ScannableObject owner)
     {
         Owner = owner;
     }

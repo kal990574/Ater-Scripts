@@ -2,7 +2,7 @@ public class ScanHoldState : ScanStateBase
 {
     public override EScannableState StateType => EScannableState.OnHold;
 
-    public ScanHoldState(InteractScanObject owner) : base(owner)
+    public ScanHoldState(ScannableObject owner) : base(owner)
     {
     }
 

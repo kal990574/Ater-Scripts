@@ -2,7 +2,7 @@ public class ScanProgressState : ScanStateBase
 {
     public override EScannableState StateType => EScannableState.OnProgress;
 
-    public ScanProgressState(InteractScanObject owner) : base(owner)
+    public ScanProgressState(ScannableObject owner) : base(owner)
     {
     }
 

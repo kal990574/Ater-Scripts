@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BoxInteraction : MonoBehaviour, IInteractable
+public class BoxInteraction : MonoBehaviour, IInteractableUI
 {
     [SerializeField] private GameObject _rewardObject;
 

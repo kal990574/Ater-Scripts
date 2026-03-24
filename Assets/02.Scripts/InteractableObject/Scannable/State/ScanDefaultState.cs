@@ -2,7 +2,7 @@ public class ScanDefaultState : ScanStateBase
 {
     public override EScannableState StateType => EScannableState.Default;
 
-    public ScanDefaultState(InteractScanObject owner) : base(owner)
+    public ScanDefaultState(ScannableObject owner) : base(owner)
     {
     }
 

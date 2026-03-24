@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class InventoryInputController : MonoBehaviour
+public class InventoryTester : MonoBehaviour
 {
     void Update()
     {
