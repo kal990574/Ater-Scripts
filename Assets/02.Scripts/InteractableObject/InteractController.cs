@@ -1,9 +1,12 @@
-using System;
 using UnityEngine;
 
-[DisallowMultipleComponent]
 public class InteractController : MonoBehaviour
 {
+    [Header("Force Switches")]
+    [SerializeField] private bool _forceDetectEnableSwitch;
+    [SerializeField] private bool _forceScanEnableSwitch;
+    [SerializeField] private bool _forceInteractEnableSwitch;
+    
     private IDetectableObject _detectableObject;
     private IScannableObject _scannableObject;
     private IInteractObject _interactableObject;
@@ -12,35 +15,68 @@ public class InteractController : MonoBehaviour
     public IScannableObject ScannableObject => _scannableObject;
     public IInteractObject InteractableObject => _interactableObject;
 
-
     private void Awake()
     {
-        CacheReferences();
-        BindScannableToInteractable();
+        if (_detectableObject == null)
+        {
+            _detectableObject = GetComponentInChildren<IDetectableObject>();
+            _forceDetectEnableSwitch = false;
+            _forceScanEnableSwitch = false;
+            _forceInteractEnableSwitch = false;
+        }
+
+        if (_scannableObject == null)
+        {
+            _scannableObject = GetComponentInChildren<IScannableObject>();
+            _forceScanEnableSwitch = false;
+            _forceInteractEnableSwitch = false;
+        }
+        
+        if (_interactableObject == null)
+        {
+            _interactableObject = GetComponentInChildren<IInteractObject>();
+            _forceInteractEnableSwitch = false;
+        }
     }
 
-    private void OnDestroy()
-    {
-        UnbindScannableToInteractable();
-    }
-
-    private void OnValidate()
-    {
-        CacheReferences();
-    }
-
+    
     public void OnDetectEnter()
     {
+        if (!_forceDetectEnableSwitch)
+        {
+            return;
+        }
+        
+        if (_detectableObject == null)
+        {
+            return;
+        }
+        
         _detectableObject?.OnDetectEnter();
     }
 
     public void OnDetectExit()
     {
+        if (!_forceDetectEnableSwitch)
+        {
+            return;
+        }
+
+        if (_detectableObject == null)
+        {
+            return;
+        }
+        
         _detectableObject?.OnDetectExit();
     }
 
     public bool TryInteract()
     {
+        if (!_forceInteractEnableSwitch)
+        {
+            return false;
+        }
+        
         if (_interactableObject == null)
         {
             return false;
@@ -48,43 +84,5 @@ public class InteractController : MonoBehaviour
 
         _interactableObject.Interact();
         return true;
-    }
-
-    private void CacheReferences()
-    {
-        if (_detectableObject == null)
-        {
-            _detectableObject = GetComponentInChildren<IDetectableObject>();
-        }
-
-        if (_scannableObject == null)
-        {
-            _scannableObject = GetComponentInChildren<IScannableObject>();
-        }
-
-        if (_interactableObject == null)
-        {
-            _interactableObject = GetComponentInChildren<IInteractObject>();
-        }
-    }
-
-    private void BindScannableToInteractable()
-    {
-        if (_scannableObject == null || _interactableObject == null)
-        {
-            return;
-        }
-        
-        _scannableObject.OnScanComplete += _interactableObject.SetActivate;
-    }
-
-    private void UnbindScannableToInteractable()
-    {
-        if (_scannableObject == null || _interactableObject == null)
-        {
-            return;
-        }
-
-        _scannableObject.OnScanComplete -= _interactableObject.SetActivate;
     }
 }
