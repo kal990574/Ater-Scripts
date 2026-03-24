@@ -4,6 +4,7 @@ using _02.Scripts.Core;
 using _02.Scripts.Core.Domain;
 using _02.Scripts.AIHint.Infrastructure.Naver;
 using _02.Scripts.AIHint.Infrastructure.OpenAI;
+using _02.Scripts.Player;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -11,27 +12,31 @@ namespace _02.Scripts.AIHint.Presentation
 {
     public class HintInputController : MonoBehaviour
     {
+        [Header("입력")]
+        [SerializeField] private PlayerInputHandler _inputHandler;
+
         [Header("설정")]
         [SerializeField] private NaverCloudConfig _naverConfig;
         [SerializeField] private OpenAIConfig _openAIConfig;
-        [SerializeField] private KeyCode _pttKey = KeyCode.R;
 
         [Header("녹음 설정")]
-        [SerializeField] private int _maxRecordSeconds = 10;
+        [SerializeField] private int _maxRecordSeconds = 5;
         [SerializeField] private int _sampleRate = 16000;
-        
+
         [Header("오디오 출력")]
         [SerializeField] private AudioSource _audioSource;
 
+#if UNITY_EDITOR
         [Header("테스트")]
-        [SerializeField] private KeyCode _testKey = KeyCode.T;
         [SerializeField] private string _testQuery = "금고 비밀번호가 뭐야?";
+#endif
 
         private AIHintService _hintService;
         private IGameStateProvider _gameStateProvider;
         private AudioClip _recordingClip;
         private bool _isRecording;
         private bool _isProcessing;
+        private float _recordStartTime;
 
         private void Start()
         {
@@ -53,19 +58,22 @@ namespace _02.Scripts.AIHint.Presentation
         {
             if (_isProcessing) return;
 
-            if (Input.GetKeyDown(_testKey))
+            if (_isRecording && Time.time - _recordStartTime >= _maxRecordSeconds)
             {
-                TestHintWithText().Forget();
+                StopRecordingAndRecognize().Forget();
                 return;
             }
 
-            if (Input.GetKeyDown(_pttKey))
+            if (_inputHandler.HintToggleInput)
             {
-                StartRecording();
-            }
-            else if (Input.GetKeyUp(_pttKey) && _isRecording)
-            {
-                StopRecordingAndRecognize().Forget();
+                if (_isRecording)
+                {
+                    StopRecordingAndRecognize().Forget();
+                }
+                else
+                {
+                    StartRecording();
+                }
             }
         }
 
@@ -81,6 +89,7 @@ namespace _02.Scripts.AIHint.Presentation
             }
 
             _isRecording = true;
+            _recordStartTime = Time.time;
             Debug.Log("[AIHint] 녹음 시작...");
         }
 
@@ -117,7 +126,7 @@ namespace _02.Scripts.AIHint.Presentation
             }
         }
         
-        // test
+#if UNITY_EDITOR
         private async UniTaskVoid TestHintWithText()
         {
             _isProcessing = true;
@@ -125,7 +134,6 @@ namespace _02.Scripts.AIHint.Presentation
 
             try
             {
-                // Step 1: LLM
                 var playerState = CollectPlayerState();
                 var request = new HintRequest(_testQuery, playerState);
                 HintResponse response = await _hintService.Llm.GenerateHintAsync(request);
@@ -138,11 +146,9 @@ namespace _02.Scripts.AIHint.Presentation
 
                 Debug.Log($"[AIHint-Test] 힌트: {response.HintText}");
 
-                // Step 2: TTS
                 byte[] ttsAudio = await _hintService.Tts.SynthesizeAsync(response.HintText);
                 Debug.Log($"[AIHint-Test] TTS 완료: {ttsAudio.Length} bytes");
 
-                // Step 3: 재생
                 PlayHintAudio(ttsAudio);
             }
             catch (System.Exception e)
@@ -154,6 +160,7 @@ namespace _02.Scripts.AIHint.Presentation
                 _isProcessing = false;
             }
         }
+#endif
 
         private void HandleHintResult(HintResult result)
         {
