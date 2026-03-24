@@ -1,5 +1,6 @@
 ﻿using System;
 
+//스캔이 가능한 대상
 public interface IInteractScan
 {
     bool IsProgressComplete {get;}  //현재 스캔이 완료되었는가

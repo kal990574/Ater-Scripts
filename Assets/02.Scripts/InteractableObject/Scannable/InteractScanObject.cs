@@ -8,14 +8,13 @@ public class InteractScanObject : MonoBehaviour,IInteractScan
 
     private ScanProgress _progress;
     private ScanStateMachine _fsm;
-
-    public ScanProgressSetting Settings => _settings;
+    
     public bool IsProgressComplete => _progress != null && _progress.IsActivated;
     public float CurrentProgress => _progress != null ? _progress.CurrentProgress : 0.0f;
     public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
     public EScannableState State => _fsm.CurrentStateType;
 
-    public event Action<float> OnScanProgressChanged;
+    public event Action<float> OnScanProgressChanged; //ratio전달
     public event Action OnScanComplete;
 
     private void Awake()

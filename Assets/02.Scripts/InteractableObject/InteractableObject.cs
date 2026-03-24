@@ -6,6 +6,5 @@ public class InteractableObject : MonoBehaviour
 {
     private IInteractScan _interactScan;
     private IInteractTarget _interactTarget;
-    private ICarryable _carryable;
-    private IUseable _useable;
+    private IInteractUse _interactUse;
 }

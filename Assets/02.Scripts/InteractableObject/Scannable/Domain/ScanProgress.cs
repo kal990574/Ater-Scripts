@@ -11,10 +11,7 @@ public class ScanProgress
     public bool CanInteract { get; private set; }
 
     public float CurrentProgress => _currentProgress;
-    public float RequiredProgress => _settings.RequiredScanTime;
     public float ProgressRatio => Mathf.Clamp01(_currentProgress / _settings.RequiredScanTime);
-    public float ProgressSinceLastMinigame => _progressSinceLastMinigame;
-
     
     public event Action<float> OnProgressChanged;
     public event Action OnActivated;
