@@ -19,10 +19,7 @@ namespace _02.Scripts.Core.Presentation
             };
 
             var gameManager = new GameManager(chapterSceneMap);
-            var gameStateProvider = new GameStateProviderAdapter(gameManager);
-
             ServiceLocator.Register<IGameManager>(gameManager);
-            ServiceLocator.Register<IGameStateProvider>(gameStateProvider);
         }
 
         private void OnDestroy()
