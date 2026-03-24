@@ -73,7 +73,7 @@ public class LidarRayDebug : MonoBehaviour
 
         foreach (Vector3 direction in EnumerateOutlineDirections(outlineSegments))
         {
-            Vector3 point = origin + direction * scanFeature.Config.RayDistance;
+            Vector3 point = origin + direction * scanFeature.Config.Query.Distance;
 
             if (hasPreviousPoint)
             {

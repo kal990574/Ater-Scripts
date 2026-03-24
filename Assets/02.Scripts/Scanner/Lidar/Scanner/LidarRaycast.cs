@@ -7,23 +7,25 @@ public class LidarRaycast
     private readonly List<LidarRayData> _rayResults = new();
     private readonly LidarScanFeature _scanFeature;
     private readonly LidarScanConfigSO _config;
-    
+    private readonly IRaycastService _raycastService;
+
     public IReadOnlyDictionary<ScannableObject, TargetHitData> HitMap => _hitMap;
     public IReadOnlyList<LidarRayData> RayResults => _rayResults;
 
-    public LidarRaycast(LidarScanFeature scanFeature)
+    public LidarRaycast(LidarScanFeature scanFeature, IRaycastService raycastService = null)
     {
         _scanFeature = scanFeature;
-        _config =  scanFeature.Config;
+        _config = scanFeature.Config;
+        _raycastService = raycastService ?? new RaycastService();
     }
-    
+
     public void Scan()
     {
         if (_scanFeature == null)
         {
             return;
         }
-        
+
         ClearScanResults();
         Vector3 origin = _scanFeature.StartPos;
 
@@ -39,7 +41,6 @@ public class LidarRaycast
         _rayResults.Clear();
     }
 
-    //주어진 설정으로 레이의 발사 방향 저장
     public IEnumerable<Vector3> EnumerateRayDirections()
     {
         Quaternion rotation = _scanFeature.transform.rotation;
@@ -59,8 +60,7 @@ public class LidarRaycast
             }
         }
     }
-    
-    //원뿔 모양 형성, 단 레이 디버그에도 사용됨
+
     public Vector3 GetConeDirection(Quaternion baseRotation, float angleFromForward, float yawAroundForward)
     {
         Vector3 localDirection = Quaternion.Euler(angleFromForward, 0.0f, 0.0f) * Vector3.forward;
@@ -70,86 +70,77 @@ public class LidarRaycast
         return worldDirection.normalized;
     }
 
-    //레이를 생성
     private void CastRay(Vector3 origin, Vector3 direction)
     {
-        bool isHit = Physics.Raycast(origin, direction, out RaycastHit hit,
-            _config.RayDistance, _config.HitMask, QueryTriggerInteraction.Ignore);
+        RaycastRequest request = _config.Query.CreateRequest(origin, direction);
+        RaycastResult hit = _raycastService.Cast(request);
 
-        if (isHit == false)
+        if (hit.Hit == false)
         {
-            //끝까지 나간 레이 처리
             HandleMiss(origin, direction);
             return;
         }
 
-        ScannableObject target = hit.collider.GetComponentInParent<ScannableObject>();
+        ScannableObject target = hit.Collider.GetComponentInParent<ScannableObject>();
 
         if (IsInvalidTarget(target))
         {
-            //벽에 막힌 레이 처리
             HandleBlockedHit(direction, hit);
             return;
         }
-        
-        //타겟을 감지한 레이 처리
+
         HandleValidTargetHit(origin, direction, hit, target);
     }
 
-    //LidarTarget이면서 추상화가 되어있는 것
-    private bool IsInvalidTarget(ScannableObject target)
+    private static bool IsInvalidTarget(ScannableObject target)
     {
         if (target == null)
         {
             return true;
         }
 
-        if (target.IsProgressComplete)
-        {
-            return true;
-        }
-
-        return false;
+        return target.IsProgressComplete;
     }
 
     private void HandleMiss(Vector3 origin, Vector3 direction)
     {
+        float rayDistance = _config.Query.Distance;
         _rayResults.Add(
             new LidarRayData(
                 direction,
                 false,
-                origin + direction * _config.RayDistance,
-                _config.RayDistance,
+                origin + direction * rayDistance,
+                rayDistance,
                 false));
     }
 
-    private void HandleBlockedHit(Vector3 direction, RaycastHit hit)
+    private void HandleBlockedHit(Vector3 direction, RaycastResult hit)
     {
         _rayResults.Add(
             new LidarRayData(
                 direction,
                 true,
-                hit.point,
-                hit.distance,
+                hit.Point,
+                hit.Distance,
                 false));
     }
 
-    private void HandleValidTargetHit(Vector3 origin, Vector3 direction, RaycastHit hit, ScannableObject target)
+    private void HandleValidTargetHit(Vector3 origin, Vector3 direction, RaycastResult hit, ScannableObject target)
     {
         _rayResults.Add(
             new LidarRayData(
                 direction,
                 true,
-                hit.point,
-                hit.distance,
+                hit.Point,
+                hit.Distance,
                 true));
-        
+
         UpdateTargetHitData(origin, hit, target);
     }
 
-    private void UpdateTargetHitData(Vector3 origin, RaycastHit hit, ScannableObject target)
+    private void UpdateTargetHitData(Vector3 origin, RaycastResult hit, ScannableObject target)
     {
-        float distance = Vector3.Distance(origin, hit.point);
+        float distance = Vector3.Distance(origin, hit.Point);
 
         if (_hitMap.TryGetValue(target, out TargetHitData data))
         {
@@ -158,14 +149,14 @@ public class LidarRaycast
             if (distance < data.ClosestDistance)
             {
                 data.ClosestDistance = distance;
-                data.RepresentativePoint = hit.point;
+                data.RepresentativePoint = hit.Point;
             }
 
             _hitMap[target] = data;
             return;
         }
 
-        TargetHitData newData = new TargetHitData(1, hit.point, distance);
+        TargetHitData newData = new(1, hit.Point, distance);
         _hitMap.Add(target, newData);
     }
 }
