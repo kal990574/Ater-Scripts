@@ -20,6 +20,7 @@ namespace _02.Scripts.Sonar
         private static readonly int _trailIntensityId = Shader.PropertyToID("_TrailIntensity");
         private static readonly int _trailFadeRadiusId = Shader.PropertyToID("_TrailFadeRadius");
         private static readonly int _ringFillIntensityId = Shader.PropertyToID("_RingFillIntensity");
+        private static readonly int _ringGradientPowerId = Shader.PropertyToID("_RingGradientPower");
         private static readonly int _ringOpacityId = Shader.PropertyToID("_RingOpacity");
 
         
@@ -126,6 +127,7 @@ namespace _02.Scripts.Sonar
             _scanMaterial.SetFloat(_trailIntensityId, _config.TrailIntensity);
             _scanMaterial.SetFloat(_trailFadeRadiusId, _trailFadeRadius);
             _scanMaterial.SetFloat(_ringFillIntensityId, _config.RingFillIntensity);
+            _scanMaterial.SetFloat(_ringGradientPowerId, _config.RingGradientPower);
             _scanMaterial.SetFloat(_ringOpacityId, _ringOpacity);
         }
     }

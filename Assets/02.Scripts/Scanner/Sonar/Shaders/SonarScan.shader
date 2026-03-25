@@ -14,6 +14,7 @@ Shader "Custom/SonarScan"
         _TrailIntensity ("Trail Intensity", Float) = 0.3
         _TrailFadeRadius ("Trail Fade Radius", Float) = 0
         _RingFillIntensity ("Ring Fill Intensity", Range(0, 1)) = 0.4
+        _RingGradientPower ("Ring Gradient Power", Float) = 2
         _RingOpacity ("Ring Opacity", Float) = 1
     }
 
@@ -32,6 +33,12 @@ Shader "Custom/SonarScan"
             ZWrite Off
             ZTest Always
             Cull Off
+
+            Stencil
+            {
+                Ref 1
+                Comp NotEqual
+            }
 
             HLSLPROGRAM
             #pragma vertex Vert
@@ -56,6 +63,7 @@ Shader "Custom/SonarScan"
             float _TrailIntensity;
             float _TrailFadeRadius;
             float _RingFillIntensity;
+            float _RingGradientPower;
             float _RingOpacity;
 
             struct Attributes
@@ -133,10 +141,11 @@ Shader "Custom/SonarScan"
                 return smoothstep(cosHalfAngle, cosInner, cosAngle);
             }
 
-            // 파동 링 마스크: 현재 반경 근처 픽셀 강조
+            // 파동 링 마스크: 현재 반경 근처 픽셀 강조 (pow로 중심→가장자리 그라데이션)
             float RingMask(float dist)
             {
-                return 1.0 - saturate(abs(dist - _ScanRadius) / _RingWidth);
+                float mask = 1.0 - saturate(abs(dist - _ScanRadius) / _RingWidth);
+                return pow(mask, _RingGradientPower);
             }
 
             // 잔상 마스크: _TrailFadeRadius ~ _ScanRadius 구간에만 표시

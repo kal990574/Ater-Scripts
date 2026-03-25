@@ -35,25 +35,41 @@ namespace _02.Scripts.Sonar.Rendering
                 ConfigureInput(ScriptableRenderPassInput.Depth);
             }
 
+            private class PassData
+            {
+                public TextureHandle source;
+                public Material material;
+            }
+
             public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
             {
                 var resourceData = frameData.Get<UniversalResourceData>();
 
-                // BackBuffer 직접 접근 방지
                 if (resourceData.isActiveTargetBackBuffer) return;
 
                 var source = resourceData.activeColorTexture;
+                var depth = resourceData.activeDepthTexture;
 
                 var destinationDesc = renderGraph.GetTextureDesc(source);
                 destinationDesc.name = "SonarScanTexture";
                 destinationDesc.clearBuffer = false;
-                TextureHandle destination = renderGraph.CreateTexture(destinationDesc);
+                var destination = renderGraph.CreateTexture(destinationDesc);
 
-                // source → _BlitTexture로 자동 바인딩, Material의 셰이더(Pass 0)로 blit
-                var parameters = new RenderGraphUtils.BlitMaterialParameters(source, destination, _material, 0);
-                renderGraph.AddBlitPass(parameters, passName: "SonarScanPass");
+                using (var builder = renderGraph.AddRasterRenderPass<PassData>("SonarScanPass", out var passData))
+                {
+                    passData.source = source;
+                    passData.material = _material;
 
-                // 결과를 카메라 최종 출력으로 설정
+                    builder.SetRenderAttachment(destination, 0);
+                    builder.SetRenderAttachmentDepth(depth, AccessFlags.Read);
+                    builder.UseTexture(source);
+
+                    builder.SetRenderFunc(static (PassData data, RasterGraphContext context) =>
+                    {
+                        Blitter.BlitTexture(context.cmd, data.source, new Vector4(1f, 1f, 0f, 0f), data.material, 0);
+                    });
+                }
+
                 resourceData.cameraColor = destination;
             }
         }
