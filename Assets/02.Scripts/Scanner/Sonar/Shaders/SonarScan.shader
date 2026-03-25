@@ -161,6 +161,7 @@ Shader "Custom/SonarScan"
                 return lerp(0.3, 1.0, step(0.5, scanLine));
             }
 
+
             half4 Frag(Varyings input) : SV_Target
             {
                 float2 uv = input.uv;
