@@ -1,6 +1,6 @@
 using UnityEngine;
 
-//아이템 인스턴스를 적용
+//아이템 인스턴스의 스테이트 변수들을 적용
 public abstract class ItemBinderBase : MonoBehaviour
 {
     private ItemInstance _itemInstance;
@@ -18,10 +18,7 @@ public abstract class ItemBinderBase : MonoBehaviour
 
     public void RefreshView()
     {
-        IBindApplier[] binders = GetComponentsInChildren<IBindApplier>(true);
-        foreach (IBindApplier binder in binders)
-        {
-            binder.ApplyState(this);
-        }
+        IBindApplier binder = GetComponentInChildren<IBindApplier>();
+        binder.ApplyState(this);
     }
 }

@@ -20,7 +20,11 @@ public class UI_Inventory : MonoBehaviour
         //임시
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        
+
+        if (InventoryManager.Instance == null)
+        {
+            return;
+        }
         
         InventoryManager.Instance.OnDataChanged += Refresh;
         InventoryManager.Instance.OnSelectionChanged += HandleSelectionChanged;
@@ -36,11 +40,15 @@ public class UI_Inventory : MonoBehaviour
 
     private void OnDisable()
     {
-        
+       
         //임시
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         
+        if (InventoryManager.Instance == null)
+        {
+            return;
+        }
         InventoryManager.Instance.OnDataChanged -= Refresh;
         InventoryManager.Instance.OnSelectionChanged -= HandleSelectionChanged;
         _uiInventoryContainer.OnSlotClicked -= HandleSlotClicked;
