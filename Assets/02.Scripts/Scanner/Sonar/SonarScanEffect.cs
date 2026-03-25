@@ -16,7 +16,6 @@ namespace _02.Scripts.Sonar
         private static readonly int _ringWidthId = Shader.PropertyToID("_RingWidth");
         private static readonly int _scanColorId = Shader.PropertyToID("_ScanColor");
         private static readonly int _edgeThresholdId = Shader.PropertyToID("_EdgeThreshold");
-        private static readonly int _scanLineFrequencyId = Shader.PropertyToID("_ScanLineFrequency");
         private static readonly int _trailIntensityId = Shader.PropertyToID("_TrailIntensity");
         private static readonly int _trailFadeRadiusId = Shader.PropertyToID("_TrailFadeRadius");
         private static readonly int _ringFillIntensityId = Shader.PropertyToID("_RingFillIntensity");
@@ -123,7 +122,6 @@ namespace _02.Scripts.Sonar
             _scanMaterial.SetFloat(_ringWidthId, _config.RingWidth);
             _scanMaterial.SetColor(_scanColorId, _config.ScanColor);
             _scanMaterial.SetFloat(_edgeThresholdId, _config.EdgeThreshold);
-            _scanMaterial.SetFloat(_scanLineFrequencyId, _config.ScanLineFrequency);
             _scanMaterial.SetFloat(_trailIntensityId, _config.TrailIntensity);
             _scanMaterial.SetFloat(_trailFadeRadiusId, _trailFadeRadius);
             _scanMaterial.SetFloat(_ringFillIntensityId, _config.RingFillIntensity);

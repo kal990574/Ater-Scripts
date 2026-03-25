@@ -19,7 +19,6 @@ namespace _02.Scripts.Sonar
         [SerializeField] private float _ringWidth = 2f;
         [SerializeField] private Color _scanColor = new(0.4f, 0.7f, 1.0f, 1.0f);
         [SerializeField] private float _edgeThreshold = 0.1f;
-        [SerializeField] private float _scanLineFrequency = 50f;
         [SerializeField] private float _trailIntensity = 0.3f;
         [SerializeField] [Range(0f, 1f)] private float _ringFillIntensity = 0.4f;
         [SerializeField] [Range(0.5f, 5f)] private float _ringGradientPower = 2f;
@@ -35,7 +34,6 @@ namespace _02.Scripts.Sonar
         public float RingWidth => _ringWidth;
         public Color ScanColor => _scanColor;
         public float EdgeThreshold => _edgeThreshold;
-        public float ScanLineFrequency => _scanLineFrequency;
         public float TrailIntensity => _trailIntensity;
         public float RingFillIntensity => _ringFillIntensity;
         public float RingGradientPower => _ringGradientPower;
