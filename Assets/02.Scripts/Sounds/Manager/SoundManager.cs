@@ -14,6 +14,11 @@ public class SoundManager : MonoBehaviour, ISoundService
     [Header("Stinger")]
     [SerializeField] private AudioSource _stingerSource;
 
+    [Header("SFX")]
+    [SerializeField] private AudioMixerGroup _sfxMixerGroup;
+
+    private bool _isPaused;
+
 
     private const string PARAM_MASTER = "MasterVolume";
     private const string PARAM_BGM = "BGMVolume";
@@ -22,7 +27,7 @@ public class SoundManager : MonoBehaviour, ISoundService
 
     private const float SFX_PITCH_VARIANCE = 0.1f;
 
-    
+
     private AudioSource _activeBGM;
     private AudioSource _inActiveBGM;
     private Coroutine _bgmFadeCoroutine;
@@ -40,9 +45,11 @@ public class SoundManager : MonoBehaviour, ISoundService
 
         if (_activeBGM.clip == clip && _activeBGM.isPlaying) return;
 
-        if(_bgmFadeCoroutine != null)
+        fadeTime = Mathf.Max(fadeTime, 0.01f); //fadetime이 0일 때의 예외처리
+
+        if (_bgmFadeCoroutine != null)
         {
-            StopCoroutine( _bgmFadeCoroutine );
+            StopCoroutine(_bgmFadeCoroutine);
         }
 
         _bgmFadeCoroutine = StartCoroutine(CrossfadeBGM(clip, fadeTime));
@@ -51,9 +58,11 @@ public class SoundManager : MonoBehaviour, ISoundService
 
     public void StopBGM(float fadeTime = 1f)
     {
-        if( _bgmFadeCoroutine != null)
+        fadeTime = Mathf.Max(fadeTime, 0.01f); //fadetime이 0일 때의 예외처리
+
+        if (_bgmFadeCoroutine != null)
         {
-            StopCoroutine( _bgmFadeCoroutine );
+            StopCoroutine(_bgmFadeCoroutine);
         }
         _bgmFadeCoroutine = StartCoroutine(FadeOutBGM(fadeTime));
     }
@@ -62,7 +71,7 @@ public class SoundManager : MonoBehaviour, ISoundService
 
     public void PlaySFX(AudioClip clip, Vector3 position, float volume = 1f)
     {
-        if( clip == null) return;
+        if (clip == null) return;
 
         GameObject tempgo = new GameObject("SFX_TEMP");
         tempgo.transform.position = position;
@@ -70,8 +79,9 @@ public class SoundManager : MonoBehaviour, ISoundService
         AudioSource source = tempgo.AddComponent<AudioSource>();
         source.clip = clip;
         source.volume = volume;
-        source.pitch = 1f + Random.Range(- SFX_PITCH_VARIANCE, SFX_PITCH_VARIANCE);
+        source.pitch = 1f + Random.Range(-SFX_PITCH_VARIANCE, SFX_PITCH_VARIANCE);
         source.spatialBlend = 1f;
+        source.outputAudioMixerGroup = _sfxMixerGroup;
         source.Play();
 
         Destroy(tempgo, clip.length / source.pitch + 0.1f);
@@ -79,7 +89,7 @@ public class SoundManager : MonoBehaviour, ISoundService
 
     public void PlaySFX2D(AudioClip clip, float volume = 1f)
     {
-        if(clip == null) return;
+        if (clip == null) return;
 
         GameObject tempgo = new GameObject("SFX2D_TEMP");
         AudioSource source = tempgo.AddComponent<AudioSource>();
@@ -87,6 +97,7 @@ public class SoundManager : MonoBehaviour, ISoundService
         source.volume = volume;
         source.pitch = 1f;
         source.spatialBlend = 0f;
+        source.outputAudioMixerGroup = _sfxMixerGroup;
         source.Play();
 
         Destroy(tempgo, clip.length + 0.1f);
@@ -94,7 +105,7 @@ public class SoundManager : MonoBehaviour, ISoundService
 
     public void PlayStinger(AudioClip clip, float volume = 1f)
     {
-        if(clip == null) return;
+        if (clip == null) return;
         _stingerSource.Stop();
         _stingerSource.clip = clip;
         _stingerSource.volume = volume;
@@ -122,12 +133,14 @@ public class SoundManager : MonoBehaviour, ISoundService
 
     public void PauseAll()
     {
+        _isPaused = true;
         _activeBGM.Pause();
         _stingerSource.Pause();
         AudioListener.pause = true;
     }
     public void ResumeAll()
     {
+        _isPaused = false;
         _activeBGM.UnPause();
         _stingerSource.UnPause();
         AudioListener.pause = false;
@@ -146,11 +159,15 @@ public class SoundManager : MonoBehaviour, ISoundService
 
         while (elapsed < fadeTime)
         {
-            elapsed += Time.unscaledDeltaTime;
+            if (!_isPaused)
+            {
+                elapsed += Time.unscaledDeltaTime;
+            }
+
             float t = elapsed / fadeTime;
 
             _activeBGM.volume = Mathf.Lerp(startVolume, 0f, t);
-            _inActiveBGM.volume = Mathf.Lerp(0f,1f,t);
+            _inActiveBGM.volume = Mathf.Lerp(0f, 1f, t);
 
             yield return null;
         }
@@ -159,18 +176,29 @@ public class SoundManager : MonoBehaviour, ISoundService
 
         (_activeBGM, _inActiveBGM) = (_inActiveBGM, _activeBGM);
     }
+
     private IEnumerator FadeOutBGM(float fadeTime)
     {
         float elapsed = 0f;
         float startVolume = _activeBGM.volume;
+        float inActiveStartVolume = _inActiveBGM.volume;
 
         while (elapsed < fadeTime)
         {
-            elapsed += Time.unscaledDeltaTime;
-            _activeBGM.volume = Mathf.Lerp(startVolume, 0f, elapsed / fadeTime);
+            if (!_isPaused)
+            {
+                elapsed += Time.unscaledDeltaTime;
+            }
+
+            float t = elapsed / fadeTime;
+
+            _activeBGM.volume = Mathf.Lerp(startVolume, 0f, t);
+            _inActiveBGM.volume = Mathf.Lerp(inActiveStartVolume, 0f, t);
             yield return null;
         }
         _activeBGM.Stop();
         _activeBGM.volume = 0f;
+        _inActiveBGM.Stop();
+        _inActiveBGM.volume = 0f;
     }
 }
