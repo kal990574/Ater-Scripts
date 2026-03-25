@@ -1,204 +1,65 @@
+using Lean.Pool;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Audio;
 
 public class SoundManager : MonoBehaviour, ISoundService
 {
-    [Header("Mixer")]
-    [SerializeField] private AudioMixer _mixer;
-
-    [Header("BGM")]
-    [SerializeField] private AudioSource _bgmSourceA;
-    [SerializeField] private AudioSource _bgmSourceB;
-
-    [Header("Stinger")]
-    [SerializeField] private AudioSource _stingerSource;
-
-    [Header("SFX")]
-    [SerializeField] private AudioMixerGroup _sfxMixerGroup;
-
-    private bool _isPaused;
-
-
-    private const string PARAM_MASTER = "MasterVolume";
-    private const string PARAM_BGM = "BGMVolume";
-    private const string PARAM_SFX = "SFXVolume";
-
-
-    private const float SFX_PITCH_VARIANCE = 0.1f;
-
-
-    private AudioSource _activeBGM;
-    private AudioSource _inActiveBGM;
-    private Coroutine _bgmFadeCoroutine;
-
-    private void Awake()
-    {
-        _activeBGM = _bgmSourceA;
-        _inActiveBGM = _bgmSourceB;
-        _inActiveBGM.volume = 0f;
-    }
+    [Header("Controller")]
+    [SerializeField] private BGMController _bgmController;
+    [SerializeField] private SFXController _sfxController;
+    [SerializeField] private MixerController _mixerController;
 
     public void PlayBGM(AudioClip clip, float fadeTime = 1f)
     {
-        if (clip == null) return;
-
-        if (_activeBGM.clip == clip && _activeBGM.isPlaying) return;
-
-        fadeTime = Mathf.Max(fadeTime, 0.01f); //fadetime이 0일 때의 예외처리
-
-        if (_bgmFadeCoroutine != null)
-        {
-            StopCoroutine(_bgmFadeCoroutine);
-        }
-
-        _bgmFadeCoroutine = StartCoroutine(CrossfadeBGM(clip, fadeTime));
+        _bgmController.Play(clip, fadeTime);
     }
-
-
     public void StopBGM(float fadeTime = 1f)
     {
-        fadeTime = Mathf.Max(fadeTime, 0.01f); //fadetime이 0일 때의 예외처리
-
-        if (_bgmFadeCoroutine != null)
-        {
-            StopCoroutine(_bgmFadeCoroutine);
-        }
-        _bgmFadeCoroutine = StartCoroutine(FadeOutBGM(fadeTime));
+        _bgmController.Stop(fadeTime);
     }
-
-
-
     public void PlaySFX(AudioClip clip, Vector3 position, float volume = 1f)
     {
-        if (clip == null) return;
-
-        GameObject tempgo = new GameObject("SFX_TEMP");
-        tempgo.transform.position = position;
-
-        AudioSource source = tempgo.AddComponent<AudioSource>();
-        source.clip = clip;
-        source.volume = volume;
-        source.pitch = 1f + Random.Range(-SFX_PITCH_VARIANCE, SFX_PITCH_VARIANCE);
-        source.spatialBlend = 1f;
-        source.outputAudioMixerGroup = _sfxMixerGroup;
-        source.Play();
-
-        Destroy(tempgo, clip.length / source.pitch + 0.1f);
+        _sfxController.PlaySFX(clip, position, volume);
     }
-
     public void PlaySFX2D(AudioClip clip, float volume = 1f)
     {
-        if (clip == null) return;
-
-        GameObject tempgo = new GameObject("SFX2D_TEMP");
-        AudioSource source = tempgo.AddComponent<AudioSource>();
-        source.clip = clip;
-        source.volume = volume;
-        source.pitch = 1f;
-        source.spatialBlend = 0f;
-        source.outputAudioMixerGroup = _sfxMixerGroup;
-        source.Play();
-
-        Destroy(tempgo, clip.length + 0.1f);
+        _sfxController.PlaySFX2D(clip, volume);
     }
-
     public void PlayStinger(AudioClip clip, float volume = 1f)
     {
-        if (clip == null) return;
-        _stingerSource.Stop();
-        _stingerSource.clip = clip;
-        _stingerSource.volume = volume;
-        _stingerSource.Play();
+        _sfxController.PlayStinger(clip, volume);
     }
 
     public void SetMasterVolume(float volume)
     {
-        SetMixerVolume(PARAM_MASTER, volume);
+        _mixerController.SetMasterVolume(volume);
     }
     public void SetBGMVolume(float volume)
     {
-        SetMixerVolume(PARAM_BGM, volume);
+        _mixerController.SetBGMVolume(volume);
     }
     public void SetSFXVolume(float volume)
     {
-        SetMixerVolume(PARAM_SFX, volume);
+        _mixerController.SetSFXVolume(volume);
     }
 
-    private void SetMixerVolume(string paramName, float volume)
+    public void TransitionToSnapshot(AudioMixerSnapshot snapshot, float transitionTime = 0.5f)
     {
-        float dB = volume > 0.0001f ? Mathf.Log10(volume) * 20f : -80f;
-        _mixer.SetFloat(paramName, dB);
+        _mixerController.TransitionToSnapshot(snapshot, transitionTime);
     }
 
     public void PauseAll()
     {
-        _isPaused = true;
-        _activeBGM.Pause();
-        _stingerSource.Pause();
+        _bgmController.Pause();
+        _sfxController.PauseStinger();
         AudioListener.pause = true;
     }
     public void ResumeAll()
     {
-        _isPaused = false;
-        _activeBGM.UnPause();
-        _stingerSource.UnPause();
+        _bgmController.Resume();
+        _sfxController.ResumeStinger();
         AudioListener.pause = false;
     }
 
-
-
-    private IEnumerator CrossfadeBGM(AudioClip newClip, float fadeTime)
-    {
-        _inActiveBGM.clip = newClip;
-        _inActiveBGM.volume = 0f;
-        _inActiveBGM.Play();
-
-        float elapsed = 0f;
-        float startVolume = _activeBGM.volume;
-
-        while (elapsed < fadeTime)
-        {
-            if (!_isPaused)
-            {
-                elapsed += Time.unscaledDeltaTime;
-            }
-
-            float t = elapsed / fadeTime;
-
-            _activeBGM.volume = Mathf.Lerp(startVolume, 0f, t);
-            _inActiveBGM.volume = Mathf.Lerp(0f, 1f, t);
-
-            yield return null;
-        }
-        _activeBGM.Stop();
-        _activeBGM.volume = 0f;
-
-        (_activeBGM, _inActiveBGM) = (_inActiveBGM, _activeBGM);
-    }
-
-    private IEnumerator FadeOutBGM(float fadeTime)
-    {
-        float elapsed = 0f;
-        float startVolume = _activeBGM.volume;
-        float inActiveStartVolume = _inActiveBGM.volume;
-
-        while (elapsed < fadeTime)
-        {
-            if (!_isPaused)
-            {
-                elapsed += Time.unscaledDeltaTime;
-            }
-
-            float t = elapsed / fadeTime;
-
-            _activeBGM.volume = Mathf.Lerp(startVolume, 0f, t);
-            _inActiveBGM.volume = Mathf.Lerp(inActiveStartVolume, 0f, t);
-            yield return null;
-        }
-        _activeBGM.Stop();
-        _activeBGM.volume = 0f;
-        _inActiveBGM.Stop();
-        _inActiveBGM.volume = 0f;
-    }
 }

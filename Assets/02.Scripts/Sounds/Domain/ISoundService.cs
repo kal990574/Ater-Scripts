@@ -1,7 +1,9 @@
 using UnityEngine;
+using UnityEngine.Audio;
 
 public interface ISoundService
 {
+
     void PlayBGM(AudioClip clip, float fadeTime = 1f);
     void StopBGM(float fadeTime = 1f);
 
@@ -14,6 +16,7 @@ public interface ISoundService
     void SetMasterVolume(float volume);
     void SetBGMVolume(float volume);
     void SetSFXVolume(float volume);
+    void TransitionToSnapshot(AudioMixerSnapshot Snapshot, float transitionTime = 0.5f);
 
     void PauseAll();
     void ResumeAll();
