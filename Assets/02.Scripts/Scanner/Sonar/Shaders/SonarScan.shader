@@ -196,12 +196,16 @@ Shader "Custom/SonarScan"
                 float edge = SobelDepthEdge(uv);
                 float scanLine = ScanLinePattern(worldPos);
 
+                // 거리별 감쇠: 가까울수록 밝고, 멀수록 어둡게
+                float distAtten = 1.0 - saturate(dist / _ScanMaxRadius);
+                distAtten = distAtten * distAtten; // 제곱으로 자연스러운 감쇠 커브
+
                 // 링: 영역 전체
                 float ringFill = ring * cone * _RingFillIntensity * _RingOpacity;
 
                 // 윤곽선: 링은 edge, 잔상은 edge + scanline
                 float ringOutline = ring * cone * edge * _RingOpacity;
-                float trailOutline = trail * cone * edge * scanLine;
+                float trailOutline = trail * cone * edge * scanLine * distAtten;
 
                 float finalEffect = saturate(ringFill + ringOutline + trailOutline);
 

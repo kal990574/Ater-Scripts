@@ -75,7 +75,7 @@ namespace _02.Scripts.Sonar
             _trailFadeRadius = 0f;
             _ringOpacity = 1f;
             float maxRadius = _config.ScanRadius;
-            float expandSpeed = _config.ExpandSpeed;
+            float expandDuration = maxRadius / _config.ExpandSpeed;
             float trailDelay = _config.TrailDuration;
             float elapsed = 0f;
 
@@ -83,23 +83,23 @@ namespace _02.Scripts.Sonar
             {
                 elapsed += Time.deltaTime;
 
-                // 링 확장.
+                // 링 확장: AnimationCurve 기반 이징
                 if (_currentRadius < maxRadius)
                 {
-                    _currentRadius += expandSpeed * Time.deltaTime;
-                    _currentRadius = Mathf.Min(_currentRadius, maxRadius);
+                    float t = Mathf.Clamp01(elapsed / expandDuration);
+                    _currentRadius = _config.ExpandCurve.Evaluate(t) * maxRadius;
                 }
                 else
                 {
-                    // 링 max 도달 → 페이드아웃.
+                    // 링 max 도달 → 페이드아웃
                     _ringOpacity -= Time.deltaTime / _ringFadeDuration;
                     _ringOpacity = Mathf.Max(_ringOpacity, 0f);
                 }
 
-                // 잔상 소멸 경계: trailDelay 후 동일 속도로 추격.
+                // 잔상 소멸 경계: trailDelay 후 동일 속도로 추격
                 if (elapsed > trailDelay)
                 {
-                    _trailFadeRadius += expandSpeed * Time.deltaTime;
+                    _trailFadeRadius += _config.ExpandSpeed * Time.deltaTime;
                     _trailFadeRadius = Mathf.Min(_trailFadeRadius, maxRadius);
                 }
 
