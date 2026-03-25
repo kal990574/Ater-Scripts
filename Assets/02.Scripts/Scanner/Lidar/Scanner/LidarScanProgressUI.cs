@@ -56,7 +56,7 @@ public class LidarScanProgressUI : MonoBehaviour
 
         UnbindCurrentTarget();
         _currentTarget = target;
-        _currentTarget.OnProgressChanged += Refresh;
+        _currentTarget.OnScanProgressChanged += Refresh;
         Refresh(_currentTarget.ProgressRatio);
         gameObject.SetActive(true);
     }
@@ -80,7 +80,7 @@ public class LidarScanProgressUI : MonoBehaviour
             return;
         }
 
-        _currentTarget.OnProgressChanged -= Refresh;
+        _currentTarget.OnScanProgressChanged -= Refresh;
         _currentTarget = null;
     }
 }

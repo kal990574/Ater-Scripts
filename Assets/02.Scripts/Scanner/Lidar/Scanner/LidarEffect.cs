@@ -19,8 +19,6 @@ public class LidarEffect
         _lineRenderer = scanFeature.LineRenderer;
         _config = scanFeature.Config;
         
-        Debug.Log($"LineRenderer Object: {_lineRenderer.gameObject.name}", _lineRenderer);
-        Debug.Log($"Instance ID: {_lineRenderer.GetInstanceID()}", _lineRenderer);
         ClearLine();
     }
 
@@ -80,7 +78,6 @@ public class LidarEffect
         LidarRayData rayData = rayDatas[Random.Range(0, rayDatas.Count)];
         SetLineColor(Color.red);
         SetLine(_muzzle.position, rayData.EndPoint);
-        Debug.Log(rayData.EndPoint.ToString());
     }
 
     private Vector3 GetPointOnTargetSurface(ScannableObject target)
@@ -145,8 +142,6 @@ public class LidarEffect
         _lineRenderer.enabled = true;
         _lineRenderer.SetPosition(0, startPoint);
         _lineRenderer.SetPosition(1, endPoint);
-        
-        Debug.Log($"drawLine : startPoint : {startPoint}, endPoint : {endPoint}");
     }
 
     private void ClearLine()
@@ -177,7 +172,5 @@ public class LidarEffect
 
         _lineRenderer.startColor = color;
         _lineRenderer.endColor = color;
-        
-        
     }
 }

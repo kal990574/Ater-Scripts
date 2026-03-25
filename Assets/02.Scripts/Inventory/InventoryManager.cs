@@ -4,44 +4,43 @@ using UnityEngine;
 
 public class InventoryManager : MonoBehaviour
 {
-    public static InventoryManager Instance { get; private set; }
+    private static InventoryManager _instance;
+    public static InventoryManager Instance => _instance;
 
     [SerializeField] private ItemDataTable _table;
 
+    //플레이어가 소유한 인벤토리
     private List<ItemData> _playerInventory = new List<ItemData>();
-    public IReadOnlyList<ItemData> ReadonlyPlayerInventory => _playerInventory;
-
-    private bool _isInventoryUIOn = false;
-
+    
+    [SerializeField]private bool _isInventoryUIOn = false;
     private int _selectedIndex = -1;
-    public int SelectedIndex => _selectedIndex;
-
+    
+    public IReadOnlyList<ItemData> ReadonlyPlayerInventory => _playerInventory;
     public int Count => _playerInventory.Count;
-
+    public int SelectedIndex => _selectedIndex;
+    
     public event Action<bool> OnInventoryToggled;
-
     public event Action OnDataChanged;
     public event Action<int> OnSelectionChanged;
-
-
-
-
+    
     private void Awake()
     {
-
-        if (Instance != null && Instance != this)
+        if (_instance == null)
+        {
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
         {
             Destroy(gameObject);
-            return;
         }
-
-        Instance = this;
-
-        AddItem(_table.GetItem(1));
-        AddItem(_table.GetItem(1));
-        AddItem(_table.GetItem(1));
+        
+        
+        // AddItem(_table.GetItem(1));
+        // AddItem(_table.GetItem(1));
+        // AddItem(_table.GetItem(1));
     }
-
+    
     public void ClearSelection()
     {
         _selectedIndex = -1;
@@ -60,14 +59,17 @@ public class InventoryManager : MonoBehaviour
         OnSelectionChanged?.Invoke(index);
     }
 
-    public bool AddItem(ItemData item)
+    public bool TryAddItem(int item)
     {
         //무조건 뒤에 넣는다
-        if (item == null) return false;
-
-        _playerInventory.Add(item);
+        ItemData newItem = _table.GetItem(item);
+        if (newItem == null)
+        {
+            return false;
+        }
+        _playerInventory.Add(newItem);
+        
         OnDataChanged?.Invoke();
-
         return true;
     }
 

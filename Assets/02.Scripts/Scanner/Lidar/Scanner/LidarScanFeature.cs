@@ -2,41 +2,34 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class LidarScanFeature : MonoBehaviour
 {
     [Header("Required References")]
     [SerializeField] private LidarScanConfigSO _config;
-    
     [SerializeField] private Transform _rayOrigin;
     [SerializeField] private Transform muzzle;
     [SerializeField] private LineRenderer _lineRenderer;
 
-    
-    
-
     [Header("Optional Settings")]
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
-    
-    //캐싱
+    [SerializeField] private LidarScanQTESettings _qteSettings;
+
     private LidarEffect _lidarEffect;
     private LidarRaycast _lidarRay;
-    
+    private LidarScanQTE _qte;
+
     public ScannableObject CurrentTarget { get; private set; }
-    
-    //프로퍼티
+
     public LidarEffect LidarEffect => _lidarEffect;
     public LidarRaycast LidarRay => _lidarRay;
     public LidarScanConfigSO Config => _config;
-    public Vector3 StartPos => _rayOrigin.position + _originOffset; //레이가 시작하는 위치
-    public Transform Muzzle => muzzle;                              //총구위치
-    public LineRenderer LineRenderer => _lineRenderer;              //라인 렌더러
+    public Vector3 StartPos => _rayOrigin.position + _originOffset;
+    public Transform Muzzle => muzzle;
+    public LineRenderer LineRenderer => _lineRenderer;
     public bool IsOnScan { get; private set; }
 
-    //이벤트
     public event Action<ScannableObject> OnTargetFind;
     public event Action OnTargetLost;
-    
 
     public void Initialize()
     {
@@ -46,29 +39,33 @@ public class LidarScanFeature : MonoBehaviour
             return;
         }
 
-        
         if (_lineRenderer == null)
         {
             Debug.LogError($"[{nameof(LidarEffect)}] LineRenderer reference is missing.");
             return;
         }
-        Debug.Log($"LineRenderer Object: {_lineRenderer.gameObject.name}", _lineRenderer);
-        Debug.Log($"Instance ID: {_lineRenderer.GetInstanceID()}", _lineRenderer);
+
         _lineRenderer.useWorldSpace = true;
         _lineRenderer.positionCount = 2;
         _lineRenderer.enabled = false;
-        
+
         _lidarRay = new(this);
         _lidarEffect = new(this);
-            
+        _qte = _qteSettings == null ? null : new LidarScanQTE(_qteSettings);
     }
-    
+
     public void StopScan()
     {
         if (CurrentTarget != null)
         {
             OnTargetLost?.Invoke();
-            CurrentTarget.OnScanLost();
+
+            bool shouldNotifyScanLost = _qte == null || _qte.HandleStop(CurrentTarget);
+            if (shouldNotifyScanLost)
+            {
+                CurrentTarget.OnScanStopped();
+            }
+
             CurrentTarget = null;
         }
 
@@ -77,41 +74,42 @@ public class LidarScanFeature : MonoBehaviour
         IsOnScan = false;
     }
 
-    //이것도 여기있으면 안됨. 나중에 수정할것
     public void SubmitCurrentQte()
     {
-        if (QTEManager.Instance == null)
+        if (_qte == null)
         {
             return;
         }
 
-        QTEManager.Instance.SubmitCurrent();
+        _qte.SubmitCurrent();
     }
 
     public void UpdateScan(float deltaTime)
     {
-        if (!IsOnScan)
+        if (IsOnScan == false)
         {
             IsOnScan = true;
         }
-        
+
         _lidarRay.Scan();
 
         ScannableObject previousTarget = CurrentTarget;
         ScannableObject newTarget = ResolveTarget(_lidarRay.HitMap, StartPos, transform.forward);
 
-        HandleTargetChanged(previousTarget, newTarget);
+        bool shouldNotifyScanLost = _qte == null || _qte.HandleTargetChanged(previousTarget, newTarget);
+        HandleTargetChanged(previousTarget, newTarget, shouldNotifyScanLost);
         CurrentTarget = newTarget;
 
         if (CurrentTarget != null)
         {
             CurrentTarget.OnScanning(deltaTime);
+            _qte?.UpdateCurrentTarget(CurrentTarget, deltaTime);
         }
-        
-        LidarEffect.DrawLidarEffect(_lidarRay.RayResults,CurrentTarget);
+
+        LidarEffect.DrawLidarEffect(_lidarRay.RayResults, CurrentTarget);
     }
 
-    private void HandleTargetChanged(ScannableObject previous, ScannableObject current)
+    private void HandleTargetChanged(ScannableObject previous, ScannableObject current, bool shouldNotifyScanLost)
     {
         if (previous == null && current != null)
         {
@@ -122,7 +120,11 @@ public class LidarScanFeature : MonoBehaviour
         if (previous != null && current != null && previous != current)
         {
             OnTargetLost?.Invoke();
-            previous.OnScanLost();
+            if (shouldNotifyScanLost)
+            {
+                previous.OnScanStopped();
+            }
+
             OnTargetFind?.Invoke(current);
             return;
         }
@@ -130,7 +132,10 @@ public class LidarScanFeature : MonoBehaviour
         if (previous != null && current == null)
         {
             OnTargetLost?.Invoke();
-            previous.OnScanLost();
+            if (shouldNotifyScanLost)
+            {
+                previous.OnScanStopped();
+            }
         }
     }
 

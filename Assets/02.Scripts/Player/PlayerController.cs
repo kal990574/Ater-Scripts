@@ -8,47 +8,95 @@ public enum PlayerInteractMode
     Item,
     Scan,
 }
-//플레이어 생명주기 담당
-//각종 설정 및 콘피그는 여기에 모두 할당하고 하위 어빌리티로 전달할것
+
 public class PlayerController : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private PlayerConfigSO playerConfig;
-    
-    
-    [SerializeField]private bool _canMove = true;
-    [SerializeField]private bool _canRotate= true;
-    [SerializeField]private PlayerInteractMode _interactMode= PlayerInteractMode.Scan;
-    
-    //Cache
-    private Dictionary<Type, PlayerAbility> _abilities;
-    private IPlayerInput _input;
-    
-    
+    [SerializeField] private PlayerConfigSO _playerConfig;
+    [SerializeField] private bool _canMove = true;
+    [SerializeField] private bool _canRotate = true;
+    [SerializeField] private PlayerInteractMode _interactMode = PlayerInteractMode.Scan;
 
-    public PlayerConfigSO Config => playerConfig;
+    private readonly Dictionary<Type, PlayerAbility> _abilities = new();
+    private IPlayerInput _input;
+
+    public PlayerConfigSO Config => _playerConfig;
     public IPlayerInput Input => _input;
     public bool CanMove => _canMove;
     public bool CanRotate => _canRotate;
     public PlayerInteractMode InteractMode => _interactMode;
+    public InteractController Target => GetAbility<PlayerDetectAbility>().CurrentTarget;
 
-    //초기화 로직
+    public event Action<PlayerInteractMode> OnModeChanged;
+
     private void Awake()
     {
         if (_input == null)
         {
             _input = GetComponentInChildren<IPlayerInput>();
         }
-        
     }
 
-    //파괴시 로직
-    private void OnDestroy()
+    private void Update()
     {
-        
+        if (Target != null)
+        {
+            ItemModeInput();
+        }
+
+        if (InteractMode == PlayerInteractMode.Scan)
+        {
+            ScanModeInput();
+        }
+
+        if (_input.ScannerToggleInput)
+        {
+            SetActionMode(PlayerInteractMode.Scan);
+        }
+
+        if (_input.InventoryToggleInput)
+        {
+            GetAbility<PlayerInventoryAbility>().ToggleInventory();
+        }
+
+        if (_input.ItemSlotInput >= 0 && _input.ItemSlotInput <= 5)
+        {
+            SetActionMode(PlayerInteractMode.Item);
+        }
     }
 
-    
+    private void ItemModeInput()
+    {
+        if (_input.InteractInput)
+        {
+            GetAbility<PlayerInteractAbility>().Interact(Target);
+        }
+    }
+
+    private void ScanModeInput()
+    {
+        PlayerScanAbility scanAbility = GetAbility<PlayerScanAbility>();
+        if (_input.RmbPressInput)
+        {
+            scanAbility.SonarActive();
+        }
+
+        if (_input.LmbPressInput)
+        {
+            scanAbility.LidarScanActiveAndUpdate();
+        }
+
+        if (_input.InteractInput)
+        {
+            scanAbility.LidarSubmitQTE();
+        }
+
+        if (_input.LmbReleaseInput)
+        {
+            scanAbility.LidarScanDeactive();
+        }
+    }
+
     public T GetAbility<T>() where T : PlayerAbility
     {
         Type type = typeof(T);
@@ -65,6 +113,12 @@ public class PlayerController : MonoBehaviour
             return ability as T;
         }
 
-        throw new Exception($"[PlayerController] Ability {type.Name} not found on {gameObject.name}.");
+        return null;
+    }
+
+    public void SetActionMode(PlayerInteractMode mode)
+    {
+        _interactMode = mode;
+        OnModeChanged?.Invoke(mode);
     }
 }
