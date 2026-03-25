@@ -66,32 +66,35 @@ namespace _02.Scripts.Sonar
             _currentRadius = 0f;
             _trailFadeRadius = 0f;
             _ringOpacity = 1f;
+
             float maxRadius = _config.ScanRadius;
-            float expandDuration = maxRadius / _config.ExpandSpeed;
+            float totalDistance = maxRadius + _config.RingWidth;
+            float expandDuration = totalDistance / _config.ExpandSpeed;
             float trailDelay = _config.TrailDuration;
             float elapsed = 0f;
 
-            while (_currentRadius < maxRadius || _ringOpacity > 0f || _trailFadeRadius < maxRadius)
+            while (_ringOpacity > 0f || _trailFadeRadius < maxRadius)
             {
                 elapsed += Time.deltaTime;
 
-                // 링 확장: AnimationCurve 기반 이징
-                if (_currentRadius < maxRadius)
+                // 링 확장 (0 → maxRadius + ringWidth, 커브 하나로 전체 이동)
+                // 셰이더가 maxRadius 밖을 클리핑 → 끝부분에서 얇아지다 자연 소멸
+                if (_ringOpacity > 0f)
                 {
                     float t = Mathf.Clamp01(elapsed / expandDuration);
-                    _currentRadius = _config.ExpandCurve.Evaluate(t) * maxRadius;
-                }
-                else
-                {
-                    // 링 max 도달 → 페이드아웃
-                    _ringOpacity -= Time.deltaTime / _config.RingFadeDuration;
-                    _ringOpacity = Mathf.Max(_ringOpacity, 0f);
+                    _currentRadius = _config.ExpandCurve.Evaluate(t) * totalDistance;
+
+                    if (t >= 1f)
+                    {
+                        _currentRadius = maxRadius;
+                        _ringOpacity = 0f;
+                    }
                 }
 
-                // 잔상 소멸 경계: trailDelay 후 동일 속도로 추격
+                // 잔상 소멸: trailDelay 후 trailFadeSpeed로 안쪽부터 지움
                 if (elapsed > trailDelay)
                 {
-                    _trailFadeRadius += _config.ExpandSpeed * Time.deltaTime;
+                    _trailFadeRadius += _config.TrailFadeSpeed * Time.deltaTime;
                     _trailFadeRadius = Mathf.Min(_trailFadeRadius, maxRadius);
                 }
 
@@ -99,7 +102,6 @@ namespace _02.Scripts.Sonar
                 yield return null;
             }
 
-            // 초기화.
             _currentRadius = 0f;
             _trailFadeRadius = 0f;
             _ringOpacity = 0f;

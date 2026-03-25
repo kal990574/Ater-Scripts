@@ -22,7 +22,7 @@ namespace _02.Scripts.Sonar
         [SerializeField] private float _scanLineFrequency = 50f;
         [SerializeField] private float _trailIntensity = 0.3f;
         [SerializeField] [Range(0f, 1f)] private float _ringFillIntensity = 0.4f;
-        [SerializeField] private float _ringFadeDuration = 0.5f;
+        [SerializeField] private float _trailFadeSpeed = 20f;
 
         public float ScanRadius => _scanRadius;
         public float ScanAngle => _scanAngle;
@@ -37,6 +37,6 @@ namespace _02.Scripts.Sonar
         public float ScanLineFrequency => _scanLineFrequency;
         public float TrailIntensity => _trailIntensity;
         public float RingFillIntensity => _ringFillIntensity;
-        public float RingFadeDuration => _ringFadeDuration;
+        public float TrailFadeSpeed => _trailFadeSpeed;
     }
 }
