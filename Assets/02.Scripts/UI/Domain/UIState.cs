@@ -5,7 +5,6 @@ namespace _02.Scripts.UI.Domain
         MainMenu,
         InGame,
         Paused,
-        GameOver,
-        Settings
+        GameOver
     }
 }

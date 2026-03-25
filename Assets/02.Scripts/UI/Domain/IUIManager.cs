@@ -5,12 +5,11 @@ namespace _02.Scripts.UI.Domain
     public interface IUIManager
     {
         UIState CurrentState { get; }
-        event Action<UIState> OnUIStateChange;
+        event Action<UIState> OnUIStateChanged;
 
         void ShowMainMenu();
         void ShowInGameHUD();
         void ShowPauseMenu();
         void ShowGameOver();
-        void ShowSettings(UIState returnTo);
     }
 }
