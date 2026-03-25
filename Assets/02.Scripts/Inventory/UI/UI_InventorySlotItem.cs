@@ -10,18 +10,18 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
     [SerializeField] private TextMeshProUGUI _indexText;
     [SerializeField] private Image _selected;
 
-    private InventoryItemInstance _itemInstance;
+    private ItemInstance _itemInstance;
     private int _index;
     private Canvas _canvas;
     private GameObject _dragIcon;
 
-    public InventoryItemInstance ItemInstance => _itemInstance;
+    public ItemInstance ItemInstance => _itemInstance;
     public int Index => _index;
 
     public event Action<UI_InventorySlotItem> OnClicked;
     public event Action<UI_InventorySlotItem, UI_InventorySlotItem> OnDropped;
 
-    public void Setup(InventoryItemInstance itemInstance, int index, Canvas canvas)
+    public void Setup(ItemInstance itemInstance, int index, Canvas canvas)
     {
         _itemInstance = itemInstance;
         _index = index;

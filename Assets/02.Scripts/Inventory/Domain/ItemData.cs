@@ -14,7 +14,7 @@ public class ItemData
     [SerializeField] private Sprite _icon;
     [SerializeField] private GameObject _prefab;
     [SerializeField] private GameObject _handPrefab;
-    [SerializeField] private InventoryItemState _defaultState = new();
+    [SerializeField] private ItemState _defaultState = new();
 
     public int ItemId => _itemId;
     public string ItemName => _itemName;
@@ -32,13 +32,13 @@ public class ItemData
         clone._icon = _icon;
         clone._prefab = _prefab;
         clone._handPrefab = _handPrefab;
-        clone._defaultState = _defaultState != null ? _defaultState.Clone() : new InventoryItemState();
+        clone._defaultState = _defaultState != null ? _defaultState.Clone() : new ItemState();
         return clone;
     }
 
-    public InventoryItemState CreateDefaultState()
+    public ItemState CreateDefaultState()
     {
-        return _defaultState != null ? _defaultState.Clone() : new InventoryItemState();
+        return _defaultState != null ? _defaultState.Clone() : new ItemState();
     }
 
 }

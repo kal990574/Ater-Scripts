@@ -10,12 +10,12 @@ public class InventoryManager : MonoBehaviour
     [SerializeField] private ItemDataTable _table;
 
     //플레이어가 소유한 인벤토리
-    private readonly List<InventoryItemInstance> _playerInventory = new();
+    private readonly List<ItemInstance> _playerInventory = new();
     
     [SerializeField]private bool _isInventoryUIOn = false;
     private int _selectedIndex = -1;
     
-    public IReadOnlyList<InventoryItemInstance> ReadonlyPlayerInventory => _playerInventory;
+    public IReadOnlyList<ItemInstance> ReadonlyPlayerInventory => _playerInventory;
     public int Count => _playerInventory.Count;
     public int SelectedIndex => _selectedIndex;
     
@@ -63,7 +63,7 @@ public class InventoryManager : MonoBehaviour
     public bool TryAddItem(int item)
     {
         //무조건 뒤에 넣는다
-        InventoryItemInstance newItem = CreateItemInstance(item);
+        ItemInstance newItem = CreateItemInstance(item);
         if (newItem == null)
         {
             return false;
@@ -72,12 +72,12 @@ public class InventoryManager : MonoBehaviour
         return TryAddItem(newItem);
     }
 
-    public InventoryItemInstance CreateItemInstance(int itemId)
+    public ItemInstance CreateItemInstance(int itemId)
     {
         return _table.CreateInstance(itemId);
     }
 
-    public bool TryAddItem(InventoryItemInstance itemInstance)
+    public bool TryAddItem(ItemInstance itemInstance)
     {
         if (itemInstance == null)
         {
@@ -114,7 +114,7 @@ public class InventoryManager : MonoBehaviour
 
     public bool HasItem(int itemId)
     {
-        foreach (InventoryItemInstance item in _playerInventory)
+        foreach (ItemInstance item in _playerInventory)
         {
             if (item.ItemId == itemId) return true;
         }

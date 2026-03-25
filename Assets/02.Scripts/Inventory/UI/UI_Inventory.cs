@@ -5,8 +5,8 @@ public class UI_Inventory : MonoBehaviour
 {
     //ItemViewer와 InventoryItmeUIContainer를 관리한다.
     [SerializeField] private UI_InventoryContainer uiInventoryContainer;
-    [SerializeField] private UI_ItemViewer uiItemViewer;
-    [SerializeField] private DetailViewInteraction _detailViewInteraction;
+    [SerializeField] private UI_InventoryItemViewer uiInventoryItemViewer;
+    [SerializeField] private ExamineInteraction examineInteraction;
 
     private void Start()
     {
@@ -20,9 +20,9 @@ public class UI_Inventory : MonoBehaviour
         InventoryManager.Instance.OnSelectionChanged += HandleSelectionChanged;
         uiInventoryContainer.OnSlotClicked += HandleSlotClicked;
         uiInventoryContainer.OnSwapRequested += HandleSwapRequested;
-        _detailViewInteraction.OnDragChanged += uiItemViewer.SetDragging;
-        _detailViewInteraction.OnScrolled += uiItemViewer.Zoom;
-        _detailViewInteraction.OnClicked += uiItemViewer.TryInteract;
+        examineInteraction.OnDragChanged += uiInventoryItemViewer.SetDragging;
+        examineInteraction.OnScrolled += uiInventoryItemViewer.Zoom;
+        examineInteraction.OnClicked += uiInventoryItemViewer.TryInteract;
 
         Refresh();
     }
@@ -33,9 +33,9 @@ public class UI_Inventory : MonoBehaviour
         InventoryManager.Instance.OnSelectionChanged -= HandleSelectionChanged;
         uiInventoryContainer.OnSlotClicked -= HandleSlotClicked;
         uiInventoryContainer.OnSwapRequested -= HandleSwapRequested;
-        _detailViewInteraction.OnDragChanged -= uiItemViewer.SetDragging;
-        _detailViewInteraction.OnScrolled -= uiItemViewer.Zoom;
-        _detailViewInteraction.OnClicked -= uiItemViewer.TryInteract;
+        examineInteraction.OnDragChanged -= uiInventoryItemViewer.SetDragging;
+        examineInteraction.OnScrolled -= uiInventoryItemViewer.Zoom;
+        examineInteraction.OnClicked -= uiInventoryItemViewer.TryInteract;
         InventoryManager.Instance.ClearSelection();
     }
 
@@ -59,7 +59,7 @@ public class UI_Inventory : MonoBehaviour
         if (index >= InventoryManager.Instance.ReadonlyPlayerInventory.Count) return;
 
         uiInventoryContainer.SelectSlotAt(index);
-        uiItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
+        uiInventoryItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
     }
 
 
@@ -78,12 +78,12 @@ public class UI_Inventory : MonoBehaviour
     {
         if(index < 0)
         {
-            uiItemViewer.Hide();
+            uiInventoryItemViewer.Hide();
             return;
         }
 
         uiInventoryContainer.SelectSlotAt(index);
-        uiItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
+        uiInventoryItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
     }
     private void Show(bool isOn)
     {

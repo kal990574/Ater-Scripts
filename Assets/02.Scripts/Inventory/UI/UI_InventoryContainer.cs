@@ -11,7 +11,7 @@ public class UI_InventoryContainer : MonoBehaviour
     public event Action<int> OnSlotClicked;
     public event Action<int, int> OnSwapRequested;
 
-    public void Refresh(IReadOnlyList<InventoryItemInstance> items)
+    public void Refresh(IReadOnlyList<ItemInstance> items)
     {
         List<GameObject> toDestroy = new List<GameObject>();
 
