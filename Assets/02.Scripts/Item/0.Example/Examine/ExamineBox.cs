@@ -1,48 +1,100 @@
 using UnityEngine;
 
-public class ExamineBox : MonoBehaviour, IExamineInteractable, IBindApplier
+public class ExamineBox : MonoBehaviour, IBindApplier
 {
-    private const string OpenStateKey = "is_open";
-
-    [SerializeField] private GameObject _rewardObject;
-
-    private bool _isOpened;
-
-    public void Interact(ExamineItemBinder binder)
-    {
-        if (_isOpened)
-        {
-            return;
-        }
-
-        _isOpened = true;
-        if (_rewardObject != null)
-        {
-            _rewardObject.SetActive(true);
-        }
-        
-        if (binder?.ItemInstance == null)
-        {
-            return;
-        }
-
-        if (binder.ItemInstance.State.GetBool(OpenStateKey))
-        {
-            return;
-        }
-
-        binder.ItemInstance.State.SetBool(OpenStateKey, true);
-        binder.RefreshView();
-    }
-
+    [SerializeField] private GameObject _interactObject;
+    [SerializeField] private GameObject _keyObject;
+    [SerializeField] private int  _rewardItemId;
+    private ItemBinderBase _binder;
+    public ItemBinderBase Binder => _binder;
+    
+    private bool _isBind = false;
+    private bool _isOpened = false;
+    private bool _isColleced = false;
+    
+    
+    //해당 아이템이 생성될때 인스턴스의 스테이트 적용
     public void ApplyState(ItemBinderBase binder)
     {
-        bool isOpened = binder != null && binder.ItemInstance != null && binder.ItemInstance.State.GetBool(OpenStateKey);
-        _isOpened = isOpened;
+        Debug.Log("바인드 적용");
+        _binder = binder;
+        _isOpened = _binder.ItemInstance.State.GetBool(BinderContext.IS_OPEN);
+        _isColleced = _binder.ItemInstance.State.GetBool(BinderContext.IS_REWARD_COLLECTED);
 
-        if (_rewardObject != null)
+        //열려있지 않을때만 인터렉터블 포인트를 보이게 한다.
+        if (_isOpened)
         {
-            _rewardObject.SetActive(isOpened);
+            _interactObject.SetActive(false);
         }
+        else
+        {
+            _interactObject.SetActive(true);
+        }
+        
+        //상자가 열려있고 , 열쇄를 수집하지 않았다면 키를 보여준다.
+        if (_isOpened && !_isColleced)
+        {
+            _keyObject.SetActive(true);
+        }
+        else
+        {
+            _keyObject.SetActive(false);
+        }
+
+        _isBind = true;
+    }
+  
+    public void Open()
+    {
+        Debug.Log("박스 인터렉트");
+        if (!CheckBindValid(BinderContext.IS_OPEN))
+        {
+            return;
+        }
+
+        _binder.ItemInstance.State.SetBool(BinderContext.IS_OPEN, true);
+        _binder.RefreshView();
+    }
+
+    
+    public void GetKey()
+    {
+        gameObject.SetActive(false);
+        
+        if (!CheckBindValid(BinderContext.IS_REWARD_COLLECTED))
+        {
+            return;
+        }
+
+        if (!_binder.InventoryManager.TryAddItem(_rewardItemId))
+        {
+            return;
+        }
+
+        _binder.ItemInstance.State.SetBool(BinderContext.IS_REWARD_COLLECTED, true);
+        _binder.RefreshView();
+    }
+
+    private bool CheckBindValid(string binderContext = "")
+    {
+        if (!_isBind)
+        {
+            Debug.LogError("현재 바인드 되지 않음.");
+            return false;
+        }
+
+        if (_binder?.ItemInstance == null)
+        {
+            Debug.LogError("바인더의 인스턴스가 없음");
+            return false;
+        }
+
+        if (!string.IsNullOrEmpty(binderContext) && _binder.ItemInstance.State.GetBool(binderContext))
+        {
+            Debug.LogError("이미 True상태임");
+            return false;
+        }
+
+        return true;
     }
 }

@@ -6,19 +6,24 @@ public class ItemDataTable : ScriptableObject
 {
     [SerializeField]private List<ItemData> _itemDatas = new();
 
-    public ItemData GetItem(int itemId)
+    public ItemData GetItemData(int itemId)
     {
-        ItemData origin = _itemDatas.Find(item => item.ItemId == itemId);
-        if (origin == null) return null;
-
-        return origin.Clone();
+        ItemData data = _itemDatas.Find(item => item.ItemId == itemId);
+        if (data == null)
+        {
+            Debug.LogWarning($"Item {itemId} not found");
+            return null;
+        }
+        
+        return data;
     }
 
     public ItemInstance CreateInstance(int itemId)
     {
-        ItemData definition = GetItem(itemId);
+        ItemData definition = GetItemData(itemId);
         if (definition == null)
         {
+            Debug.LogWarning($"Item {itemId} not found");
             return null;
         }
 

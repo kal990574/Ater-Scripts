@@ -7,23 +7,26 @@ using UnityEngine;
 public class ItemInstance
 {
     [SerializeField] private string _instanceId;
-    [SerializeField] private ItemData _definition;
+    [SerializeField] private ItemData data;
     [SerializeField] private ItemState _state;
 
     public string InstanceId => _instanceId;
-    public ItemData Definition => _definition;
+    public ItemData Data => data;
     public ItemState State => _state;
 
-    public int ItemId => _definition != null ? _definition.ItemId : -1;
-    public string ItemName => _definition != null ? _definition.ItemName : string.Empty;
-    public string Description => _definition != null ? _definition.Description : string.Empty;
-    public Sprite Icon => _definition != null ? _definition.Icon : null;
-    public GameObject Prefab => _definition != null ? _definition.Prefab : null;
+    public int ItemId => data != null ? data.ItemId : -1;
+    public string ItemName => data != null ? data.ItemName : string.Empty;
+    public string Description => data != null ? data.Description : string.Empty;
+    public Sprite Icon => data != null ? data.Icon : null;
+    public GameObject WorldPrefab => data != null ? data.WorldPrefab : null;
+    public GameObject ExaminePrefab => data != null ? data.ExaminePrefab : null;
+    public GameObject HandPrefab => data != null ? data.HandPrefab : null;
 
-    public ItemInstance(ItemData definition)
+    //데이터로 인스턴스 제작하기
+    public ItemInstance(ItemData data)
     {
         _instanceId = Guid.NewGuid().ToString("N");
-        _definition = definition;
-        _state = definition != null ? definition.CreateDefaultState() : new ItemState();
+        this.data = data;
+        _state = data != null ? data.CreateDefaultState() : new ItemState();
     }
 }

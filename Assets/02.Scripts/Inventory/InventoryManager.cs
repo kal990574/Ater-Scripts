@@ -6,14 +6,14 @@ public class InventoryManager : MonoBehaviour
 {
     private static InventoryManager _instance;
     public static InventoryManager Instance => _instance;
-
-    [SerializeField] private ItemDataTable _table;
-
-    //플레이어가 소유한 인벤토리
-    private readonly List<ItemInstance> _playerInventory = new();
     
-    [SerializeField]private bool _isInventoryUIOn = false;
-    private int _selectedIndex = -1;
+    [Header("Reference")]
+    [SerializeField] private ItemDataTable _table;
+    [SerializeField] private List<ItemInstance> _playerInventory = new();
+    
+    [Header("Debug/DontChange")]
+    [SerializeField] private bool _isInventoryUIOn = false;
+    [SerializeField] private int _selectedIndex = -1;
     
     public IReadOnlyList<ItemInstance> ReadonlyPlayerInventory => _playerInventory;
     public int Count => _playerInventory.Count;

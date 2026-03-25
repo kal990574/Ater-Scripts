@@ -63,6 +63,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
 
     public void TryInteract(Vector2 screenPosition, RectTransform rawImageRect)
     {
+        Debug.Log("TryInteract");
         RectTransformUtility.ScreenPointToLocalPointInRectangle(rawImageRect, screenPosition, null, out Vector2 localPoint);
 
         Vector2 viewportPoint = new Vector2(
@@ -73,8 +74,14 @@ public class UI_InventoryItemViewer : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            InteractPoint interactPoint = hit.collider.GetComponent<InteractPoint>();
-            interactPoint?.OnClick();
+            Debug.Log("Hit");
+            InteractPoint interactPoint = hit.collider.GetComponentInParent<InteractPoint>();
+            if (interactPoint != null)
+            {
+                Debug.Log("clickevent");
+                interactPoint?.OnClick();
+            }
+            
         }
     }
 
@@ -90,7 +97,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
 
     private GameObject GetOrCreate(ItemInstance itemInstance)
     {
-        if (itemInstance == null || itemInstance.Prefab == null)
+        if (itemInstance == null || itemInstance.ExaminePrefab == null)
         {
             return null;
         }
@@ -102,7 +109,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
             return cached;
         }
 
-        GameObject obj = Instantiate(itemInstance.Prefab, _itemRoot, false);
+        GameObject obj = Instantiate(itemInstance.ExaminePrefab, _itemRoot, false);
         obj.transform.localPosition = Vector3.zero;
         SetLayerRecursively(obj, _itemRoot.gameObject.layer);
         GetOrAddBinder(obj).Bind(itemInstance, InventoryManager.Instance);
