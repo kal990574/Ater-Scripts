@@ -7,14 +7,6 @@ namespace _02.Scripts.Sonar
     public class SonarScanEffect : MonoBehaviour
     {
         [SerializeField] private Material _scanMaterial;
-        
-        [SerializeField] private float _ringWidth = 2f;
-        [SerializeField] private Color _scanColor = new(0.4f, 0.7f, 1.0f, 1.0f);
-        [SerializeField] private float _edgeThreshold = 0.1f;
-        [SerializeField] private float _scanLineFrequency = 50f;
-        [SerializeField] private float _trailIntensity = 0.3f;
-        [SerializeField] [Range(0f, 1f)] private float _ringFillIntensity = 0.4f;
-        [SerializeField] private float _ringFadeDuration = 0.5f;
 
         private static readonly int _scanOriginId = Shader.PropertyToID("_ScanOrigin");
         private static readonly int _scanDirectionId = Shader.PropertyToID("_ScanDirection");
@@ -92,7 +84,7 @@ namespace _02.Scripts.Sonar
                 else
                 {
                     // 링 max 도달 → 페이드아웃
-                    _ringOpacity -= Time.deltaTime / _ringFadeDuration;
+                    _ringOpacity -= Time.deltaTime / _config.RingFadeDuration;
                     _ringOpacity = Mathf.Max(_ringOpacity, 0f);
                 }
 
@@ -125,13 +117,13 @@ namespace _02.Scripts.Sonar
             _scanMaterial.SetFloat(_scanRadiusId, _currentRadius);
             _scanMaterial.SetFloat(_scanMaxRadiusId, _config.ScanRadius);
             _scanMaterial.SetFloat(_scanAngleId, _config.ScanAngle);
-            _scanMaterial.SetFloat(_ringWidthId, _ringWidth);
-            _scanMaterial.SetColor(_scanColorId, _scanColor);
-            _scanMaterial.SetFloat(_edgeThresholdId, _edgeThreshold);
-            _scanMaterial.SetFloat(_scanLineFrequencyId, _scanLineFrequency);
-            _scanMaterial.SetFloat(_trailIntensityId, _trailIntensity);
+            _scanMaterial.SetFloat(_ringWidthId, _config.RingWidth);
+            _scanMaterial.SetColor(_scanColorId, _config.ScanColor);
+            _scanMaterial.SetFloat(_edgeThresholdId, _config.EdgeThreshold);
+            _scanMaterial.SetFloat(_scanLineFrequencyId, _config.ScanLineFrequency);
+            _scanMaterial.SetFloat(_trailIntensityId, _config.TrailIntensity);
             _scanMaterial.SetFloat(_trailFadeRadiusId, _trailFadeRadius);
-            _scanMaterial.SetFloat(_ringFillIntensityId, _ringFillIntensity);
+            _scanMaterial.SetFloat(_ringFillIntensityId, _config.RingFillIntensity);
             _scanMaterial.SetFloat(_ringOpacityId, _ringOpacity);
         }
     }
