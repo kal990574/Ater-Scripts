@@ -3,7 +3,7 @@ using UnityEngine;
 //아이템 인스턴스의 스테이트 변수들을 적용
 public abstract class ItemBinderBase : MonoBehaviour
 {
-    private ItemInstance _itemInstance;
+    [SerializeField]private ItemInstance _itemInstance;
     private InventoryManager _inventoryManager;
 
     public ItemInstance ItemInstance => _itemInstance;

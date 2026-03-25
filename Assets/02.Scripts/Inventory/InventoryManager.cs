@@ -10,13 +10,17 @@ public class InventoryManager : MonoBehaviour
     [Header("Reference")]
     [SerializeField] private ItemDataTable _table;
     [SerializeField] private List<ItemInstance> _playerInventory = new();
+    [SerializeField] private Transform _cachedExamineRoot;
+    [SerializeField] private Transform _cachedHandRoot;
     
     [Header("Debug/DontChange")]
     [SerializeField] private bool _isInventoryUIOn = false;
     [SerializeField] private int _selectedIndex = -1;
 
     private readonly Dictionary<string, GameObject> _examineItemCache = new();
+    private readonly Dictionary<string, GameObject> _handItemCache = new();
     private GameObject _currentExamineItemObject;
+    private GameObject _currentHandItemObject;
     
     public IReadOnlyList<ItemInstance> ReadonlyPlayerInventory => _playerInventory;
     public int Count => _playerInventory.Count;
@@ -85,17 +89,20 @@ public class InventoryManager : MonoBehaviour
         }
 
         _playerInventory.Add(itemInstance);
+        CacheOwnedItem(itemInstance);
         OnDataChanged?.Invoke();
         return true;
     }
 
     public void RemoveItem(int index)
     {
-        if (index < 0 || index > _playerInventory.Count)
+        if (index < 0 || index >= _playerInventory.Count)
         {
             return;
         }
 
+        ItemInstance removedItem = _playerInventory[index];
+        DestroyOwnedItemCache(removedItem);
         _playerInventory.RemoveAt(index);
 
         if (_playerInventory.Count == 0)
@@ -147,32 +154,25 @@ public class InventoryManager : MonoBehaviour
             OnSelectionChanged?.Invoke(_selectedIndex);
         }
     }
-
     #endregion
     
     #region Examine
-    public GameObject ShowExamineItem(ItemInstance itemInstance, Transform itemRoot)
+    public GameObject ShowExamineItem(ItemInstance itemInstance)
     {
         HideExamineItem();
-        if (itemInstance == null || itemRoot == null || itemInstance.ExaminePrefab == null)
+        if (itemInstance == null)
         {
             return null;
         }
-        
-        if (_examineItemCache.TryGetValue(itemInstance.InstanceId, out GameObject cached))
-        {
-            cached.SetActive(true);
-            BindExamineItem(cached, itemInstance);
-            _currentExamineItemObject = cached;
-            return cached;
-        }
-        
-        GameObject examineObject = Instantiate(itemInstance.ExaminePrefab, itemRoot, false);
-        examineObject.transform.localPosition = Vector3.zero;
-        SetLayerRecursively(examineObject, itemRoot.gameObject.layer);
-        BindExamineItem(examineObject, itemInstance);
 
-        _examineItemCache[itemInstance.InstanceId] = examineObject;
+        GameObject examineObject = GetOrCreateCachedExamineItem(itemInstance);
+        if (examineObject == null)
+        {
+            return null;
+        }
+
+        SetLayerRecursively(examineObject, ResolveCacheRoot(_cachedExamineRoot).gameObject.layer);
+        examineObject.SetActive(true);
         _currentExamineItemObject = examineObject;
         return examineObject;
     }
@@ -184,6 +184,7 @@ public class InventoryManager : MonoBehaviour
             return;
         }
 
+        MoveToCacheRoot(_currentExamineItemObject, _cachedExamineRoot);
         _currentExamineItemObject.SetActive(false);
         _currentExamineItemObject = null;
     }
@@ -210,18 +211,123 @@ public class InventoryManager : MonoBehaviour
     #endregion
     
     #region Hand Object
-    public GameObject CreateHandItem(ItemInstance itemInstance, Transform itemRoot)
+    public GameObject ShowHandItem(ItemInstance itemInstance)
     {
-        if (itemInstance == null || itemRoot == null || itemInstance.HandPrefab == null)
+        HideHandItem();
+        if (itemInstance == null)
         {
             return null;
         }
 
-        GameObject item = Instantiate(itemInstance.HandPrefab, itemRoot, false);
-        item.transform.localPosition = Vector3.zero;
-        SetLayerRecursively(item, itemRoot.gameObject.layer);
-        BindHandItem(item, itemInstance);
-        return item;
+        GameObject handObject = GetOrCreateCachedHandItem(itemInstance);
+        if (handObject == null)
+        {
+            return null;
+        }
+
+        SetLayerRecursively(handObject, ResolveCacheRoot(_cachedHandRoot).gameObject.layer);
+        handObject.SetActive(true);
+        _currentHandItemObject = handObject;
+        return handObject;
+    }
+
+    public void HideHandItem()
+    {
+        if (_currentHandItemObject == null)
+        {
+            return;
+        }
+
+        MoveToCacheRoot(_currentHandItemObject, _cachedHandRoot);
+        _currentHandItemObject.SetActive(false);
+        _currentHandItemObject = null;
+    }
+    #endregion
+
+    #region Cache Helpers
+    private void CacheOwnedItem(ItemInstance itemInstance)
+    {
+        GetOrCreateCachedExamineItem(itemInstance);
+        GetOrCreateCachedHandItem(itemInstance);
+    }
+
+    private GameObject GetOrCreateCachedExamineItem(ItemInstance itemInstance)
+    {
+        if (itemInstance == null || itemInstance.ExaminePrefab == null)
+        {
+            return null;
+        }
+
+        if (_examineItemCache.TryGetValue(itemInstance.InstanceId, out GameObject cached) && cached != null)
+        {
+            BindExamineItem(cached, itemInstance);
+            return cached;
+        }
+
+        Transform cacheRoot = ResolveCacheRoot(_cachedExamineRoot);
+        GameObject examineObject = Instantiate(itemInstance.ExaminePrefab, cacheRoot, false);
+        examineObject.SetActive(false);
+        BindExamineItem(examineObject, itemInstance);
+        _examineItemCache[itemInstance.InstanceId] = examineObject;
+        return examineObject;
+    }
+
+    private GameObject GetOrCreateCachedHandItem(ItemInstance itemInstance)
+    {
+        if (itemInstance == null || itemInstance.HandPrefab == null)
+        {
+            return null;
+        }
+
+        if (_handItemCache.TryGetValue(itemInstance.InstanceId, out GameObject cached) && cached != null)
+        {
+            BindHandItem(cached, itemInstance);
+            return cached;
+        }
+
+        Transform cacheRoot = ResolveCacheRoot(_cachedHandRoot);
+        GameObject handObject = Instantiate(itemInstance.HandPrefab, cacheRoot, false);
+        handObject.SetActive(false);
+        BindHandItem(handObject, itemInstance);
+        _handItemCache[itemInstance.InstanceId] = handObject;
+        return handObject;
+    }
+
+    private void DestroyOwnedItemCache(ItemInstance itemInstance)
+    {
+        if (itemInstance == null)
+        {
+            return;
+        }
+
+        if (_examineItemCache.Remove(itemInstance.InstanceId, out GameObject examineObject) && examineObject != null)
+        {
+            if (_currentExamineItemObject == examineObject)
+            {
+                _currentExamineItemObject = null;
+            }
+
+            Destroy(examineObject);
+        }
+
+        if (_handItemCache.Remove(itemInstance.InstanceId, out GameObject handObject) && handObject != null)
+        {
+            if (_currentHandItemObject == handObject)
+            {
+                _currentHandItemObject = null;
+            }
+
+            Destroy(handObject);
+        }
+    }
+    
+
+    private void MoveToCacheRoot(GameObject itemObject, Transform cacheRoot)
+    {
+        itemObject.transform.SetParent(ResolveCacheRoot(cacheRoot), false);
+        itemObject.transform.localPosition = Vector3.zero;
+        itemObject.transform.localRotation = Quaternion.identity;
+        itemObject.transform.localScale = Vector3.one;
     }
     #endregion
 
@@ -266,6 +372,11 @@ public class InventoryManager : MonoBehaviour
         {
             SetLayerRecursively(child.gameObject, layer);
         }
+    }
+
+    private Transform ResolveCacheRoot(Transform cacheRoot)
+    {
+        return cacheRoot != null ? cacheRoot : transform;
     }
     #endregion
 }

@@ -49,7 +49,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
         _itemViewerCamera.transform.localPosition = _initialCameraLocalPosition;
         _itemViewerCamera.fieldOfView = _maxFieldOfView;
 
-        InventoryManager.Instance.ShowExamineItem(itemInstance, _itemRoot);
+        InventoryManager.Instance.ShowExamineItem(itemInstance);
         _descriptionText.text = itemInstance != null ? itemInstance.Description : string.Empty;
     }
 
