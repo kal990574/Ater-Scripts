@@ -36,9 +36,7 @@ public class InventoryManager : MonoBehaviour
         }
         
         
-        // AddItem(_table.GetItem(1));
-        // AddItem(_table.GetItem(1));
-        // AddItem(_table.GetItem(1));
+        TryAddItem(1);
     }
     
     public void ClearSelection()

@@ -10,8 +10,8 @@ public class UI_InventoryItemViewer : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _descriptionText;
     [SerializeField] private float _rotateSpeed = 0.5f;
     [SerializeField] private float _zoomSpeed = 1f;
-    [SerializeField] private float _minZoom = 100f;
-    [SerializeField] private float _maxZoom = 500f;
+    [SerializeField] private float _minFieldOfView = 20f;
+    [SerializeField] private float _maxFieldOfView = 60f;
 
     private readonly Dictionary<string, GameObject> _cache = new();
 
@@ -37,18 +37,13 @@ public class UI_InventoryItemViewer : MonoBehaviour
 
     public void Zoom(float scrollDelta)
     {
-        if (_currentItem == null)
+        if (_currentItem == null || _itemViewerCamera == null)
         {
             return;
         }
 
-        Vector3 newPos = _itemViewerCamera.transform.position + _itemViewerCamera.transform.forward * scrollDelta * _zoomSpeed;
-        float distance = Vector3.Distance(newPos, _itemRoot.position);
-
-        if (distance >= _minZoom && distance <= _maxZoom)
-        {
-            _itemViewerCamera.transform.position = newPos;
-        }
+        float nextFieldOfView = _itemViewerCamera.fieldOfView - (scrollDelta * _zoomSpeed);
+        _itemViewerCamera.fieldOfView = Mathf.Clamp(nextFieldOfView, _minFieldOfView, _maxFieldOfView);
     }
 
     public void ShowItem(ItemInstance itemInstance)
@@ -60,6 +55,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
 
         _itemRoot.rotation = Quaternion.identity;
         _itemViewerCamera.transform.localPosition = _initialCameraLocalPosition;
+        _itemViewerCamera.fieldOfView = _maxFieldOfView;
 
         _currentItem = GetOrCreate(itemInstance);
         _descriptionText.text = itemInstance != null ? itemInstance.Description : string.Empty;

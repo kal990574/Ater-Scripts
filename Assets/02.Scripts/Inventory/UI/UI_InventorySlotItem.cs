@@ -44,6 +44,7 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        Debug.Log("아이템 클릭");
         OnClicked?.Invoke(this);
     }
 

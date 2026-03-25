@@ -4,9 +4,9 @@ using UnityEngine;
 public class UI_Inventory : MonoBehaviour
 {
     //ItemViewer와 InventoryItmeUIContainer를 관리한다.
-    [SerializeField] private UI_InventoryContainer uiInventoryContainer;
-    [SerializeField] private UI_InventoryItemViewer uiInventoryItemViewer;
-    [SerializeField] private ExamineInteraction examineInteraction;
+    [SerializeField] private UI_InventoryContainer _uiInventoryContainer;
+    [SerializeField] private UI_InventoryItemViewer _uiInventoryItemViewer;
+    [SerializeField] private ExamineInteraction _examineInteraction;
 
     private void Start()
     {
@@ -16,26 +16,39 @@ public class UI_Inventory : MonoBehaviour
 
     private void OnEnable()
     {
+        //임시
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        
+        
         InventoryManager.Instance.OnDataChanged += Refresh;
         InventoryManager.Instance.OnSelectionChanged += HandleSelectionChanged;
-        uiInventoryContainer.OnSlotClicked += HandleSlotClicked;
-        uiInventoryContainer.OnSwapRequested += HandleSwapRequested;
-        examineInteraction.OnDragChanged += uiInventoryItemViewer.SetDragging;
-        examineInteraction.OnScrolled += uiInventoryItemViewer.Zoom;
-        examineInteraction.OnClicked += uiInventoryItemViewer.TryInteract;
+        _uiInventoryContainer.OnSlotClicked += HandleSlotClicked;
+        _uiInventoryContainer.OnSwapRequested += HandleSwapRequested;
+        
+        _examineInteraction.OnDragChanged += _uiInventoryItemViewer.SetDragging;
+        _examineInteraction.OnScrolled += _uiInventoryItemViewer.Zoom;
+        _examineInteraction.OnClicked += _uiInventoryItemViewer.TryInteract;
 
         Refresh();
     }
 
     private void OnDisable()
     {
+        
+        //임시
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        
         InventoryManager.Instance.OnDataChanged -= Refresh;
         InventoryManager.Instance.OnSelectionChanged -= HandleSelectionChanged;
-        uiInventoryContainer.OnSlotClicked -= HandleSlotClicked;
-        uiInventoryContainer.OnSwapRequested -= HandleSwapRequested;
-        examineInteraction.OnDragChanged -= uiInventoryItemViewer.SetDragging;
-        examineInteraction.OnScrolled -= uiInventoryItemViewer.Zoom;
-        examineInteraction.OnClicked -= uiInventoryItemViewer.TryInteract;
+        _uiInventoryContainer.OnSlotClicked -= HandleSlotClicked;
+        _uiInventoryContainer.OnSwapRequested -= HandleSwapRequested;
+        
+        _examineInteraction.OnDragChanged -= _uiInventoryItemViewer.SetDragging;
+        _examineInteraction.OnScrolled -= _uiInventoryItemViewer.Zoom;
+        _examineInteraction.OnClicked -= _uiInventoryItemViewer.TryInteract;
+        
         InventoryManager.Instance.ClearSelection();
     }
 
@@ -46,7 +59,7 @@ public class UI_Inventory : MonoBehaviour
 
     public void Refresh()
     {
-        uiInventoryContainer.Refresh(InventoryManager.Instance.ReadonlyPlayerInventory);
+        _uiInventoryContainer.Refresh(InventoryManager.Instance.ReadonlyPlayerInventory);
         RestoreSelection();
     }
 
@@ -58,8 +71,8 @@ public class UI_Inventory : MonoBehaviour
 
         if (index >= InventoryManager.Instance.ReadonlyPlayerInventory.Count) return;
 
-        uiInventoryContainer.SelectSlotAt(index);
-        uiInventoryItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
+        _uiInventoryContainer.SelectSlotAt(index);
+        _uiInventoryItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
     }
 
 
@@ -78,12 +91,12 @@ public class UI_Inventory : MonoBehaviour
     {
         if(index < 0)
         {
-            uiInventoryItemViewer.Hide();
+            _uiInventoryItemViewer.Hide();
             return;
         }
 
-        uiInventoryContainer.SelectSlotAt(index);
-        uiInventoryItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
+        _uiInventoryContainer.SelectSlotAt(index);
+        _uiInventoryItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
     }
     private void Show(bool isOn)
     {
