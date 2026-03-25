@@ -95,13 +95,15 @@ public class PlayerInventoryAbility : PlayerAbility
 
         RemoveCurrentHandItemFromCache();
         _inventoryManager.RemoveItem(_handIndex);
-        
+
+        int nextHandIndex = GetNextHandIndexAfterThrow();
         ClearHandItem();
+        TryPickUpItem(nextHandIndex);
         return true;
     }
     
 
-    private void ClearHandItem()
+    public void ClearHandItem()
     {
         _handIndex = -1;
         _currentHandItem = null;
@@ -148,5 +150,21 @@ public class PlayerInventoryAbility : PlayerAbility
         {
             Destroy(cachedHandObject);
         }
+    }
+
+    private int GetNextHandIndexAfterThrow()
+    {
+        int itemCount = _inventoryManager.ReadonlyPlayerInventory.Count;
+        if (itemCount <= 0)
+        {
+            return -1;
+        }
+
+        if (_handIndex < itemCount)
+        {
+            return _handIndex;
+        }
+
+        return itemCount - 1;
     }
 }

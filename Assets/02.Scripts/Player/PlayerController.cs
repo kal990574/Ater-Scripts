@@ -53,6 +53,7 @@ public class PlayerController : MonoBehaviour
         
         if (_input.ScannerToggleInput)
         {
+            GetAbility<PlayerInventoryAbility>().ClearHandItem();
             SetActionMode(PlayerInteractMode.Scan);
         }
         
@@ -81,7 +82,7 @@ public class PlayerController : MonoBehaviour
             scanAbility.SonarActive();
         }
 
-        if (_input.LmbPressInput)
+        if (_input.LmbPressingInput)
         {
             scanAbility.LidarScanActiveAndUpdate();
         }
