@@ -4,6 +4,7 @@ using _02.Scripts.Core;
 using _02.Scripts.Core.Domain;
 using _02.Scripts.AIHint.Infrastructure.Naver;
 using _02.Scripts.AIHint.Infrastructure.OpenAI;
+using _02.Scripts.Core.Infrastructure;
 using _02.Scripts.Player;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -40,7 +41,8 @@ namespace _02.Scripts.AIHint.Presentation
 
         private void Start()
         {
-            _gameStateProvider = ServiceLocator.Get<IGameStateProvider>();
+            var gameManager = ServiceLocator.Get<IGameManager>();
+            _gameStateProvider = new GameStateProviderAdapter(gameManager);
 
             var stt = new ClovaSpeechToText(_naverConfig);
 

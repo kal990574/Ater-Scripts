@@ -1,5 +1,6 @@
 using UnityEngine;
 using _02.Scripts.Core;
+using _02.Scripts.Core.Application;
 using _02.Scripts.Core.Domain;
 
 namespace _02.Scripts.Enemy
