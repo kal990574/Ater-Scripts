@@ -63,7 +63,6 @@ public class UI_InventoryItemViewer : MonoBehaviour
 
     public void TryInteract(Vector2 screenPosition, RectTransform rawImageRect)
     {
-        Debug.Log("TryInteract");
         RectTransformUtility.ScreenPointToLocalPointInRectangle(rawImageRect, screenPosition, null, out Vector2 localPoint);
 
         Vector2 viewportPoint = new Vector2(
@@ -74,14 +73,11 @@ public class UI_InventoryItemViewer : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            Debug.Log("Hit");
             InteractPoint interactPoint = hit.collider.GetComponentInParent<InteractPoint>();
             if (interactPoint != null)
             {
-                Debug.Log("clickevent");
                 interactPoint?.OnClick();
             }
-            
         }
     }
 

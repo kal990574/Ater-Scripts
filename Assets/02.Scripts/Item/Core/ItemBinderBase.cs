@@ -18,13 +18,10 @@ public abstract class ItemBinderBase : MonoBehaviour
 
     public void RefreshView()
     {
-        MonoBehaviour[] behaviours = GetComponentsInChildren<MonoBehaviour>(true);
-        foreach (MonoBehaviour behaviour in behaviours)
+        IBindApplier[] binders = GetComponentsInChildren<IBindApplier>(true);
+        foreach (IBindApplier binder in binders)
         {
-            if (behaviour is IBindApplier handler)
-            {
-                handler.ApplyState(this);
-            }
+            binder.ApplyState(this);
         }
     }
 }

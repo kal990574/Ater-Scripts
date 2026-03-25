@@ -46,7 +46,6 @@ public class ExamineBox : MonoBehaviour, IBindApplier
   
     public void Open()
     {
-        Debug.Log("박스 인터렉트");
         if (!CheckBindValid(BinderContext.IS_OPEN))
         {
             return;
@@ -59,8 +58,6 @@ public class ExamineBox : MonoBehaviour, IBindApplier
     
     public void GetKey()
     {
-        gameObject.SetActive(false);
-        
         if (!CheckBindValid(BinderContext.IS_REWARD_COLLECTED))
         {
             return;
