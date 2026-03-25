@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor.UIElements;
 using UnityEngine;
 
 public class InventoryManager : MonoBehaviour
@@ -38,8 +37,7 @@ public class InventoryManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        
-        
+
         TryAddItem(1);
     }
     
@@ -76,7 +74,7 @@ public class InventoryManager : MonoBehaviour
 
     public ItemInstance CreateItemInstance(int itemId)
     {
-        return _table.CreateInstance(itemId);
+        return _table != null ? _table.CreateInstance(itemId) : null;
     }
 
     public bool TryAddItem(ItemInstance itemInstance)
@@ -93,13 +91,17 @@ public class InventoryManager : MonoBehaviour
 
     public void RemoveItem(int index)
     {
+        if (index < 0 || index > _playerInventory.Count)
+        {
+            return;
+        }
+
         _playerInventory.RemoveAt(index);
 
         if (_playerInventory.Count == 0)
         {
             _selectedIndex = -1;
         }
-
         else if (_selectedIndex > index)
         {
             _selectedIndex--;
@@ -125,6 +127,11 @@ public class InventoryManager : MonoBehaviour
 
     public void SwapItem(int index1, int index2)
     {
+        if (index1 < 0 || index1 >= _playerInventory.Count || index2 < 0 || index2 >= _playerInventory.Count)
+        {
+            return;
+        }
+
         var temp = _playerInventory[index1];
         _playerInventory[index1] = _playerInventory[index2];
         _playerInventory[index2] = temp;
@@ -137,7 +144,7 @@ public class InventoryManager : MonoBehaviour
         }
         else if (_selectedIndex == index1 || _selectedIndex == index2)
         {
-            SelectItem(_selectedIndex);
+            OnSelectionChanged?.Invoke(_selectedIndex);
         }
     }
 
@@ -155,7 +162,7 @@ public class InventoryManager : MonoBehaviour
         if (_examineItemCache.TryGetValue(itemInstance.InstanceId, out GameObject cached))
         {
             cached.SetActive(true);
-            BindItemInstance(cached, itemInstance);
+            BindExamineItem(cached, itemInstance);
             _currentExamineItemObject = cached;
             return cached;
         }
@@ -163,7 +170,7 @@ public class InventoryManager : MonoBehaviour
         GameObject examineObject = Instantiate(itemInstance.ExaminePrefab, itemRoot, false);
         examineObject.transform.localPosition = Vector3.zero;
         SetLayerRecursively(examineObject, itemRoot.gameObject.layer);
-        BindItemInstance(examineObject, itemInstance);
+        BindExamineItem(examineObject, itemInstance);
 
         _examineItemCache[itemInstance.InstanceId] = examineObject;
         _currentExamineItemObject = examineObject;
@@ -180,7 +187,78 @@ public class InventoryManager : MonoBehaviour
         _currentExamineItemObject.SetActive(false);
         _currentExamineItemObject = null;
     }
+    #endregion
+
+    #region World Object
+    public GameObject CreateWorldItem(ItemInstance itemInstance, Transform itemRoot)
+    {
+        if (itemInstance == null || itemInstance.WorldPrefab == null)
+        {
+            return null;
+        }
+
+        GameObject item = Instantiate(itemInstance.WorldPrefab, itemRoot, false);
+        if (itemRoot != null)
+        {
+            item.transform.localPosition = Vector3.zero;
+            SetLayerRecursively(item, itemRoot.gameObject.layer);
+        }
+
+        BindWorldItem(item, itemInstance);
+        return item;
+    }
+    #endregion
     
+    #region Hand Object
+    public GameObject CreateHandItem(ItemInstance itemInstance, Transform itemRoot)
+    {
+        if (itemInstance == null || itemRoot == null || itemInstance.HandPrefab == null)
+        {
+            return null;
+        }
+
+        GameObject item = Instantiate(itemInstance.HandPrefab, itemRoot, false);
+        item.transform.localPosition = Vector3.zero;
+        SetLayerRecursively(item, itemRoot.gameObject.layer);
+        BindHandItem(item, itemInstance);
+        return item;
+    }
+    #endregion
+
+    #region Binding Helpers
+    private void BindExamineItem(GameObject itemObject, ItemInstance itemInstance)
+    {
+        ExamineItemBinder binder = itemObject.GetComponent<ExamineItemBinder>();
+        if (binder == null)
+        {
+            binder = itemObject.AddComponent<ExamineItemBinder>();
+        }
+
+        binder.Bind(itemInstance, this);
+    }
+
+    private void BindWorldItem(GameObject itemObject, ItemInstance itemInstance)
+    {
+        WorldItemBinder binder = itemObject.GetComponent<WorldItemBinder>();
+        if (binder == null)
+        {
+            binder = itemObject.AddComponent<WorldItemBinder>();
+        }
+
+        binder.Bind(itemInstance, this);
+    }
+
+    private void BindHandItem(GameObject itemObject, ItemInstance itemInstance)
+    {
+        HandItemBinder binder = itemObject.GetComponent<HandItemBinder>();
+        if (binder == null)
+        {
+            binder = itemObject.AddComponent<HandItemBinder>();
+        }
+
+        binder.Bind(itemInstance, this);
+    }
+
     private void SetLayerRecursively(GameObject obj, int layer)
     {
         obj.layer = layer;
@@ -190,33 +268,4 @@ public class InventoryManager : MonoBehaviour
         }
     }
     #endregion
-
-    public GameObject CreateWorldItem(ItemInstance itemInstance, Transform itemRoot)
-    {
-        GameObject item = Instantiate(itemInstance.WorldPrefab, itemRoot, false);
-        item.transform.localPosition = Vector3.zero;
-        SetLayerRecursively(item, itemRoot.gameObject.layer);
-        BindItemInstance(item, itemInstance);
-        return item;
-    }
-    
-    public GameObject CreateHandItem(ItemInstance itemInstance, Transform itemRoot)
-    {
-        GameObject item = Instantiate(itemInstance.HandPrefab, itemRoot, false);
-        item.transform.localPosition = Vector3.zero;
-        SetLayerRecursively(item, itemRoot.gameObject.layer);
-        BindItemInstance(item, itemInstance);
-        return item;
-    }
-    
-    private void BindItemInstance(GameObject itemObject, ItemInstance itemInstance)
-    {
-        ItemBinderBase binder = itemObject.GetComponent<ItemBinderBase>();
-        if (binder == null)
-        {
-            binder = itemObject.AddComponent<ItemBinderBase>();
-        }
-
-        binder.Bind(itemInstance, this);
-    }
 }

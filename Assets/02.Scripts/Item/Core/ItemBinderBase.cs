@@ -19,6 +19,11 @@ public abstract class ItemBinderBase : MonoBehaviour
     public void RefreshView()
     {
         IBindApplier binder = GetComponentInChildren<IBindApplier>();
+        if (binder == null)
+        {
+            return;
+        }
+        
         binder.ApplyState(this);
     }
 }

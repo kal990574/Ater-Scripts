@@ -1,23 +1,21 @@
 using UnityEngine;
 
-public class ExamineBox : MonoBehaviour, IBindApplier
+public class ExamineBox : ExamineItemBase, IBindApplier
 {
     [SerializeField] private GameObject _interactObject;
     [SerializeField] private GameObject _keyObject;
     [SerializeField] private int  _rewardItemId;
-    private ItemBinderBase _binder;
-    public ItemBinderBase Binder => _binder;
-    
-    private bool _isBind = false;
+
     private bool _isOpened = false;
     private bool _isColleced = false;
     
     
     //해당 아이템이 생성될때 인스턴스의 스테이트 적용
-    public void ApplyState(ItemBinderBase binder)
+    public override void ApplyState(ItemBinderBase binder)
     {
         Debug.Log("바인드 적용");
         _binder = binder;
+        
         _isOpened = _binder.ItemInstance.State.GetBool(BinderContext.IS_OPEN);
         _isColleced = _binder.ItemInstance.State.GetBool(BinderContext.IS_REWARD_COLLECTED);
 
@@ -70,28 +68,5 @@ public class ExamineBox : MonoBehaviour, IBindApplier
 
         _binder.ItemInstance.State.SetBool(BinderContext.IS_REWARD_COLLECTED, true);
         _binder.RefreshView();
-    }
-
-    private bool CheckBindValid(string binderContext = "")
-    {
-        if (!_isBind)
-        {
-            Debug.LogError("현재 바인드 되지 않음.");
-            return false;
-        }
-
-        if (_binder?.ItemInstance == null)
-        {
-            Debug.LogError("바인더의 인스턴스가 없음");
-            return false;
-        }
-
-        if (!string.IsNullOrEmpty(binderContext) && _binder.ItemInstance.State.GetBool(binderContext))
-        {
-            Debug.LogError("이미 True상태임");
-            return false;
-        }
-
-        return true;
     }
 }
