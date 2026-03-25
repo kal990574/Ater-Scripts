@@ -11,7 +11,7 @@ public class PlayerTargetDetector
         _query = query;
     }
 
-    public InteractController Detect(Vector3 origin, Vector3 direction)
+    public WorldItemController Detect(Vector3 origin, Vector3 direction)
     {
         RaycastRequest request = _query.CreateRequest(origin, direction);
         RaycastResult result = _raycastService.Cast(request);
@@ -24,9 +24,9 @@ public class PlayerTargetDetector
         return FindTargetable(result.Collider);
     }
 
-    private static InteractController FindTargetable(Collider collider)
+    private static WorldItemController FindTargetable(Collider collider)
     {
-        InteractController controller = collider.GetComponentInParent<InteractController>(true);
+        WorldItemController controller = collider.GetComponentInParent<WorldItemController>(true);
         if (controller != null)
         {
             return controller;
@@ -37,7 +37,7 @@ public class PlayerTargetDetector
         {
             if (behaviours[i] is IDetectableObject hoverable)
             {
-                return (hoverable as Component)?.GetComponentInParent<InteractController>();
+                return (hoverable as Component)?.GetComponentInParent<WorldItemController>();
             }
         }
 

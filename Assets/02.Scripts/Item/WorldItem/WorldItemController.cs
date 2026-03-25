@@ -2,12 +2,13 @@ using System;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public class InteractController : MonoBehaviour
+public class WorldItemController : MonoBehaviour
 {
+    //캐싱
     private IDetectableObject _detectableObject;
     private IScannableObject _scannableObject;
     private IInteractObject _interactableObject;
-
+    
     public IDetectableObject DetectableObject => _detectableObject;
     public IScannableObject ScannableObject => _scannableObject;
     public IInteractObject InteractableObject => _interactableObject;
@@ -16,18 +17,28 @@ public class InteractController : MonoBehaviour
     private void Awake()
     {
         CacheReferences();
-        BindScannableToInteractable();
+        if (_scannableObject == null || _interactableObject == null)
+        {
+            return;
+        }
+        _scannableObject.OnScanComplete += _interactableObject.SetActivate;
+    }
+
+    public void SetInstance(ItemInstance instance)
+    {
+        
     }
 
     private void OnDestroy()
     {
-        UnbindScannableToInteractable();
-    }
+        if (_scannableObject == null || _interactableObject == null)
+        {
+            return;
+        }
 
-    private void OnValidate()
-    {
-        CacheReferences();
+        _scannableObject.OnScanComplete -= _interactableObject.SetActivate;
     }
+    
 
     public void OnDetectEnter()
     {
@@ -66,25 +77,5 @@ public class InteractController : MonoBehaviour
         {
             _interactableObject = GetComponentInChildren<IInteractObject>();
         }
-    }
-
-    private void BindScannableToInteractable()
-    {
-        if (_scannableObject == null || _interactableObject == null)
-        {
-            return;
-        }
-        
-        _scannableObject.OnScanComplete += _interactableObject.SetActivate;
-    }
-
-    private void UnbindScannableToInteractable()
-    {
-        if (_scannableObject == null || _interactableObject == null)
-        {
-            return;
-        }
-
-        _scannableObject.OnScanComplete -= _interactableObject.SetActivate;
     }
 }
