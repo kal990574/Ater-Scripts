@@ -61,7 +61,13 @@ public class ExamineBox : ExamineItemBase
             return;
         }
 
-        if (!_binder.InventoryManager.TryAddItem(_rewardItemId))
+        ItemInstance rewardItem = _binder.InventoryManager.CreateItemInstance(_rewardItemId);
+        if (rewardItem == null)
+        {
+            return;
+        }
+
+        if (!_binder.InventoryManager.TryAddItem(rewardItem))
         {
             return;
         }

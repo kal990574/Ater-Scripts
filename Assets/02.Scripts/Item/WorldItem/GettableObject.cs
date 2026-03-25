@@ -1,8 +1,10 @@
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class GettableObject : InteractableObject
 {
+    [SerializeField] protected int _initialItemKey;
+    public int InitialItemKey => _initialItemKey;
+    
     public override void Interact()
     {
         if (!_isInteractActive)
@@ -11,16 +13,21 @@ public class GettableObject : InteractableObject
             return;
         }
 
-        //현재 serializefield라 null체킹이 안됨
-        ItemInstance itemInstance = ItemInstance != null ? ItemInstance : InventoryManager.Instance.CreateItemInstance(_initialItemKey);
+        ItemInstance itemInstance = ItemInstance;
         if (itemInstance == null)
         {
+            Debug.LogError($"[{nameof(GettableObject)}] {gameObject.name} has no bound ItemInstance.", this);
             return;
         }
-        
+
+        if (InventoryManager.Instance == null)
+        {
+            Debug.LogError($"[{nameof(GettableObject)}] {nameof(InventoryManager)}.Instance is null.", this);
+            return;
+        }
+
         InventoryManager.Instance.TryAddItem(itemInstance);
         OnInteractActivate();
         Destroy(gameObject);
     }
-    
 }

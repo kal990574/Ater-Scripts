@@ -5,7 +5,6 @@ public class ScanProgress
     private readonly ScanProgressSetting _settings;
 
     private float _currentProgress;
-    private float _progressSinceLastMinigame;
 
     public bool IsActivated { get; private set; }
     public bool CanInteract { get; private set; }
@@ -30,7 +29,6 @@ public class ScanProgress
         }
 
         _currentProgress = Mathf.Clamp(_currentProgress + amount, 0.0f, _settings.RequiredScanTime);
-        _progressSinceLastMinigame += amount;
 
         NotifyProgressChanged();
 
@@ -51,17 +49,11 @@ public class ScanProgress
         NotifyProgressChanged();
     }
 
-    public void ConsumeMinigameProgress()
-    {
-        _progressSinceLastMinigame = 0.0f;
-    }
-
     public void Reset()
     {
         IsActivated = false;
         CanInteract = false;
         _currentProgress = 0.0f;
-        _progressSinceLastMinigame = 0.0f;
         NotifyProgressChanged();
     }
 

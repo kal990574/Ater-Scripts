@@ -66,6 +66,11 @@ public class ItemState
         return entry.StringValue;
     }
 
+    public bool HasKey(string key)
+    {
+        return TryGetEntry(key, out _);
+    }
+
     public void SetBool(string key, bool value)
     {
         GetOrCreateEntry(key).BoolValue = value;

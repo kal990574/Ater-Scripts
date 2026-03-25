@@ -40,6 +40,7 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
         ApplyInitialShaderState();
         SubscribeTargetEvents();
+        SynchronizeCurrentState();
     }
 
     private void OnDestroy()
@@ -122,6 +123,14 @@ public class InteractTargetShaderModifier : MonoBehaviour
     private void OnTargetScanComplete()
     {
         PlayHitBlendEffect();
+    }
+
+    private void SynchronizeCurrentState()
+    {
+        if (_scannableObject != null)
+        {
+            ApplyProgressState(_scannableObject.ProgressRatio);
+        }
     }
 
     private void ApplyProgressState(float ratio)

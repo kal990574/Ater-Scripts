@@ -6,6 +6,7 @@ public class ScannableObject : MonoBehaviour,IScannableObject
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
+    [SerializeField] private WorldItemBinder _worldItemBinder;
 
     private ScanProgress _progress;
     private ScanStateMachine _fsm;
@@ -26,6 +27,8 @@ public class ScannableObject : MonoBehaviour,IScannableObject
     
     private void Awake()
     {
+        
+
         Init();
     }
 
@@ -50,6 +53,11 @@ public class ScannableObject : MonoBehaviour,IScannableObject
 
     public void Init()
     {
+        if (_worldItemBinder == null)
+        {
+            _worldItemBinder = GetComponentInParent<WorldItemBinder>();
+        }
+
         if (_settings == null)
         {
             Debug.LogError($"[{nameof(ScannableObject)}] {nameof(ScanProgressSetting)} is missing.", this);
@@ -80,7 +88,6 @@ public class ScannableObject : MonoBehaviour,IScannableObject
 
     public void OnScanStarted()
     {
-        OnScanComplete?.Invoke();
         ScanStartEvent?.Invoke();
     }
 
@@ -107,8 +114,38 @@ public class ScannableObject : MonoBehaviour,IScannableObject
    
     public void OnScanCompleted()
     {
+        if (_worldItemBinder == null)
+        {
+            _worldItemBinder = GetComponentInParent<WorldItemBinder>();
+        }
+
+        ItemInstance itemInstance = _worldItemBinder != null ? _worldItemBinder.ItemInstance : null;
+        if (itemInstance?.State != null && itemInstance.State.HasKey(BinderContext.IS_SCAN_COMPLETE))
+        {
+            itemInstance.State.SetBool(BinderContext.IS_SCAN_COMPLETE, true);
+        }
+
         OnScanComplete?.Invoke();
         ScanCompletEvent?.Invoke();
+    }
+    
+    [ContextMenu("Force")]
+    public void ForceScanComplete()
+    {
+        if (_progress == null || _fsm == null)
+        {
+            Init();
+        }
+
+        if (IsProgressComplete == false)
+        {
+            AddProgress(_settings.RequiredScanTime);
+        }
+
+        ChangeState(EScannableState.OnCompleted, true);
+        
+        OnScanProgressChanged?.Invoke(1);
+        OnScanComplete?.Invoke();
     }
 
     public void ChangeState(EScannableState nextState, bool force = false)

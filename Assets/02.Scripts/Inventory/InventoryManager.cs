@@ -41,8 +41,6 @@ public class InventoryManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-
-        TryAddItem(1);
     }
     
     #region Managing Inventory
@@ -67,24 +65,32 @@ public class InventoryManager : MonoBehaviour
 
     public bool TryAddItem(int item)
     {
-        ItemInstance newItem = CreateItemInstance(item);
-        if (newItem == null)
-        {
-            return false;
-        }
-
-        return TryAddItem(newItem);
+        Debug.LogError($"[{nameof(InventoryManager)}] TryAddItem(int) is not allowed. Create an ItemInstance first for item id {item}.", this);
+        return false;
     }
 
     public ItemInstance CreateItemInstance(int itemId)
     {
-        return _table != null ? _table.CreateInstance(itemId) : null;
+        if (_table == null)
+        {
+            Debug.LogError($"[{nameof(InventoryManager)}] {nameof(ItemDataTable)} reference is missing.", this);
+            return null;
+        }
+
+        ItemInstance itemInstance = _table.CreateInstance(itemId);
+        if (itemInstance == null)
+        {
+            Debug.LogError($"[{nameof(InventoryManager)}] Failed to create ItemInstance for item id {itemId}.", this);
+        }
+
+        return itemInstance;
     }
 
     public bool TryAddItem(ItemInstance itemInstance)
     {
         if (itemInstance == null)
         {
+            Debug.LogError($"[{nameof(InventoryManager)}] Tried to add a null ItemInstance to inventory.", this);
             return false;
         }
 
@@ -162,6 +168,7 @@ public class InventoryManager : MonoBehaviour
         HideExamineItem();
         if (itemInstance == null)
         {
+            Debug.LogError($"[{nameof(InventoryManager)}] Cannot show examine item because ItemInstance is null.", this);
             return null;
         }
 
@@ -193,8 +200,15 @@ public class InventoryManager : MonoBehaviour
     #region World Object
     public GameObject CreateWorldItem(ItemInstance itemInstance, Transform itemRoot)
     {
-        if (itemInstance == null || itemInstance.WorldPrefab == null)
+        if (itemInstance == null)
         {
+            Debug.LogError($"[{nameof(InventoryManager)}] Cannot create a world item from a null ItemInstance.", this);
+            return null;
+        }
+
+        if (itemInstance.WorldPrefab == null)
+        {
+            Debug.LogError($"[{nameof(InventoryManager)}] Item {itemInstance.ItemName} has no WorldPrefab.", this);
             return null;
         }
 
@@ -216,6 +230,7 @@ public class InventoryManager : MonoBehaviour
         HideHandItem();
         if (itemInstance == null)
         {
+            Debug.LogError($"[{nameof(InventoryManager)}] Cannot show hand item because ItemInstance is null.", this);
             return null;
         }
 
@@ -345,6 +360,19 @@ public class InventoryManager : MonoBehaviour
 
     private void BindWorldItem(GameObject itemObject, ItemInstance itemInstance)
     {
+        if (itemInstance == null)
+        {
+            Debug.LogError($"[{nameof(InventoryManager)}] Cannot bind world item because ItemInstance is null.", this);
+            return;
+        }
+
+        WorldItemController controller = itemObject.GetComponent<WorldItemController>();
+        if (controller != null)
+        {
+            controller.SetInstance(itemInstance);
+            return;
+        }
+
         WorldItemBinder binder = itemObject.GetComponent<WorldItemBinder>();
         if (binder == null)
         {
