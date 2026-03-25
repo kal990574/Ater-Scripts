@@ -1,19 +1,29 @@
-using System;
 using UnityEngine;
 
-//인벤토리에 넣을 수 있는 오브젝트
 public class GettableObject : InteractableObject
 {
     [SerializeField] private int _itemId;
+    [SerializeField] private Vector3 _pickUpOffset;
+    [SerializeField] private InventoryItemState _stateOverrides;
+
+    public Vector3 PickUpOffset => _pickUpOffset;
+
     public override void Interact()
     {
         if (!_isInteractActive)
         {
-            Debug.Log($"{gameObject.name} : 현재 상호작용 가능한 상태가 아님");
+            Debug.Log($"{gameObject.name} : interaction is not active");
             return;
         }
-        
-        InventoryManager.Instance.TryAddItem(_itemId);
+
+        InventoryItemInstance itemInstance = InventoryManager.Instance.CreateItemInstance(_itemId);
+        if (itemInstance == null)
+        {
+            return;
+        }
+
+        itemInstance.State.ApplyOverrides(_stateOverrides);
+        InventoryManager.Instance.TryAddItem(itemInstance);
         OnInteractActivate();
         gameObject.SetActive(false);
     }

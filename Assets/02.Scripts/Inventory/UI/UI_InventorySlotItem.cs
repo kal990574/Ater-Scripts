@@ -4,26 +4,26 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class UI_InventorySlotItem : MonoBehaviour,IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
+public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
 {
     [SerializeField] private Image _itemIcon;
     [SerializeField] private TextMeshProUGUI _indexText;
     [SerializeField] private Image _selected;
 
-    private ItemData _itemDataSo;
+    private InventoryItemInstance _itemInstance;
     private int _index;
     private Canvas _canvas;
     private GameObject _dragIcon;
 
-    public ItemData ItemDataSo => _itemDataSo;
+    public InventoryItemInstance ItemInstance => _itemInstance;
     public int Index => _index;
 
     public event Action<UI_InventorySlotItem> OnClicked;
     public event Action<UI_InventorySlotItem, UI_InventorySlotItem> OnDropped;
 
-    public void Setup(ItemData itemDataSo, int index, Canvas canvas)
+    public void Setup(InventoryItemInstance itemInstance, int index, Canvas canvas)
     {
-        _itemDataSo = itemDataSo;
+        _itemInstance = itemInstance;
         _index = index;
         _canvas = canvas;
         Refresh();
@@ -32,14 +32,14 @@ public class UI_InventorySlotItem : MonoBehaviour,IPointerClickHandler, IBeginDr
     private void Refresh()
     {
         _indexText.text = _index.ToString();
-        if (_itemDataSo == null)
+        if (_itemInstance == null)
         {
             _itemIcon.enabled = false;
             return;
         }
 
         _itemIcon.enabled = true;
-        _itemIcon.sprite = _itemDataSo.Icon;
+        _itemIcon.sprite = _itemInstance.Icon;
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -49,23 +49,28 @@ public class UI_InventorySlotItem : MonoBehaviour,IPointerClickHandler, IBeginDr
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (_itemDataSo == null) return;
+        if (_itemInstance == null)
+        {
+            return;
+        }
 
         _dragIcon = new GameObject("DragIcon");
         _dragIcon.transform.SetParent(_canvas.transform, false);
         _dragIcon.transform.SetAsLastSibling();
 
         Image icon = _dragIcon.AddComponent<Image>();
-        icon.sprite = _itemDataSo.Icon;
+        icon.sprite = _itemInstance.Icon;
         icon.raycastTarget = false;
 
         _itemIcon.enabled = false;
-
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        if (_dragIcon == null) return;
+        if (_dragIcon == null)
+        {
+            return;
+        }
 
         _dragIcon.transform.position = eventData.position;
     }
@@ -84,7 +89,10 @@ public class UI_InventorySlotItem : MonoBehaviour,IPointerClickHandler, IBeginDr
     public void OnDrop(PointerEventData eventData)
     {
         UI_InventorySlotItem dragged = eventData.pointerDrag.GetComponent<UI_InventorySlotItem>();
-        if (dragged == null) return;
+        if (dragged == null)
+        {
+            return;
+        }
 
         dragged.ClearDragIcon();
         OnDropped?.Invoke(dragged, this);
@@ -97,6 +105,7 @@ public class UI_InventorySlotItem : MonoBehaviour,IPointerClickHandler, IBeginDr
             Destroy(_dragIcon);
             _dragIcon = null;
         }
+
         _itemIcon.enabled = true;
     }
 

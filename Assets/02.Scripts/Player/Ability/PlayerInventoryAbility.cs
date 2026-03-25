@@ -13,11 +13,6 @@ public class PlayerInventoryAbility : PlayerAbility
         _inventoryManager = InventoryManager.Instance;
         _input = _owner.Input;
     }
-
-    public void Init(InventoryManager inventoryManager)
-    {
-        _inventoryManager =  inventoryManager;
-    }
     
     public void ToggleInventory()
     {
@@ -30,5 +25,11 @@ public class PlayerInventoryAbility : PlayerAbility
         {
             _inventoryManager.ToggleInventory();
         }
+    }
+
+    public bool TryPickUpItem(int num)
+    {
+        //해당 번호에있는 아이템을 든다.
+        return false;
     }
 }

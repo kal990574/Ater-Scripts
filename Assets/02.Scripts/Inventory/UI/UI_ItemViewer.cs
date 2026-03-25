@@ -3,26 +3,21 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-//아이템의 정보 확인 및 / 조사하기 기능
 public class UI_ItemViewer : MonoBehaviour
 {
-
     [SerializeField] private Transform _itemRoot;
     [SerializeField] private Camera _itemViewerCamera;
     [SerializeField] private TextMeshProUGUI _descriptionText;
-
     [SerializeField] private float _rotateSpeed = 0.5f;
     [SerializeField] private float _zoomSpeed = 1f;
     [SerializeField] private float _minZoom = 100f;
     [SerializeField] private float _maxZoom = 500f;
 
+    private readonly Dictionary<string, GameObject> _cache = new();
+
     private Vector3 _initialCameraLocalPosition;
-
     private GameObject _currentItem;
-
     private bool _isDragging;
-
-    private Dictionary<int, GameObject> _cache = new();
 
     private void Start()
     {
@@ -42,10 +37,12 @@ public class UI_ItemViewer : MonoBehaviour
 
     public void Zoom(float scrollDelta)
     {
-        if (_currentItem == null) return;
+        if (_currentItem == null)
+        {
+            return;
+        }
 
         Vector3 newPos = _itemViewerCamera.transform.position + _itemViewerCamera.transform.forward * scrollDelta * _zoomSpeed;
-
         float distance = Vector3.Distance(newPos, _itemRoot.position);
 
         if (distance >= _minZoom && distance <= _maxZoom)
@@ -53,24 +50,24 @@ public class UI_ItemViewer : MonoBehaviour
             _itemViewerCamera.transform.position = newPos;
         }
     }
-    public void ShowItem(ItemData itemDataSo)
+
+    public void ShowItem(InventoryItemInstance itemInstance)
     {
         if (_currentItem != null)
+        {
             _currentItem.SetActive(false);
+        }
 
         _itemRoot.rotation = Quaternion.identity;
         _itemViewerCamera.transform.localPosition = _initialCameraLocalPosition;
 
-        _currentItem = GetOrCreate(itemDataSo);
-        _descriptionText.text = itemDataSo.Description;
+        _currentItem = GetOrCreate(itemInstance);
+        _descriptionText.text = itemInstance != null ? itemInstance.Description : string.Empty;
     }
-
-
 
     public void TryInteract(Vector2 screenPosition, RectTransform rawImageRect)
     {
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            rawImageRect, screenPosition, null, out Vector2 localPoint);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(rawImageRect, screenPosition, null, out Vector2 localPoint);
 
         Vector2 viewportPoint = new Vector2(
             (localPoint.x / rawImageRect.rect.width) + 0.5f,
@@ -80,36 +77,62 @@ public class UI_ItemViewer : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            TryClickInteractPoint(hit.collider.gameObject);
+            InteractPoint interactPoint = hit.collider.GetComponent<InteractPoint>();
+            interactPoint?.OnClick();
         }
     }
-    private void TryClickInteractPoint(GameObject hitObject)
+
+    public void Hide()
     {
-        InteractPoint interactPoint = hitObject.GetComponent<InteractPoint>();
-        interactPoint?.OnClick();
+        if (_currentItem != null)
+        {
+            _currentItem.SetActive(false);
+        }
+
+        _descriptionText.text = string.Empty;
     }
 
-    private GameObject GetOrCreate(ItemData itemDataSo)
+    private GameObject GetOrCreate(InventoryItemInstance itemInstance)
     {
-        if (_cache.TryGetValue(itemDataSo.ItemId, out GameObject cached))
+        if (itemInstance == null || itemInstance.Prefab == null)
+        {
+            return null;
+        }
+
+        if (_cache.TryGetValue(itemInstance.InstanceId, out GameObject cached))
         {
             cached.SetActive(true);
+            GetOrAddContext(cached).Bind(itemInstance, InventoryManager.Instance);
             return cached;
         }
 
-        GameObject obj = Instantiate(itemDataSo.Prefab, _itemRoot, false);
+        GameObject obj = Instantiate(itemInstance.Prefab, _itemRoot, false);
         obj.transform.localPosition = Vector3.zero;
         SetLayerRecursively(obj, _itemRoot.gameObject.layer);
-        _cache[itemDataSo.ItemId] = obj;
+        GetOrAddContext(obj).Bind(itemInstance, InventoryManager.Instance);
+        _cache[itemInstance.InstanceId] = obj;
         return obj;
     }
+
+    private InventoryItemViewContext GetOrAddContext(GameObject obj)
+    {
+        InventoryItemViewContext context = obj.GetComponent<InventoryItemViewContext>();
+        if (context == null)
+        {
+            context = obj.AddComponent<InventoryItemViewContext>();
+        }
+
+        return context;
+    }
+
     private void HandleRotate()
     {
-        if (!_isDragging) return;
-        if (_currentItem == null) return;
+        if (!_isDragging || _currentItem == null)
+        {
+            return;
+        }
 
         Vector2 delta = Mouse.current.delta.ReadValue();
-
         _itemRoot.Rotate(Vector3.up, -delta.x * _rotateSpeed, Space.World);
         _itemRoot.Rotate(Vector3.right, delta.y * _rotateSpeed, Space.World);
     }
@@ -118,7 +141,9 @@ public class UI_ItemViewer : MonoBehaviour
     {
         obj.layer = layer;
         foreach (Transform child in obj.transform)
+        {
             SetLayerRecursively(child.gameObject, layer);
+        }
     }
 
     private void OnDisable()
@@ -129,14 +154,5 @@ public class UI_ItemViewer : MonoBehaviour
         {
             _currentItem.SetActive(false);
         }
-    }
-
-    public void Hide()
-    {
-        if (_currentItem != null)
-        {
-            _currentItem.SetActive(false);
-        }
-        _descriptionText.text = string.Empty;
     }
 }

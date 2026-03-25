@@ -1,6 +1,4 @@
-using NUnit.Framework;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "ItemDataTable", menuName = "Inventory/ItemDataTable")]
@@ -14,5 +12,16 @@ public class ItemDataTable : ScriptableObject
         if (origin == null) return null;
 
         return origin.Clone();
+    }
+
+    public InventoryItemInstance CreateInstance(int itemId)
+    {
+        ItemData definition = GetItem(itemId);
+        if (definition == null)
+        {
+            return null;
+        }
+
+        return new InventoryItemInstance(definition);
     }
 }

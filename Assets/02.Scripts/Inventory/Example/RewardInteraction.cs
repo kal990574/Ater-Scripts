@@ -1,8 +1,9 @@
 using UnityEngine;
 
-public class RewardInteraction : MonoBehaviour, IInteractableUI
+public class RewardInteraction : MonoBehaviour, IInteractableUI, IInventoryItemViewInteractable, IInventoryItemViewStateHandler
 {
-    [SerializeField] private ItemDataTable _itemDataTable;
+    private const string RewardCollectedStateKey = "reward_collected";
+
     [SerializeField] private int _rewardItemId;
 
     public void Interact()
@@ -13,5 +14,32 @@ public class RewardInteraction : MonoBehaviour, IInteractableUI
         }
 
         gameObject.SetActive(false);
+    }
+
+    public void Interact(InventoryItemViewContext context)
+    {
+        if (context?.ItemInstance == null)
+        {
+            return;
+        }
+
+        if (context.ItemInstance.State.GetBool(RewardCollectedStateKey))
+        {
+            return;
+        }
+
+        if (!context.InventoryManager.TryAddItem(_rewardItemId))
+        {
+            return;
+        }
+
+        context.ItemInstance.State.SetBool(RewardCollectedStateKey, true);
+        context.RefreshView();
+    }
+
+    public void ApplyState(InventoryItemViewContext context)
+    {
+        bool isCollected = context != null && context.ItemInstance != null && context.ItemInstance.State.GetBool(RewardCollectedStateKey);
+        gameObject.SetActive(!isCollected);
     }
 }

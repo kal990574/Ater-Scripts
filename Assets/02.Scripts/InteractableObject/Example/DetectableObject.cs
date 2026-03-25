@@ -15,6 +15,7 @@ public class DetectableObject : MonoBehaviour, IDetectableObject
     [ContextMenu("hover")]
     public void OnDetectEnter()
     {
+        Debug.Log("Hover");
         OnDetected?.Invoke(true);
         DetectOnEvent?.Invoke();
     }
