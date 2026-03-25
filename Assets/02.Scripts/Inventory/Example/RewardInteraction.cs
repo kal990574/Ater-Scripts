@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class RewardInteraction : MonoBehaviour, IInteractableUI, IInventoryItemViewInteractable, IInventoryItemViewStateHandler
+public class RewardInteraction : MonoBehaviour, IInteractableUI, IUIViewItemInteractable, IItemInstanceStateHandler
 {
     private const string RewardCollectedStateKey = "reward_collected";
 
@@ -16,30 +16,30 @@ public class RewardInteraction : MonoBehaviour, IInteractableUI, IInventoryItemV
         gameObject.SetActive(false);
     }
 
-    public void Interact(InventoryItemViewContext context)
+    public void Interact(UIViewItemBinder binder)
     {
-        if (context?.ItemInstance == null)
+        if (binder?.ItemInstance == null)
         {
             return;
         }
 
-        if (context.ItemInstance.State.GetBool(RewardCollectedStateKey))
+        if (binder.ItemInstance.State.GetBool(RewardCollectedStateKey))
         {
             return;
         }
 
-        if (!context.InventoryManager.TryAddItem(_rewardItemId))
+        if (!binder.InventoryManager.TryAddItem(_rewardItemId))
         {
             return;
         }
 
-        context.ItemInstance.State.SetBool(RewardCollectedStateKey, true);
-        context.RefreshView();
+        binder.ItemInstance.State.SetBool(RewardCollectedStateKey, true);
+        binder.RefreshView();
     }
 
-    public void ApplyState(InventoryItemViewContext context)
+    public void ApplyState(ItemInstanceBinderBase binder)
     {
-        bool isCollected = context != null && context.ItemInstance != null && context.ItemInstance.State.GetBool(RewardCollectedStateKey);
+        bool isCollected = binder != null && binder.ItemInstance != null && binder.ItemInstance.State.GetBool(RewardCollectedStateKey);
         gameObject.SetActive(!isCollected);
     }
 }

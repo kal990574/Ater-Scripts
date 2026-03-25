@@ -31,13 +31,13 @@ public class HandItemController : MonoBehaviour
         _currentHandObject.transform.localRotation = Quaternion.identity;
         _currentHandObject.transform.localScale = Vector3.one;
 
-        InventoryItemViewContext context = _currentHandObject.GetComponent<InventoryItemViewContext>();
-        if (context == null)
+        HandItemBinder binder = _currentHandObject.GetComponent<HandItemBinder>();
+        if (binder == null)
         {
-            context = _currentHandObject.AddComponent<InventoryItemViewContext>();
+            binder = _currentHandObject.AddComponent<HandItemBinder>();
         }
 
-        context.Bind(itemInstance, InventoryManager.Instance);
+        binder.Bind(itemInstance, InventoryManager.Instance);
     }
 
     public void RefreshCurrentItem()
@@ -47,13 +47,13 @@ public class HandItemController : MonoBehaviour
             return;
         }
 
-        InventoryItemViewContext context = _currentHandObject.GetComponent<InventoryItemViewContext>();
-        if (context == null)
+        HandItemBinder binder = _currentHandObject.GetComponent<HandItemBinder>();
+        if (binder == null)
         {
             return;
         }
 
-        context.Bind(_currentItemInstance, InventoryManager.Instance);
+        binder.Bind(_currentItemInstance, InventoryManager.Instance);
     }
 
     public void ClearItem()

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BoxInteraction : MonoBehaviour, IInteractableUI, IInventoryItemViewInteractable, IInventoryItemViewStateHandler
+public class BoxInteraction : MonoBehaviour, IInteractableUI, IUIViewItemInteractable, IItemInstanceStateHandler
 {
     private const string OpenStateKey = "is_open";
 
@@ -22,25 +22,25 @@ public class BoxInteraction : MonoBehaviour, IInteractableUI, IInventoryItemView
         }
     }
 
-    public void Interact(InventoryItemViewContext context)
+    public void Interact(UIViewItemBinder binder)
     {
-        if (context?.ItemInstance == null)
+        if (binder?.ItemInstance == null)
         {
             return;
         }
 
-        if (context.ItemInstance.State.GetBool(OpenStateKey))
+        if (binder.ItemInstance.State.GetBool(OpenStateKey))
         {
             return;
         }
 
-        context.ItemInstance.State.SetBool(OpenStateKey, true);
-        context.RefreshView();
+        binder.ItemInstance.State.SetBool(OpenStateKey, true);
+        binder.RefreshView();
     }
 
-    public void ApplyState(InventoryItemViewContext context)
+    public void ApplyState(ItemInstanceBinderBase binder)
     {
-        bool isOpened = context != null && context.ItemInstance != null && context.ItemInstance.State.GetBool(OpenStateKey);
+        bool isOpened = binder != null && binder.ItemInstance != null && binder.ItemInstance.State.GetBool(OpenStateKey);
         _isOpened = isOpened;
 
         if (_rewardObject != null)

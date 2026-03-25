@@ -102,27 +102,27 @@ public class UI_ItemViewer : MonoBehaviour
         if (_cache.TryGetValue(itemInstance.InstanceId, out GameObject cached))
         {
             cached.SetActive(true);
-            GetOrAddContext(cached).Bind(itemInstance, InventoryManager.Instance);
+            GetOrAddBinder(cached).Bind(itemInstance, InventoryManager.Instance);
             return cached;
         }
 
         GameObject obj = Instantiate(itemInstance.Prefab, _itemRoot, false);
         obj.transform.localPosition = Vector3.zero;
         SetLayerRecursively(obj, _itemRoot.gameObject.layer);
-        GetOrAddContext(obj).Bind(itemInstance, InventoryManager.Instance);
+        GetOrAddBinder(obj).Bind(itemInstance, InventoryManager.Instance);
         _cache[itemInstance.InstanceId] = obj;
         return obj;
     }
 
-    private InventoryItemViewContext GetOrAddContext(GameObject obj)
+    private UIViewItemBinder GetOrAddBinder(GameObject obj)
     {
-        InventoryItemViewContext context = obj.GetComponent<InventoryItemViewContext>();
-        if (context == null)
+        UIViewItemBinder binder = obj.GetComponent<UIViewItemBinder>();
+        if (binder == null)
         {
-            context = obj.AddComponent<InventoryItemViewContext>();
+            binder = obj.AddComponent<UIViewItemBinder>();
         }
 
-        return context;
+        return binder;
     }
 
     private void HandleRotate()

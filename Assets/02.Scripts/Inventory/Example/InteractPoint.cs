@@ -3,8 +3,8 @@ using UnityEngine;
 public class InteractPoint : MonoBehaviour
 {
     private IInteractableUI _interactableUI;
-    private IInventoryItemViewInteractable _inventoryInteractable;
-    private InventoryItemViewContext _context;
+    private IUIViewItemInteractable _uiViewInteractable;
+    private UIViewItemBinder _binder;
 
     private void Awake()
     {
@@ -16,20 +16,20 @@ public class InteractPoint : MonoBehaviour
                 _interactableUI = interactableUI;
             }
 
-            if (_inventoryInteractable == null && behaviour is IInventoryItemViewInteractable inventoryInteractable)
+            if (_uiViewInteractable == null && behaviour is IUIViewItemInteractable uiViewInteractable)
             {
-                _inventoryInteractable = inventoryInteractable;
+                _uiViewInteractable = uiViewInteractable;
             }
         }
 
-        _context = GetComponentInParent<InventoryItemViewContext>();
+        _binder = GetComponentInParent<UIViewItemBinder>();
     }
 
     public void OnClick()
     {
-        if (_inventoryInteractable != null && _context != null)
+        if (_uiViewInteractable != null && _binder != null)
         {
-            _inventoryInteractable.Interact(_context);
+            _uiViewInteractable.Interact(_binder);
             return;
         }
 
