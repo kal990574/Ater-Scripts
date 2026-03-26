@@ -1,7 +1,6 @@
 using UnityEngine;
 
-//아이템 인스턴스의 스테이트 변수들을 적용
-public abstract class ItemBinderBase : MonoBehaviour
+public class InstanceView : MonoBehaviour, IItemInstance
 {
     [SerializeField]private ItemInstance _itemInstance;
     private InventoryManager _inventoryManager;

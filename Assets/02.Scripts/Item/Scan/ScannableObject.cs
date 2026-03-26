@@ -6,7 +6,7 @@ public class ScannableObject : MonoBehaviour,IScannableObject
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
-    [SerializeField] private WorldItemBinder _worldItemBinder;
+    [SerializeField] private InstanceView _itemBinder;
 
     private ScanProgress _progress;
     private ScanStateMachine _fsm;
@@ -53,9 +53,9 @@ public class ScannableObject : MonoBehaviour,IScannableObject
 
     public void Init()
     {
-        if (_worldItemBinder == null)
+        if (_itemBinder == null)
         {
-            _worldItemBinder = GetComponentInParent<WorldItemBinder>();
+            _itemBinder = GetComponentInParent<InstanceView>();
         }
 
         if (_settings == null)
@@ -114,12 +114,12 @@ public class ScannableObject : MonoBehaviour,IScannableObject
    
     public void OnScanCompleted()
     {
-        if (_worldItemBinder == null)
+        if (_itemBinder == null)
         {
-            _worldItemBinder = GetComponentInParent<WorldItemBinder>();
+            _itemBinder = GetComponentInParent<InstanceView>();
         }
 
-        ItemInstance itemInstance = _worldItemBinder != null ? _worldItemBinder.ItemInstance : null;
+        ItemInstance itemInstance = _itemBinder != null ? _itemBinder.ItemInstance : null;
         if (itemInstance?.State != null && itemInstance.State.HasKey(BinderContext.IS_SCAN_COMPLETE))
         {
             itemInstance.State.SetBool(BinderContext.IS_SCAN_COMPLETE, true);

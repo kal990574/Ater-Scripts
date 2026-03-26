@@ -4,7 +4,7 @@ public class HandBox : BindApplierBase
 {
     [SerializeField] private GameObject _rewardVisual;
 
-    public override void ApplyState(ItemBinderBase binder)
+    public override void ApplyState(InstanceView binder)
     {
         if (binder?.ItemInstance == null)
         {

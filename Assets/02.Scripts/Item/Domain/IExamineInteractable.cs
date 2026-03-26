@@ -2,5 +2,5 @@
 
 public interface IExamineInteractable
 {
-    void Interact(ExamineItemBinder binder);
+    void Interact(IItemInstance instanceView);
 }

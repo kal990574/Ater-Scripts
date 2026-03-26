@@ -219,7 +219,7 @@ public class InventoryManager : MonoBehaviour
             SetLayerRecursively(item, itemRoot.gameObject.layer);
         }
 
-        BindWorldItem(item, itemInstance);
+        BindItemInstance(item, itemInstance);
         return item;
     }
     #endregion
@@ -275,14 +275,14 @@ public class InventoryManager : MonoBehaviour
 
         if (_examineItemCache.TryGetValue(itemInstance.InstanceId, out GameObject cached) && cached != null)
         {
-            BindExamineItem(cached, itemInstance);
+            BindItemInstance(cached, itemInstance);
             return cached;
         }
 
         Transform cacheRoot = ResolveCacheRoot(_cachedExamineRoot);
         GameObject examineObject = Instantiate(itemInstance.ExaminePrefab, cacheRoot, false);
         examineObject.SetActive(false);
-        BindExamineItem(examineObject, itemInstance);
+        BindItemInstance(examineObject, itemInstance);
         _examineItemCache[itemInstance.InstanceId] = examineObject;
         return examineObject;
     }
@@ -296,14 +296,14 @@ public class InventoryManager : MonoBehaviour
 
         if (_handItemCache.TryGetValue(itemInstance.InstanceId, out GameObject cached) && cached != null)
         {
-            BindHandItem(cached, itemInstance);
+            BindItemInstance(cached, itemInstance);
             return cached;
         }
 
         Transform cacheRoot = ResolveCacheRoot(_cachedHandRoot);
         GameObject handObject = Instantiate(itemInstance.HandPrefab, cacheRoot, false);
         handObject.SetActive(false);
-        BindHandItem(handObject, itemInstance);
+        BindItemInstance(handObject, itemInstance);
         _handItemCache[itemInstance.InstanceId] = handObject;
         return handObject;
     }
@@ -347,52 +347,17 @@ public class InventoryManager : MonoBehaviour
     #endregion
 
     #region Binding Helpers
-    private void BindExamineItem(GameObject itemObject, ItemInstance itemInstance)
+    private void BindItemInstance(GameObject itemObject, ItemInstance itemInstance)
     {
-        ExamineItemBinder binder = itemObject.GetComponent<ExamineItemBinder>();
-        if (binder == null)
+        if (!itemObject.TryGetComponent(out IItemInstance binder))
         {
-            binder = itemObject.AddComponent<ExamineItemBinder>();
-        }
-
-        binder.Bind(itemInstance, this);
-    }
-
-    private void BindWorldItem(GameObject itemObject, ItemInstance itemInstance)
-    {
-        if (itemInstance == null)
-        {
-            Debug.LogError($"[{nameof(InventoryManager)}] Cannot bind world item because ItemInstance is null.", this);
+            Debug.Log("[InventoryManager] Can't Find ItemInstance ");
             return;
         }
 
-        WorldItemController controller = itemObject.GetComponent<WorldItemController>();
-        if (controller != null)
-        {
-            controller.SetInstance(itemInstance);
-            return;
-        }
-
-        WorldItemBinder binder = itemObject.GetComponent<WorldItemBinder>();
-        if (binder == null)
-        {
-            binder = itemObject.AddComponent<WorldItemBinder>();
-        }
-
         binder.Bind(itemInstance, this);
     }
-
-    private void BindHandItem(GameObject itemObject, ItemInstance itemInstance)
-    {
-        HandItemBinder binder = itemObject.GetComponent<HandItemBinder>();
-        if (binder == null)
-        {
-            binder = itemObject.AddComponent<HandItemBinder>();
-        }
-
-        binder.Bind(itemInstance, this);
-    }
-
+    
     private void SetLayerRecursively(GameObject obj, int layer)
     {
         obj.layer = layer;

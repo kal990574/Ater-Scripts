@@ -1,4 +1,15 @@
-﻿using System;
+using System;
+
+public interface IItemBindable
+{
+    ItemInstance ItemInstance { get; }
+    void SetInstance(ItemInstance itemInstance);
+}
+
+public interface IInitialItemSource
+{
+    int InitialItemKey { get; }
+}
 
 public interface IInteractObject
 {

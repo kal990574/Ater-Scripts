@@ -7,13 +7,14 @@ public class WorldItemController : MonoBehaviour
     private IDetectableObject _detectableObject;
     private IScannableObject _scannableObject;
     private IInteractObject _interactableObject;
-    private GettableObject _gettableObject;
-    private WorldItemBinder _worldItemBinder;
+    private IItemBindable _itemBindableObject;
+    private IInitialItemSource _initialItemSource;
+    private IItemInstance _itemInstance;
 
     public IDetectableObject DetectableObject => _detectableObject;
     public IScannableObject ScannableObject => _scannableObject;
     public IInteractObject InteractableObject => _interactableObject;
-    public GettableObject GettableObject => _gettableObject;
+    public IItemBindable ItemBindableObject => _itemBindableObject;
 
     private void Awake()
     {
@@ -41,26 +42,22 @@ public class WorldItemController : MonoBehaviour
 
         CacheReferences();
 
-        if (_gettableObject == null)
+        if (_itemBindableObject == null)
         {
-            Debug.LogError($"[{nameof(WorldItemController)}] {gameObject.name} has no {nameof(GettableObject)} to bind an ItemInstance.", this);
+            Debug.LogError($"[{nameof(WorldItemController)}] {gameObject.name} has no {nameof(IItemBindable)} to bind an ItemInstance.", this);
             return;
         }
 
-        _gettableObject.SetInstance(instance);
+        _itemBindableObject.SetInstance(instance);
 
-        if (_worldItemBinder == null)
+        if (_itemInstance == null)
         {
-            _worldItemBinder = GetComponent<WorldItemBinder>();
+            Debug.LogError($"[{nameof(WorldItemController)}] {gameObject.name} has no {nameof(IItemInstance)}.", this);
+            return;
         }
 
-        if (_worldItemBinder == null)
-        {
-            _worldItemBinder = gameObject.AddComponent<WorldItemBinder>();
-        }
-
-        _worldItemBinder.Bind(instance, InventoryManager.Instance);
-        _worldItemBinder.RefreshView();
+        _itemInstance.Bind(instance, InventoryManager.Instance);
+        _itemInstance.RefreshView();
     }
 
     private void OnDestroy()
@@ -96,9 +93,9 @@ public class WorldItemController : MonoBehaviour
 
     private void CacheReferences()
     {
-        if (_worldItemBinder == null)
+        if (_itemInstance == null)
         {
-            _worldItemBinder = GetComponent<WorldItemBinder>();
+            _itemInstance = GetComponent<IItemInstance>();
         }
 
         if (_detectableObject == null)
@@ -116,9 +113,14 @@ public class WorldItemController : MonoBehaviour
             _interactableObject = GetComponentInChildren<IInteractObject>();
         }
 
-        if (_gettableObject == null)
+        if (_itemBindableObject == null)
         {
-            _gettableObject = GetComponentInChildren<GettableObject>();
+            _itemBindableObject = GetComponentInChildren<IItemBindable>();
+        }
+
+        if (_initialItemSource == null)
+        {
+            _initialItemSource = GetComponentInChildren<IInitialItemSource>();
         }
     }
 
@@ -126,14 +128,14 @@ public class WorldItemController : MonoBehaviour
     {
         CacheReferences();
 
-        if (_gettableObject == null)
+        if (_itemBindableObject == null)
         {
             return;
         }
 
-        if (_gettableObject.ItemInstance != null)
+        if (_itemBindableObject.ItemInstance != null)
         {
-            SetInstance(_gettableObject.ItemInstance);
+            SetInstance(_itemBindableObject.ItemInstance);
             return;
         }
 
@@ -143,16 +145,22 @@ public class WorldItemController : MonoBehaviour
             return;
         }
 
-        if (_gettableObject.InitialItemKey < 0)
+        if (_initialItemSource == null)
+        {
+            Debug.LogError($"[{nameof(WorldItemController)}] {gameObject.name} has no {nameof(IInitialItemSource)}.", this);
+            return;
+        }
+
+        if (_initialItemSource.InitialItemKey < 0)
         {
             Debug.LogError($"[{nameof(WorldItemController)}] {gameObject.name} has an invalid initial item key.", this);
             return;
         }
 
-        ItemInstance instance = InventoryManager.Instance.CreateItemInstance(_gettableObject.InitialItemKey);
+        ItemInstance instance = InventoryManager.Instance.CreateItemInstance(_initialItemSource.InitialItemKey);
         if (instance == null)
         {
-            Debug.LogError($"[{nameof(WorldItemController)}] Failed to create ItemInstance for key {_gettableObject.InitialItemKey} on {gameObject.name}.", this);
+            Debug.LogError($"[{nameof(WorldItemController)}] Failed to create ItemInstance for key {_initialItemSource.InitialItemKey} on {gameObject.name}.", this);
             return;
         }
 

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public abstract class InteractableObject : MonoBehaviour, IInteractObject
+public abstract class InteractableObject : MonoBehaviour, IInteractObject, IItemBindable
 {
     [Header("References")] 
    

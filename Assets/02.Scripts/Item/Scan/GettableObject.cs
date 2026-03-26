@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class GettableObject : InteractableObject
+public class GettableObject : InteractableObject, IInitialItemSource
 {
     [SerializeField] protected int _initialItemKey;
     public int InitialItemKey => _initialItemKey;

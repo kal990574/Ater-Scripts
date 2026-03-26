@@ -11,7 +11,7 @@ public class ExamineBox : BindApplierBase
     
     
     //해당 아이템이 생성될때 인스턴스의 스테이트 적용
-    public override void ApplyState(ItemBinderBase binder)
+    public override void ApplyState(InstanceView binder)
     {
         Debug.Log("바인드 적용");
         _binder = binder;
