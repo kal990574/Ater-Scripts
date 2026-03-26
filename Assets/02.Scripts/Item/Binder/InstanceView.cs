@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class InstanceView : MonoBehaviour, IItemInstance,IInitialItemSource
+public class InstanceView : MonoBehaviour, IItemInstance
 {
     [SerializeField] private ItemInstance _itemInstance;
     [SerializeField] private int _initialItemKey = -1;
@@ -17,6 +17,7 @@ public class InstanceView : MonoBehaviour, IItemInstance,IInitialItemSource
         if (_initInstnace && InventoryManager.Instance != null)
         {
             _itemInstance = InventoryManager.Instance.CreateItemInstance(_initialItemKey);
+            Bind(_itemInstance, InventoryManager.Instance);
         }
     }
 
@@ -42,14 +43,13 @@ public class InstanceView : MonoBehaviour, IItemInstance,IInitialItemSource
             return null;
         }
 
-        int initialItemKey = ResolveInitialItemKey();
-        if (initialItemKey < 0)
+        if (_initialItemKey < 0)
         {
             Debug.LogError($"[{nameof(InstanceView)}] Initial item key is missing or invalid.", this);
             return null;
         }
 
-        _itemInstance = inventoryManager.CreateItemInstance(initialItemKey);
+        _itemInstance = inventoryManager.CreateItemInstance(_initialItemKey);
         if (_itemInstance == null)
         {
             return null;
@@ -83,23 +83,7 @@ public class InstanceView : MonoBehaviour, IItemInstance,IInitialItemSource
         _inventoryManager = InventoryManager.Instance;
         return _inventoryManager;
     }
-
-    private int ResolveInitialItemKey()
-    {
-        if (_initialItemKey >= 0)
-        {
-            return _initialItemKey;
-        }
-
-        IInitialItemSource initialItemSource = GetComponentInChildren<IInitialItemSource>(true);
-        if (initialItemSource != null)
-        {
-            return initialItemSource.InitialItemKey;
-        }
-
-        return -1;
-    }
-
+    
     private void PropagateItemInstance()
     {
         IItemBindable[] itemBindables = GetComponentsInChildren<IItemBindable>(true);

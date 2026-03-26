@@ -4,9 +4,10 @@ using UnityEngine;
 public class ScanCondition : MonoBehaviour,IUseCondition
 {
     [SerializeField] private bool _completeToTrue = false;
-    public bool CanUse(UseableObject useableObject)
+    public bool CanUse(UseContext context)
     {
-        if (useableObject.TryGetComponent(out IScannableObject scannableObject) &&
+        if (context?.Target != null &&
+            context.Target.TryGetComponent(out IScannableObject scannableObject) &&
             scannableObject.IsProgressComplete == _completeToTrue)
         {
             return true;

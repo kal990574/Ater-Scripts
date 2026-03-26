@@ -1,4 +1,4 @@
 public interface IUseCondition
 {
-    bool CanUse(UseableObject useableObject);
+    bool CanUse(UseContext context);
 }

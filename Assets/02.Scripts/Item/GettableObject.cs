@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class GettableObject : InteractableObject
 {
-    public override void Interact()
+    public override void Interact(UseContext context)
     {
         if (!_isInteractActive)
         {

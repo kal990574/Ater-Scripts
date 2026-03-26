@@ -6,15 +6,15 @@ using UnityEngine.Events;
 [DisallowMultipleComponent]
 public abstract class InteractableObject : MonoBehaviour, IInteractObject, IItemBindable
 {
-    [Header("References")] 
-   
     [SerializeField] protected bool _isInteractActive;
     
     private IScannableObject _scannableObject;
     private IItemInstance _instance;
+
+    public int InitialItemKey { get; }
     public ItemInstance ItemInstance => _instance.ItemInstance;
-    public event Action OnInteract;
     
+    public event Action OnInteract;
     [Header("Scene Event")]
     public UnityEvent InteractEvent;
 
@@ -43,7 +43,7 @@ public abstract class InteractableObject : MonoBehaviour, IInteractObject, IItem
         }
     }
 
-    public abstract void Interact();
+    public abstract void Interact(UseContext context);
 
     private void SetActivate()
     {
@@ -53,7 +53,6 @@ public abstract class InteractableObject : MonoBehaviour, IInteractObject, IItem
     public void SetActivate(bool active)
     {
         _isInteractActive = active;
-        Debug.Log($"활성화 : {active}");
     }
 
     public void SetInstance(IItemInstance itemInstance)

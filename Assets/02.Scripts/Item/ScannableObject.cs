@@ -7,6 +7,7 @@ public class ScannableObject : MonoBehaviour,IScannableObject
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
     [SerializeField] private StateKeySO _scanCompleteStateKey;
+    [SerializeField] private Rigidbody _targetRigidbody;
     
     private IItemInstance _itemBinder;
     private ScanProgress _progress;
@@ -52,12 +53,21 @@ public class ScannableObject : MonoBehaviour,IScannableObject
 
     public void Init()
     {
-
         if (_settings == null)
         {
             Debug.LogError($"[{nameof(ScannableObject)}] {nameof(ScanProgressSetting)} is missing.", this);
             enabled = false;
             return;
+        }
+
+        if (_targetRigidbody == null)
+        {
+            _targetRigidbody = GetComponent<Rigidbody>();
+        }
+
+        if (_targetRigidbody == null)
+        {
+            _targetRigidbody = GetComponentInParent<Rigidbody>();
         }
         
         _itemBinder = GetComponentInParent<InstanceView>();
@@ -74,6 +84,7 @@ public class ScannableObject : MonoBehaviour,IScannableObject
 
         _fsm = new ScanStateMachine(this);
         ChangeState(EScannableState.Default, true);
+        ApplyPhysicsState(false);
     }
 
     [ContextMenu("Reset")]
@@ -81,6 +92,7 @@ public class ScannableObject : MonoBehaviour,IScannableObject
     {
         _progress?.Reset();
         ChangeState(EScannableState.Default, true);
+        ApplyPhysicsState(false);
     }
 
     public void OnScanStarted()
@@ -120,6 +132,8 @@ public class ScannableObject : MonoBehaviour,IScannableObject
                 itemInstance.State.SetBool(_scanCompleteStateKey, true);
             }
         }
+
+        ApplyPhysicsState(true);
         
         OnScanComplete?.Invoke();
         ScanCompletEvent?.Invoke();
@@ -139,6 +153,7 @@ public class ScannableObject : MonoBehaviour,IScannableObject
         }
 
         ChangeState(EScannableState.OnCompleted, true);
+        ApplyPhysicsState(true);
         
         OnScanProgressChanged?.Invoke(1);
         OnScanComplete?.Invoke();
@@ -203,5 +218,16 @@ public class ScannableObject : MonoBehaviour,IScannableObject
         }
 
         ChangeState(EScannableState.OnHold);
+    }
+
+    private void ApplyPhysicsState(bool isScanComplete)
+    {
+        if (_targetRigidbody == null)
+        {
+            return;
+        }
+
+        _targetRigidbody.useGravity = isScanComplete;
+        _targetRigidbody.isKinematic = !isScanComplete;
     }
 }

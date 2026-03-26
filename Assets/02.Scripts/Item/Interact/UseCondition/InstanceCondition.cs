@@ -17,7 +17,7 @@ public class InstanceCondition : MonoBehaviour, IUseCondition
     [SerializeField] private int _expectedIntValue;
     [SerializeField] private string _expectedStringValue = string.Empty;
 
-    public bool CanUse(UseableObject useableObject)
+    public bool CanUse(UseContext context)
     {
         if (_stateKey == null)
         {
