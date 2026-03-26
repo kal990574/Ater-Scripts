@@ -22,7 +22,7 @@ public class PlayerDetectAbility : PlayerAbility
     {
         IDetectableObject nextDetectTarget =
             _playerTargetDetector.Detect(_camera.transform.position, _camera.transform.forward);
-
+        Debug.Log($"DetectableObject : {nextDetectTarget?.Transform.name}");
         if (ReferenceEquals(_currentTarget, nextDetectTarget))
         {
             return;

@@ -1,6 +1,7 @@
 using UnityEngine;
 
-public class WorldKey : BindApplierBase
+//기본적으로 스캔 동기화
+public class ScanStateApplier : BindApplierBase
 {
     [SerializeField] private ScannableObject _scannableObject;
     [SerializeField] private StateKeySO _scanCompleteStateKey;

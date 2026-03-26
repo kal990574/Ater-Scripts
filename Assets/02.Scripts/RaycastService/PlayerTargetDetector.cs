@@ -26,11 +26,19 @@ public class PlayerTargetDetector
 
     private static IDetectableObject FindTargetable(Collider collider)
     {
-        if (collider.TryGetComponent(out IDetectableObject targetable))
+        IDetectableObject detectableObject =  collider.GetComponentInChildren<IDetectableObject>();
+        
+        if (detectableObject != null)
         {
-            return targetable;
+            return detectableObject;
         }
         
+         detectableObject =  collider.GetComponentInParent<IDetectableObject>();
+         if (detectableObject != null)
+         {
+             return detectableObject;
+         }
+         
         return null;
     }
 }
