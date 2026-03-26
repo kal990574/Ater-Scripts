@@ -1,10 +1,7 @@
 using UnityEngine;
 
-public class GettableObject : InteractableObject, IInitialItemSource
+public class GettableObject : InteractableObject
 {
-    [SerializeField] protected int _initialItemKey;
-    public int InitialItemKey => _initialItemKey;
-    
     public override void Interact()
     {
         if (!_isInteractActive)

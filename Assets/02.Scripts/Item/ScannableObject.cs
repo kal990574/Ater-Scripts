@@ -113,8 +113,9 @@ public class ScannableObject : MonoBehaviour,IScannableObject
     {
         if (_itemBinder != null)
         {
-            ItemInstance itemInstance = _itemBinder != null ? _itemBinder.ItemInstance : null;
-            if (itemInstance?.State != null && itemInstance.State.HasKey(_scanCompleteStateKey))
+            InstanceView instanceView = _itemBinder as InstanceView;
+            ItemInstance itemInstance = instanceView != null ? instanceView.EnsureItemInstance() : _itemBinder.ItemInstance;
+            if (itemInstance?.State != null && _scanCompleteStateKey != null)
             {
                 itemInstance.State.SetBool(_scanCompleteStateKey, true);
             }

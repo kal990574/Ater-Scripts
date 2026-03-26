@@ -11,12 +11,20 @@ public abstract class InteractableObject : MonoBehaviour, IInteractObject, IItem
     [SerializeField] protected bool _isInteractActive;
     
     private IScannableObject _scannableObject;
-    private ItemInstance _instance;
-    public ItemInstance ItemInstance => _instance;
+    private IItemInstance _instance;
+    public ItemInstance ItemInstance => _instance.ItemInstance;
     public event Action OnInteract;
     
     [Header("Scene Event")]
     public UnityEvent InteractEvent;
+
+    private void Awake()
+    {
+        if (TryGetComponent(out IItemInstance instance))
+        {
+            _instance = instance;
+        }
+    }
 
     protected virtual void Start()
     {
@@ -43,7 +51,7 @@ public abstract class InteractableObject : MonoBehaviour, IInteractObject, IItem
         Debug.Log("활성화");
     }
 
-    public void SetInstance(ItemInstance itemInstance)
+    public void SetInstance(IItemInstance itemInstance)
     {
         _instance = itemInstance;
     }

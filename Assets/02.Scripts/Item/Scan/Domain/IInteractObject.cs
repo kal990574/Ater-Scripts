@@ -3,7 +3,7 @@ using System;
 public interface IItemBindable
 {
     ItemInstance ItemInstance { get; }
-    void SetInstance(ItemInstance itemInstance);
+    void SetInstance(IItemInstance itemInstance);
 }
 
 public interface IInitialItemSource
