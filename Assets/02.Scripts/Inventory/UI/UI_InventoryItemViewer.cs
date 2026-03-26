@@ -65,10 +65,10 @@ public class UI_InventoryItemViewer : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            InteractPoint interactPoint = hit.collider.GetComponentInParent<InteractPoint>();
-            if (interactPoint != null)
+            ExamineInteractPoint examineInteractPoint = hit.collider.GetComponentInParent<ExamineInteractPoint>();
+            if (examineInteractPoint != null)
             {
-                interactPoint?.OnClick();
+                examineInteractPoint?.OnClick();
             }
         }
     }

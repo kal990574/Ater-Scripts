@@ -5,6 +5,8 @@ public class ExamineBox : BindApplierBase
     [SerializeField] private GameObject _interactObject;
     [SerializeField] private GameObject _keyObject;
     [SerializeField] private int  _rewardItemId;
+    [SerializeField] private StateKeySO _openStateKey;
+    [SerializeField] private StateKeySO _rewardCollectedStateKey;
 
     private bool _isOpened = false;
     private bool _isColleced = false;
@@ -16,8 +18,8 @@ public class ExamineBox : BindApplierBase
         Debug.Log("바인드 적용");
         _binder = binder;
         
-        _isOpened = _binder.ItemInstance.State.GetBool(BinderContext.IS_OPEN);
-        _isColleced = _binder.ItemInstance.State.GetBool(BinderContext.IS_REWARD_COLLECTED);
+        _isOpened = _binder.ItemInstance.State.GetBool(_openStateKey);
+        _isColleced = _binder.ItemInstance.State.GetBool(_rewardCollectedStateKey);
 
         //열려있지 않을때만 인터렉터블 포인트를 보이게 한다.
         if (_isOpened)
@@ -44,19 +46,19 @@ public class ExamineBox : BindApplierBase
   
     public void Open()
     {
-        if (!CheckBindValid(BinderContext.IS_OPEN))
+        if (!CheckBindValid())
         {
             return;
         }
 
-        _binder.ItemInstance.State.SetBool(BinderContext.IS_OPEN, true);
+        _binder.ItemInstance.State.SetBool(_openStateKey, true);
         _binder.RefreshView();
     }
 
     
     public void GetKey()
     {
-        if (!CheckBindValid(BinderContext.IS_REWARD_COLLECTED))
+        if (!CheckBindValid())
         {
             return;
         }
@@ -72,7 +74,7 @@ public class ExamineBox : BindApplierBase
             return;
         }
 
-        _binder.ItemInstance.State.SetBool(BinderContext.IS_REWARD_COLLECTED, true);
+        _binder.ItemInstance.State.SetBool(_rewardCollectedStateKey, true);
         _binder.RefreshView();
     }
 }

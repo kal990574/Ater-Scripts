@@ -13,6 +13,18 @@ public class PlayerInventoryAbility : PlayerAbility
     private void Start()
     {
         _inventoryManager = InventoryManager.Instance;
+        if (_inventoryManager != null)
+        {
+            _inventoryManager.OnDataChanged += SyncCurrentHandItemState;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (_inventoryManager != null)
+        {
+            _inventoryManager.OnDataChanged -= SyncCurrentHandItemState;
+        }
     }
     
     public void ToggleInventory()
@@ -78,6 +90,25 @@ public class PlayerInventoryAbility : PlayerAbility
         _handIndex = -1;
         _currentHandItem = null;
         _inventoryManager?.HideHandItem();
+    }
+
+    private void SyncCurrentHandItemState()
+    {
+        if (_inventoryManager == null || _currentHandItem == null)
+        {
+            return;
+        }
+
+        int currentIndex = _inventoryManager.IndexOf(_currentHandItem);
+        if (currentIndex < 0)
+        {
+            _handIndex = -1;
+            _currentHandItem = null;
+            _inventoryManager.HideHandItem();
+            return;
+        }
+
+        _handIndex = currentIndex;
     }
 
     private int GetNextHandIndexAfterThrow()

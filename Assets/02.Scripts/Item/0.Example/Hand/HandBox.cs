@@ -3,6 +3,8 @@ using UnityEngine;
 public class HandBox : BindApplierBase
 {
     [SerializeField] private GameObject _rewardVisual;
+    [SerializeField] private StateKeySO _openStateKey;
+    [SerializeField] private StateKeySO _rewardCollectedStateKey;
 
     public override void ApplyState(InstanceView binder)
     {
@@ -11,8 +13,8 @@ public class HandBox : BindApplierBase
             return;
         }
 
-        bool isOpened = binder.ItemInstance.State.GetBool(BinderContext.IS_OPEN);
-        bool rewardCollected = binder.ItemInstance.State.GetBool(BinderContext.IS_REWARD_COLLECTED);
+        bool isOpened = binder.ItemInstance.State.GetBool(_openStateKey);
+        bool rewardCollected = binder.ItemInstance.State.GetBool(_rewardCollectedStateKey);
 
         if (_rewardVisual != null)
         {

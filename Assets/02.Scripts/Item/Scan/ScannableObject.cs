@@ -6,6 +6,7 @@ public class ScannableObject : MonoBehaviour,IScannableObject
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
+    [SerializeField] private StateKeySO _scanCompleteStateKey;
     
     private IItemInstance _itemBinder;
     private ScanProgress _progress;
@@ -113,9 +114,9 @@ public class ScannableObject : MonoBehaviour,IScannableObject
         if (_itemBinder != null)
         {
             ItemInstance itemInstance = _itemBinder != null ? _itemBinder.ItemInstance : null;
-            if (itemInstance?.State != null && itemInstance.State.HasKey(BinderContext.IS_SCAN_COMPLETE))
+            if (itemInstance?.State != null && itemInstance.State.HasKey(_scanCompleteStateKey))
             {
-                itemInstance.State.SetBool(BinderContext.IS_SCAN_COMPLETE, true);
+                itemInstance.State.SetBool(_scanCompleteStateKey, true);
             }
         }
         

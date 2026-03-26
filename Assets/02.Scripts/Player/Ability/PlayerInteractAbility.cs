@@ -11,7 +11,7 @@ public class PlayerInteractAbility : PlayerAbility
             return;
         }
         
-        if (!TryGetComponent(out IInteractObject interactableObject))
+        if (!target.Transform.TryGetComponent(out IInteractObject interactableObject))
         {
             Debug.Log("[PlayerInteractAbility] :해당 대상은 상호작용 가능하지 않음");
             return;

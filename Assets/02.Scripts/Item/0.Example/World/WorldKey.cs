@@ -3,6 +3,7 @@ using UnityEngine;
 public class WorldKey : BindApplierBase
 {
     [SerializeField] private ScannableObject _scannableObject;
+    [SerializeField] private StateKeySO _scanCompleteStateKey;
 
     private void Awake()
     {
@@ -19,7 +20,7 @@ public class WorldKey : BindApplierBase
             return;
         }
 
-        bool isScanComplete = binder.ItemInstance.State.GetBool(BinderContext.IS_SCAN_COMPLETE);
+        bool isScanComplete = binder.ItemInstance.State.GetBool(_scanCompleteStateKey);
       
         if (isScanComplete && _scannableObject != null)
         {

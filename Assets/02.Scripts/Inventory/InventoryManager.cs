@@ -21,10 +21,12 @@ public class InventoryManager : MonoBehaviour
     private readonly Dictionary<string, GameObject> _handItemCache = new();
     private GameObject _currentExamineItemObject;
     private GameObject _currentHandItemObject;
+    private ItemInstance _currentHandItem;
     
     public IReadOnlyList<ItemInstance> ReadonlyPlayerInventory => _playerInventory;
     public int Count => _playerInventory.Count;
     public int SelectedIndex => _selectedIndex;
+    public ItemInstance CurrentHandItem => _currentHandItem;
     
     public event Action<bool> OnInventoryToggled;
     public event Action OnDataChanged;
@@ -128,6 +130,37 @@ public class InventoryManager : MonoBehaviour
         OnSelectionChanged?.Invoke(_selectedIndex);
     }
 
+    public bool RemoveItem(ItemInstance itemInstance)
+    {
+        if (itemInstance == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < _playerInventory.Count; i++)
+        {
+            if (_playerInventory[i]?.InstanceId != itemInstance.InstanceId)
+            {
+                continue;
+            }
+
+            RemoveItem(i);
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool RemoveCurrentHandItem()
+    {
+        if (_currentHandItem == null)
+        {
+            return false;
+        }
+
+        return RemoveItem(_currentHandItem);
+    }
+
     public bool HasItem(int itemId)
     {
         foreach (ItemInstance item in _playerInventory)
@@ -136,6 +169,24 @@ public class InventoryManager : MonoBehaviour
         }
 
         return false;
+    }
+
+    public int IndexOf(ItemInstance itemInstance)
+    {
+        if (itemInstance == null)
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < _playerInventory.Count; i++)
+        {
+            if (_playerInventory[i]?.InstanceId == itemInstance.InstanceId)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     public void SwapItem(int index1, int index2)
@@ -242,6 +293,7 @@ public class InventoryManager : MonoBehaviour
 
         SetLayerRecursively(handObject, ResolveCacheRoot(_cachedHandRoot).gameObject.layer);
         handObject.SetActive(true);
+        _currentHandItem = itemInstance;
         _currentHandItemObject = handObject;
         return handObject;
     }
@@ -256,6 +308,7 @@ public class InventoryManager : MonoBehaviour
         MoveToCacheRoot(_currentHandItemObject, _cachedHandRoot);
         _currentHandItemObject.SetActive(false);
         _currentHandItemObject = null;
+        _currentHandItem = null;
     }
     #endregion
 
@@ -330,6 +383,7 @@ public class InventoryManager : MonoBehaviour
             if (_currentHandItemObject == handObject)
             {
                 _currentHandItemObject = null;
+                _currentHandItem = null;
             }
 
             Destroy(handObject);

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ItemDataTable", menuName = "Inventory/ItemDataTable")]
+[CreateAssetMenu(fileName = "ItemDataTable", menuName = "Ater/Inventory/ItemDataTable")]
 public class ItemDataTable : ScriptableObject
 {
     [SerializeField]private List<ItemData> _itemDatas = new();

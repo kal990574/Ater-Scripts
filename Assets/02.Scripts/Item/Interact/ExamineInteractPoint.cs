@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-public class InteractPoint : MonoBehaviour
+public class ExamineInteractPoint : MonoBehaviour
 {
     public UnityEvent OnInteract;
     

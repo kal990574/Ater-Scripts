@@ -7,7 +7,7 @@ public class ItemState
 {
     [SerializeField] private List<StateEntry> _entries = new();
 
-    private Dictionary<string, StateEntry> _cachedEntries;
+    private Dictionary<StateKeySO, StateEntry> _cachedEntries;
 
     public ItemState Clone()
     {
@@ -36,7 +36,7 @@ public class ItemState
         }
     }
 
-    public bool GetBool(string key, bool defaultValue = false)
+    public bool GetBool(StateKeySO key, bool defaultValue = false)
     {
         if (!TryGetEntry(key, out StateEntry entry))
         {
@@ -46,7 +46,7 @@ public class ItemState
         return entry.BoolValue;
     }
 
-    public int GetInt(string key, int defaultValue = 0)
+    public int GetInt(StateKeySO key, int defaultValue = 0)
     {
         if (!TryGetEntry(key, out StateEntry entry))
         {
@@ -56,7 +56,7 @@ public class ItemState
         return entry.IntValue;
     }
 
-    public string GetString(string key, string defaultValue = "")
+    public string GetString(StateKeySO key, string defaultValue = "")
     {
         if (!TryGetEntry(key, out StateEntry entry))
         {
@@ -66,41 +66,52 @@ public class ItemState
         return entry.StringValue;
     }
 
-    public bool HasKey(string key)
+    public bool HasKey(StateKeySO key)
     {
         return TryGetEntry(key, out _);
     }
 
-    public void SetBool(string key, bool value)
+    public void SetBool(StateKeySO key, bool value)
     {
         GetOrCreateEntry(key).BoolValue = value;
     }
 
-    public void SetInt(string key, int value)
+    public void SetInt(StateKeySO key, int value)
     {
         GetOrCreateEntry(key).IntValue = value;
     }
 
-    public void SetString(string key, string value)
+    public void SetString(StateKeySO key, string value)
     {
         GetOrCreateEntry(key).StringValue = value;
     }
 
-    private bool TryGetEntry(string key, out StateEntry entry)
+    private bool TryGetEntry(StateKeySO key, out StateEntry entry)
     {
+        if (key == null)
+        {
+            entry = null;
+            return false;
+        }
+
         EnsureCache();
         return _cachedEntries.TryGetValue(key, out entry);
     }
 
-    private StateEntry GetOrCreateEntry(string key)
+    private StateEntry GetOrCreateEntry(StateKeySO key)
     {
+        if (key == null)
+        {
+            throw new ArgumentNullException(nameof(key));
+        }
+
         EnsureCache();
         if (_cachedEntries.TryGetValue(key, out StateEntry entry))
         {
             return entry;
         }
 
-        entry = new StateEntry { Key = key };
+        entry = new StateEntry(key);
         _entries.Add(entry);
         _cachedEntries[key] = entry;
         return entry;
@@ -113,10 +124,10 @@ public class ItemState
             return;
         }
 
-        _cachedEntries = new Dictionary<string, StateEntry>(StringComparer.Ordinal);
+        _cachedEntries = new Dictionary<StateKeySO, StateEntry>();
         foreach (StateEntry entry in _entries)
         {
-            if (string.IsNullOrWhiteSpace(entry.Key))
+            if (entry.Key == null)
             {
                 continue;
             }
@@ -129,7 +140,7 @@ public class ItemState
     {
         foreach (StateEntry entry in _entries)
         {
-            if (string.IsNullOrWhiteSpace(entry.Key))
+            if (entry.Key == null)
             {
                 continue;
             }
@@ -141,16 +152,17 @@ public class ItemState
     [Serializable]
     private class StateEntry
     {
-        [SerializeField] private string _key;
+        [SerializeField] private StateKeySO _key;
         [SerializeField] private bool _boolValue;
         [SerializeField] private int _intValue;
         [SerializeField] private string _stringValue;
 
-        public string Key
+        public StateEntry(StateKeySO key)
         {
-            get => _key;
-            set => _key = value;
+            _key = key;
         }
+
+        public StateKeySO Key => _key;
 
         public bool BoolValue
         {
@@ -172,9 +184,8 @@ public class ItemState
 
         public StateEntry Clone()
         {
-            return new StateEntry
+            return new StateEntry(_key)
             {
-                _key = _key,
                 _boolValue = _boolValue,
                 _intValue = _intValue,
                 _stringValue = _stringValue
@@ -184,7 +195,7 @@ public class ItemState
 
     private readonly struct StateSnapshot
     {
-        public StateSnapshot(string key, bool boolValue, int intValue, string stringValue)
+        public StateSnapshot(StateKeySO key, bool boolValue, int intValue, string stringValue)
         {
             Key = key;
             BoolValue = boolValue;
@@ -192,7 +203,7 @@ public class ItemState
             StringValue = stringValue;
         }
 
-        public string Key { get; }
+        public StateKeySO Key { get; }
         public bool BoolValue { get; }
         public int IntValue { get; }
         public string StringValue { get; }
