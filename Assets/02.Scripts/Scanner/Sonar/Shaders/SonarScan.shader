@@ -8,12 +8,12 @@ Shader "Custom/SonarScan"
         _ScanMaxRadius ("Scan Max Radius", Float) = 15
         _ScanAngle ("Scan Angle", Float) = 40
         _RingWidth ("Ring Width", Float) = 2
-        _ScanColor ("Scan Color", Color) = (0.4, 0.7, 1.0, 1.0)
+        _ScanColor ("Scan Color", Color) = (1.0, 1.0, 1.0, 1.0)
         _EdgeThreshold ("Edge Threshold", Float) = 0.1
-        _ScanLineFrequency ("Scan Line Frequency", Float) = 50
         _TrailIntensity ("Trail Intensity", Float) = 0.3
         _TrailFadeRadius ("Trail Fade Radius", Float) = 0
         _RingFillIntensity ("Ring Fill Intensity", Range(0, 1)) = 0.4
+        _RingGradientPower ("Ring Gradient Power", Float) = 2
         _RingOpacity ("Ring Opacity", Float) = 1
     }
 
@@ -32,6 +32,12 @@ Shader "Custom/SonarScan"
             ZWrite Off
             ZTest Always
             Cull Off
+
+            Stencil
+            {
+                Ref 1
+                Comp NotEqual
+            }
 
             HLSLPROGRAM
             #pragma vertex Vert
@@ -52,10 +58,10 @@ Shader "Custom/SonarScan"
             float _RingWidth;
             float4 _ScanColor;
             float _EdgeThreshold;
-            float _ScanLineFrequency;
             float _TrailIntensity;
             float _TrailFadeRadius;
             float _RingFillIntensity;
+            float _RingGradientPower;
             float _RingOpacity;
 
             struct Attributes
@@ -133,10 +139,11 @@ Shader "Custom/SonarScan"
                 return smoothstep(cosHalfAngle, cosInner, cosAngle);
             }
 
-            // 파동 링 마스크: 현재 반경 근처 픽셀 강조
+            // 파동 링 마스크: 현재 반경 근처 픽셀 강조 (pow로 중심→가장자리 그라데이션)
             float RingMask(float dist)
             {
-                return 1.0 - saturate(abs(dist - _ScanRadius) / _RingWidth);
+                float mask = 1.0 - saturate(abs(dist - _ScanRadius) / _RingWidth);
+                return pow(mask, _RingGradientPower);
             }
 
             // 잔상 마스크: _TrailFadeRadius ~ _ScanRadius 구간에만 표시
@@ -154,12 +161,6 @@ Shader "Custom/SonarScan"
                 return inTrail * gradient * _TrailIntensity;
             }
 
-            // 스캔 라인 패턴: 월드 Y 기반 수평 줄무늬
-            float ScanLinePattern(float3 worldPos)
-            {
-                float scanLine = frac(worldPos.y * _ScanLineFrequency);
-                return lerp(0.3, 1.0, step(0.5, scanLine));
-            }
 
             half4 Frag(Varyings input) : SV_Target
             {
@@ -194,14 +195,17 @@ Shader "Custom/SonarScan"
                 float ring = RingMask(dist);
                 float trail = TrailMask(dist);
                 float edge = SobelDepthEdge(uv);
-                float scanLine = ScanLinePattern(worldPos);
+
+                // 거리별 감쇠: 가까울수록 밝고, 멀수록 어둡게
+                float distAtten = 1.0 - saturate(dist / _ScanMaxRadius);
+                distAtten = distAtten * distAtten;
 
                 // 링: 영역 전체
                 float ringFill = ring * cone * _RingFillIntensity * _RingOpacity;
 
-                // 윤곽선: 링은 edge, 잔상은 edge + scanline
+                // 윤곽선
                 float ringOutline = ring * cone * edge * _RingOpacity;
-                float trailOutline = trail * cone * edge * scanLine;
+                float trailOutline = trail * cone * edge * distAtten;
 
                 float finalEffect = saturate(ringFill + ringOutline + trailOutline);
 

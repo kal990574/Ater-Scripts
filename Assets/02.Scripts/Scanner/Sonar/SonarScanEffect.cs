@@ -7,14 +7,6 @@ namespace _02.Scripts.Sonar
     public class SonarScanEffect : MonoBehaviour
     {
         [SerializeField] private Material _scanMaterial;
-        
-        [SerializeField] private float _ringWidth = 2f;
-        [SerializeField] private Color _scanColor = new(0.4f, 0.7f, 1.0f, 1.0f);
-        [SerializeField] private float _edgeThreshold = 0.1f;
-        [SerializeField] private float _scanLineFrequency = 50f;
-        [SerializeField] private float _trailIntensity = 0.3f;
-        [SerializeField] [Range(0f, 1f)] private float _ringFillIntensity = 0.4f;
-        [SerializeField] private float _ringFadeDuration = 0.5f;
 
         private static readonly int _scanOriginId = Shader.PropertyToID("_ScanOrigin");
         private static readonly int _scanDirectionId = Shader.PropertyToID("_ScanDirection");
@@ -24,10 +16,10 @@ namespace _02.Scripts.Sonar
         private static readonly int _ringWidthId = Shader.PropertyToID("_RingWidth");
         private static readonly int _scanColorId = Shader.PropertyToID("_ScanColor");
         private static readonly int _edgeThresholdId = Shader.PropertyToID("_EdgeThreshold");
-        private static readonly int _scanLineFrequencyId = Shader.PropertyToID("_ScanLineFrequency");
         private static readonly int _trailIntensityId = Shader.PropertyToID("_TrailIntensity");
         private static readonly int _trailFadeRadiusId = Shader.PropertyToID("_TrailFadeRadius");
         private static readonly int _ringFillIntensityId = Shader.PropertyToID("_RingFillIntensity");
+        private static readonly int _ringGradientPowerId = Shader.PropertyToID("_RingGradientPower");
         private static readonly int _ringOpacityId = Shader.PropertyToID("_RingOpacity");
 
         
@@ -74,32 +66,35 @@ namespace _02.Scripts.Sonar
             _currentRadius = 0f;
             _trailFadeRadius = 0f;
             _ringOpacity = 1f;
+
             float maxRadius = _config.ScanRadius;
-            float expandSpeed = _config.ExpandSpeed;
+            float totalDistance = maxRadius + _config.RingWidth;
+            float expandDuration = totalDistance / _config.ExpandSpeed;
             float trailDelay = _config.TrailDuration;
             float elapsed = 0f;
 
-            while (_currentRadius < maxRadius || _ringOpacity > 0f || _trailFadeRadius < maxRadius)
+            while (_ringOpacity > 0f || _trailFadeRadius < maxRadius)
             {
                 elapsed += Time.deltaTime;
 
-                // 링 확장.
-                if (_currentRadius < maxRadius)
+                // 링 확장 (0 → maxRadius + ringWidth, 커브 하나로 전체 이동)
+                // 셰이더가 maxRadius 밖을 클리핑 → 끝부분에서 얇아지다 자연 소멸
+                if (_ringOpacity > 0f)
                 {
-                    _currentRadius += expandSpeed * Time.deltaTime;
-                    _currentRadius = Mathf.Min(_currentRadius, maxRadius);
-                }
-                else
-                {
-                    // 링 max 도달 → 페이드아웃.
-                    _ringOpacity -= Time.deltaTime / _ringFadeDuration;
-                    _ringOpacity = Mathf.Max(_ringOpacity, 0f);
+                    float t = Mathf.Clamp01(elapsed / expandDuration);
+                    _currentRadius = _config.ExpandCurve.Evaluate(t) * totalDistance;
+
+                    if (t >= 1f)
+                    {
+                        _currentRadius = maxRadius;
+                        _ringOpacity = 0f;
+                    }
                 }
 
-                // 잔상 소멸 경계: trailDelay 후 동일 속도로 추격.
+                // 잔상 소멸: trailDelay 후 trailFadeSpeed로 안쪽부터 지움
                 if (elapsed > trailDelay)
                 {
-                    _trailFadeRadius += expandSpeed * Time.deltaTime;
+                    _trailFadeRadius += _config.TrailFadeSpeed * Time.deltaTime;
                     _trailFadeRadius = Mathf.Min(_trailFadeRadius, maxRadius);
                 }
 
@@ -107,7 +102,6 @@ namespace _02.Scripts.Sonar
                 yield return null;
             }
 
-            // 초기화.
             _currentRadius = 0f;
             _trailFadeRadius = 0f;
             _ringOpacity = 0f;
@@ -125,13 +119,13 @@ namespace _02.Scripts.Sonar
             _scanMaterial.SetFloat(_scanRadiusId, _currentRadius);
             _scanMaterial.SetFloat(_scanMaxRadiusId, _config.ScanRadius);
             _scanMaterial.SetFloat(_scanAngleId, _config.ScanAngle);
-            _scanMaterial.SetFloat(_ringWidthId, _ringWidth);
-            _scanMaterial.SetColor(_scanColorId, _scanColor);
-            _scanMaterial.SetFloat(_edgeThresholdId, _edgeThreshold);
-            _scanMaterial.SetFloat(_scanLineFrequencyId, _scanLineFrequency);
-            _scanMaterial.SetFloat(_trailIntensityId, _trailIntensity);
+            _scanMaterial.SetFloat(_ringWidthId, _config.RingWidth);
+            _scanMaterial.SetColor(_scanColorId, _config.ScanColor);
+            _scanMaterial.SetFloat(_edgeThresholdId, _config.EdgeThreshold);
+            _scanMaterial.SetFloat(_trailIntensityId, _config.TrailIntensity);
             _scanMaterial.SetFloat(_trailFadeRadiusId, _trailFadeRadius);
-            _scanMaterial.SetFloat(_ringFillIntensityId, _ringFillIntensity);
+            _scanMaterial.SetFloat(_ringFillIntensityId, _config.RingFillIntensity);
+            _scanMaterial.SetFloat(_ringGradientPowerId, _config.RingGradientPower);
             _scanMaterial.SetFloat(_ringOpacityId, _ringOpacity);
         }
     }
