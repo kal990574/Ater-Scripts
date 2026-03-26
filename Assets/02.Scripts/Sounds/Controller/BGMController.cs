@@ -69,8 +69,8 @@ public class BGMController : MonoBehaviour
             _activeBGM.volume = Mathf.Lerp(startVolume, 0f, t);
             _inActiveBGM.volume = Mathf.Lerp(0f, 1f, t);
 
+            yield return null;
         }
-        yield return null;
 
         _activeBGM.Stop();
         _activeBGM.volume = 0f;
@@ -95,8 +95,9 @@ public class BGMController : MonoBehaviour
 
             _activeBGM.volume = Mathf.Lerp(startVolume, 0f, t);
             _inActiveBGM.volume = Mathf.Lerp(inActiveStartVolume, 0f, t);
+
+            yield return null;
         }
-        yield return null;
 
         _activeBGM.Stop();
         _activeBGM.volume = 0f;

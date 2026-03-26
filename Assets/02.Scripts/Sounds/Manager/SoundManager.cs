@@ -52,14 +52,12 @@ public class SoundManager : MonoBehaviour, ISoundService
         _bgmController.Pause();
         _sfxController.PauseSFX();
         _sfxController.PauseStinger();
-        AudioListener.pause = true;
     }
     public void ResumeAll()
     {
         _bgmController.Resume();
         _sfxController.ResumeSFX();
         _sfxController.ResumeStinger();
-        AudioListener.pause = false;
     }
 
 }

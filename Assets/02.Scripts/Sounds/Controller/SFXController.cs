@@ -22,7 +22,6 @@ public class SFXController : MonoBehaviour
     }
 
     private readonly List<SFXEntry> _activeSFX = new();
-    private readonly List<AudioSource> sfxToRemove = new List<AudioSource>();
 
     private bool _isPaused;
 
