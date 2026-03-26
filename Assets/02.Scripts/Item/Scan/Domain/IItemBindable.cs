@@ -1,0 +1,1 @@
+// Declared in IInteractObject.cs.

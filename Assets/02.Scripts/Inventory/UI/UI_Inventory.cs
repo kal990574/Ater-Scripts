@@ -4,10 +4,11 @@ using UnityEngine;
 public class UI_Inventory : MonoBehaviour
 {
     //ItemViewer와 InventoryItmeUIContainer를 관리한다.
-    [SerializeField] private UI_InventoryContainer uiInventoryContainer;
-    [SerializeField] private UI_ItemViewer uiItemViewer;
-    [SerializeField] private DetailViewInteraction _detailViewInteraction;
-
+    [SerializeField] private UI_InventoryContainer _uiInventoryContainer;
+    [SerializeField] private UI_InventoryItemViewer _uiInventoryItemViewer;
+    [SerializeField] private ExamineInteraction _examineInteraction;
+    
+    private int _selectedIndex = -1;
     private void Start()
     {
         InventoryManager.Instance.OnInventoryToggled += Show;
@@ -16,26 +17,47 @@ public class UI_Inventory : MonoBehaviour
 
     private void OnEnable()
     {
+        //임시
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        if (InventoryManager.Instance == null)
+        {
+            return;
+        }
+        
         InventoryManager.Instance.OnDataChanged += Refresh;
         InventoryManager.Instance.OnSelectionChanged += HandleSelectionChanged;
-        uiInventoryContainer.OnSlotClicked += HandleSlotClicked;
-        uiInventoryContainer.OnSwapRequested += HandleSwapRequested;
-        _detailViewInteraction.OnDragChanged += uiItemViewer.SetDragging;
-        _detailViewInteraction.OnScrolled += uiItemViewer.Zoom;
-        _detailViewInteraction.OnClicked += uiItemViewer.TryInteract;
+        _uiInventoryContainer.OnSlotClicked += HandleSlotClicked;
+        _uiInventoryContainer.OnSwapRequested += HandleSwapRequested;
+        
+        _examineInteraction.OnDragChanged += _uiInventoryItemViewer.SetDragging;
+        _examineInteraction.OnScrolled += _uiInventoryItemViewer.Zoom;
+        _examineInteraction.OnClicked += _uiInventoryItemViewer.TryInteract;
 
         Refresh();
     }
 
     private void OnDisable()
     {
+       
+        //임시
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        
+        if (InventoryManager.Instance == null)
+        {
+            return;
+        }
         InventoryManager.Instance.OnDataChanged -= Refresh;
         InventoryManager.Instance.OnSelectionChanged -= HandleSelectionChanged;
-        uiInventoryContainer.OnSlotClicked -= HandleSlotClicked;
-        uiInventoryContainer.OnSwapRequested -= HandleSwapRequested;
-        _detailViewInteraction.OnDragChanged -= uiItemViewer.SetDragging;
-        _detailViewInteraction.OnScrolled -= uiItemViewer.Zoom;
-        _detailViewInteraction.OnClicked -= uiItemViewer.TryInteract;
+        _uiInventoryContainer.OnSlotClicked -= HandleSlotClicked;
+        _uiInventoryContainer.OnSwapRequested -= HandleSwapRequested;
+        
+        _examineInteraction.OnDragChanged -= _uiInventoryItemViewer.SetDragging;
+        _examineInteraction.OnScrolled -= _uiInventoryItemViewer.Zoom;
+        _examineInteraction.OnClicked -= _uiInventoryItemViewer.TryInteract;
+        
         InventoryManager.Instance.ClearSelection();
     }
 
@@ -46,27 +68,13 @@ public class UI_Inventory : MonoBehaviour
 
     public void Refresh()
     {
-        uiInventoryContainer.Refresh(InventoryManager.Instance.ReadonlyPlayerInventory);
-        RestoreSelection();
+        _uiInventoryContainer.Refresh(InventoryManager.Instance.ReadonlyPlayerInventory);
     }
-
-    private void RestoreSelection()
-    {
-        int index = InventoryManager.Instance.SelectedIndex;
-
-        if (index < 0) return;
-
-        if (index >= InventoryManager.Instance.ReadonlyPlayerInventory.Count) return;
-
-        uiInventoryContainer.SelectSlotAt(index);
-        uiItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
-    }
-
-
-
+    
     private void HandleSlotClicked(int index)
     {
         InventoryManager.Instance.SelectItem(index);
+        
     }
 
     private void HandleSwapRequested(int index1, int index2)
@@ -76,15 +84,15 @@ public class UI_Inventory : MonoBehaviour
 
     private void HandleSelectionChanged(int index)
     {
-        if(index < 0)
+        if (_selectedIndex == index)
         {
-            uiItemViewer.Hide();
             return;
         }
-
-        uiInventoryContainer.SelectSlotAt(index);
-        uiItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
+        
+        _uiInventoryContainer.SelectSlotAt(index);
+        _uiInventoryItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
     }
+    
     private void Show(bool isOn)
     {
         gameObject.SetActive(isOn);

@@ -25,7 +25,7 @@ public class PlayerController : MonoBehaviour
     public bool CanMove => _canMove;
     public bool CanRotate => _canRotate;
     public PlayerInteractMode InteractMode => _interactMode;
-    public InteractController Target => GetAbility<PlayerDetectAbility>().CurrentTarget;
+    public IDetectableObject Target => GetAbility<PlayerDetectAbility>().CurrentTarget;
 
     public event Action<PlayerInteractMode> OnModeChanged;
 
@@ -39,37 +39,38 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (Target != null)
+        if (Target != null && _input.InteractInput)
         {
-            ItemModeInput();
+            //타게팅된 오브젝트와 상호작용
+            GetAbility<PlayerInteractAbility>().Interact(Target);
         }
-
+        
+        //스캔모드일 경우 스캔 인풋
         if (InteractMode == PlayerInteractMode.Scan)
         {
             ScanModeInput();
         }
-
+        
         if (_input.ScannerToggleInput)
         {
+            GetAbility<PlayerInventoryAbility>().ClearHandItem();
             SetActionMode(PlayerInteractMode.Scan);
         }
-
+        
         if (_input.InventoryToggleInput)
         {
             GetAbility<PlayerInventoryAbility>().ToggleInventory();
         }
-
+        
         if (_input.ItemSlotInput >= 0 && _input.ItemSlotInput <= 5)
         {
             SetActionMode(PlayerInteractMode.Item);
+            GetAbility<PlayerInventoryAbility>().TryPickUpItem(_input.ItemSlotInput);
         }
-    }
-
-    private void ItemModeInput()
-    {
-        if (_input.InteractInput)
+        
+        if (_interactMode == PlayerInteractMode.Item && _input.LmbPressInput)
         {
-            GetAbility<PlayerInteractAbility>().Interact(Target);
+            GetAbility<PlayerInventoryAbility>().TryThrowItem();
         }
     }
 
@@ -81,7 +82,7 @@ public class PlayerController : MonoBehaviour
             scanAbility.SonarActive();
         }
 
-        if (_input.LmbPressInput)
+        if (_input.LmbPressingInput)
         {
             scanAbility.LidarScanActiveAndUpdate();
         }

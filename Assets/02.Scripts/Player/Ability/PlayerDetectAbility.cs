@@ -6,9 +6,9 @@ public class PlayerDetectAbility : PlayerAbility
     [SerializeField] private RaycastSetting _query = new(5f, ~0, QueryTriggerInteraction.Ignore);
 
     private PlayerTargetDetector _playerTargetDetector;
-    private InteractController _currentTarget;
+    private IDetectableObject _currentTarget;
 
-    public InteractController CurrentTarget => _currentTarget;
+    public IDetectableObject CurrentTarget => _currentTarget;
 
     private void Start()
     {
@@ -20,7 +20,7 @@ public class PlayerDetectAbility : PlayerAbility
 
     private void Update()
     {
-        InteractController nextDetectTarget =
+        IDetectableObject nextDetectTarget =
             _playerTargetDetector.Detect(_camera.transform.position, _camera.transform.forward);
 
         if (ReferenceEquals(_currentTarget, nextDetectTarget))
