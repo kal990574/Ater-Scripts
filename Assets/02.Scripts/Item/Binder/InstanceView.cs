@@ -1,15 +1,25 @@
+using System;
 using UnityEngine;
 
 public class InstanceView : MonoBehaviour, IItemInstance,IInitialItemSource
 {
     [SerializeField] private ItemInstance _itemInstance;
     [SerializeField] private int _initialItemKey = -1;
+    [SerializeField] private bool _initInstnace = false;
     private InventoryManager _inventoryManager;
 
     public ItemInstance ItemInstance => _itemInstance;
     public InventoryManager InventoryManager => _inventoryManager;
     public int InitialItemKey => _initialItemKey;
-    
+
+    private void Start()
+    {
+        if (_initInstnace && InventoryManager.Instance != null)
+        {
+            _itemInstance = InventoryManager.Instance.CreateItemInstance(_initialItemKey);
+        }
+    }
+
     public virtual void Bind(ItemInstance itemInstance, InventoryManager inventoryManager)
     {
         _itemInstance = itemInstance;

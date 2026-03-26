@@ -23,7 +23,7 @@ public class ItemInstance
     public GameObject HandPrefab => data != null ? data.HandPrefab : null;
 
     //데이터로 인스턴스 제작하기
-    public ItemInstance(ItemData data)
+    public ItemInstance(ItemData data = null)
     {
         _instanceId = Guid.NewGuid().ToString("N");
         this.data = data;
