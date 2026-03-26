@@ -7,7 +7,7 @@ public class SoundTest : MonoBehaviour
 
     private void Start()
     {
-        _sound = FindObjectOfType<SoundManager>(); // SoundManager가 같은 오브젝트에 있을 경우
+        _sound = FindObjectOfType<SoundManager>();
     }
 
     private void Update()

@@ -12,6 +12,8 @@ public class BGMController : MonoBehaviour
 
     private bool _isPaused;
 
+    private const float MinFadeTime = 0.01f;
+
     private void Awake()
     {
         _activeBGM = _bgmSourceA;
@@ -25,7 +27,7 @@ public class BGMController : MonoBehaviour
 
         if (_activeBGM.clip == clip && _activeBGM.isPlaying) return;
 
-        fadeTime = Mathf.Max(fadeTime, 0.01f); //fadetime이 0일 때의 예외처리
+        fadeTime = Mathf.Max(fadeTime, MinFadeTime); //fadetime이 0일 때의 예외처리
 
         if (_bgmFadeCoroutine != null)
         {
@@ -37,7 +39,7 @@ public class BGMController : MonoBehaviour
 
     public void Stop(float fadeTime)
     {
-        fadeTime = Mathf.Max(fadeTime, 0.01f); //fadetime이 0일 때의 예외처리
+        fadeTime = Mathf.Max(fadeTime, MinFadeTime); //fadetime이 0일 때의 예외처리
 
         if (_bgmFadeCoroutine != null)
         {
