@@ -6,8 +6,8 @@ public class ScannableObject : MonoBehaviour,IScannableObject
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
-    [SerializeField] private InstanceView _itemBinder;
-
+    
+    private IItemInstance _itemBinder;
     private ScanProgress _progress;
     private ScanStateMachine _fsm;
     
@@ -27,8 +27,6 @@ public class ScannableObject : MonoBehaviour,IScannableObject
     
     private void Awake()
     {
-        
-
         Init();
     }
 
@@ -53,10 +51,6 @@ public class ScannableObject : MonoBehaviour,IScannableObject
 
     public void Init()
     {
-        if (_itemBinder == null)
-        {
-            _itemBinder = GetComponentInParent<InstanceView>();
-        }
 
         if (_settings == null)
         {
@@ -64,7 +58,9 @@ public class ScannableObject : MonoBehaviour,IScannableObject
             enabled = false;
             return;
         }
-
+        
+        _itemBinder = GetComponentInParent<InstanceView>();
+        
         if (_progress != null)
         {
             _progress.OnProgressChanged -= HandleProgressChanged;
@@ -114,17 +110,15 @@ public class ScannableObject : MonoBehaviour,IScannableObject
    
     public void OnScanCompleted()
     {
-        if (_itemBinder == null)
+        if (_itemBinder != null)
         {
-            _itemBinder = GetComponentInParent<InstanceView>();
+            ItemInstance itemInstance = _itemBinder != null ? _itemBinder.ItemInstance : null;
+            if (itemInstance?.State != null && itemInstance.State.HasKey(BinderContext.IS_SCAN_COMPLETE))
+            {
+                itemInstance.State.SetBool(BinderContext.IS_SCAN_COMPLETE, true);
+            }
         }
-
-        ItemInstance itemInstance = _itemBinder != null ? _itemBinder.ItemInstance : null;
-        if (itemInstance?.State != null && itemInstance.State.HasKey(BinderContext.IS_SCAN_COMPLETE))
-        {
-            itemInstance.State.SetBool(BinderContext.IS_SCAN_COMPLETE, true);
-        }
-
+        
         OnScanComplete?.Invoke();
         ScanCompletEvent?.Invoke();
     }

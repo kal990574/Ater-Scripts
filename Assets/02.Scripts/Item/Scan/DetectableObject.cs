@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 //플레이어가 감지 가능한 오브젝트에 대해 아웃라인 기능을 제공한다.
+//플레이어는 해당 인터페이스만을 찾아서 타겟으로 삼는다.
 public class DetectableObject : MonoBehaviour, IDetectableObject
 {
     public Transform Transform => transform;
