@@ -6,10 +6,5 @@ namespace _02.Scripts.UI.Domain
     {
         UIState CurrentState { get; }
         event Action<UIState> OnUIStateChanged;
-
-        void ShowMainMenu();
-        void ShowInGameHUD();
-        void ShowPauseMenu();
-        void ShowGameOver();
     }
 }

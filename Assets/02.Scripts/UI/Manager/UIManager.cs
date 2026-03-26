@@ -14,27 +14,7 @@ namespace _02.Scripts.UI.Manager
         {
             _gameManager = gameManager;
             _gameManager.OnGameStateChanged += HandleGameStateChanged;
-            CurrentState = UIState.MainMenu;
-        }
-        
-        public void ShowMainMenu()
-        {
-            SetState(UIState.MainMenu);
-        }
-
-        public void ShowInGameHUD()
-        {
-            SetState(UIState.InGame);
-        }
-
-        public void ShowPauseMenu()
-        {
-            SetState(UIState.Paused);
-        }
-
-        public void ShowGameOver()
-        {
-            SetState(UIState.GameOver);
+            CurrentState = UIState.InGame;
         }
 
         private void SetState(UIState newState)
@@ -49,13 +29,13 @@ namespace _02.Scripts.UI.Manager
             switch (gameState)
             {
                 case GameState.Playing:
-                    ShowInGameHUD();
+                    SetState(UIState.InGame);
                     break;
                 case GameState.Paused:
-                    ShowPauseMenu();
+                    SetState(UIState.Paused);
                     break;
                 case GameState.GameOver:
-                    ShowGameOver();
+                    SetState(UIState.GameOver);
                     break;
             }
         }

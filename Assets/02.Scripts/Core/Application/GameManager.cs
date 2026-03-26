@@ -35,6 +35,8 @@ namespace _02.Scripts.Core.Application
 
             CurrentState = GameState.Paused;
             Time.timeScale = 0f;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             OnGameStateChanged?.Invoke(GameState.Paused);
         }
 
@@ -44,6 +46,8 @@ namespace _02.Scripts.Core.Application
             
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
             OnGameStateChanged?.Invoke(GameState.Playing);
         }
 
