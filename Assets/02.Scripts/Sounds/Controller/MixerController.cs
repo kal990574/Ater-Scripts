@@ -34,7 +34,7 @@ public class MixerController : MonoBehaviour
     }
     private void SetMixerVolume(string paramName, float volume)
     {
-        float dB = volume > MinVolumeForLog ? Mathf.Log10(volume) * DecibelMultiplier : -MinDecibels;
+        float dB = volume > MinVolumeForLog ? Mathf.Log10(volume) * DecibelMultiplier : MinDecibels;
         _mixer.SetFloat(paramName, dB);
     }
 

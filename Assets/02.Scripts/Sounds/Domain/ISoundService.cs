@@ -16,7 +16,7 @@ public interface ISoundService
     void SetMasterVolume(float volume);
     void SetBGMVolume(float volume);
     void SetSFXVolume(float volume);
-    void TransitionToSnapshot(AudioMixerSnapshot Snapshot, float transitionTime = 0.5f);
+    void TransitionToSnapshot(AudioMixerSnapshot snapshot, float transitionTime = 0.5f);
 
     void PauseAll();
     void ResumeAll();

@@ -22,6 +22,8 @@ public class SFXController : MonoBehaviour
     }
 
     private readonly List<SFXEntry> _activeSFX = new();
+    private readonly List<AudioSource> sfxToRemove = new List<AudioSource>();
+
     private bool _isPaused;
 
     public void PlaySFX(AudioClip clip, Vector3 position, float volume)
@@ -46,7 +48,7 @@ public class SFXController : MonoBehaviour
         source.pitch = pitch;
         source.Play();
 
-        if(_isPaused)
+        if (_isPaused)
         {
             source.Pause();
         }
