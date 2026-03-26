@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class HandBox : HandItemBase
+public class HandBox : BindApplierBase
 {
     [SerializeField] private GameObject _rewardVisual;
 

@@ -1,12 +1,12 @@
 using UnityEngine;
 
-public abstract class ExamineItemBase : MonoBehaviour, IBindApplier
+//바인드 어플라이어는 스테이트를 통해 해당 오브젝트의 상태를 변경하는 역할을 한다.
+public abstract class BindApplierBase : MonoBehaviour,IBindApplier
 {
     protected ItemBinderBase _binder;
-    protected bool _isBind = false;
     
     public ItemBinderBase Binder => _binder;
-    
+    protected bool _isBind = false;
     public abstract void ApplyState(ItemBinderBase binder);
     
     protected virtual bool CheckBindValid(string binderContext = "")
@@ -23,13 +23,6 @@ public abstract class ExamineItemBase : MonoBehaviour, IBindApplier
             return false;
         }
 
-        if (!string.IsNullOrEmpty(binderContext) && _binder.ItemInstance.State.GetBool(binderContext))
-        {
-            Debug.LogError("이미 True상태임");
-            return false;
-        }
-
         return true;
     }
-
 }

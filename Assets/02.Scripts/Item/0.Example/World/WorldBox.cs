@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class WorldBox : WorldItemBase
+public class WorldBox : BindApplierBase
 {
     [SerializeField] private ScannableObject _scannableObject;
     [SerializeField] private InteractableObject _interactableObject;

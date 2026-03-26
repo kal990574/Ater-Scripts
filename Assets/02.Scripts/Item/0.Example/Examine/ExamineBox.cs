@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ExamineBox : ExamineItemBase
+public class ExamineBox : BindApplierBase
 {
     [SerializeField] private GameObject _interactObject;
     [SerializeField] private GameObject _keyObject;

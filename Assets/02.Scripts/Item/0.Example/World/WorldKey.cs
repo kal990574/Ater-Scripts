@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class WorldKey : WorldItemBase
+public class WorldKey : BindApplierBase
 {
     [SerializeField] private ScannableObject _scannableObject;
 
