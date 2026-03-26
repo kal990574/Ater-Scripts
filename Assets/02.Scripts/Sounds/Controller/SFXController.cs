@@ -35,7 +35,13 @@ public class SFXController : MonoBehaviour
     public void PlaySFX2D(AudioClip clip, float volume = 1f)
     {
         if (clip == null) return;
-        PlayAndDespawn(_sfx2DPrefab, clip, Vector3.zero, volume, 1f);
+        GameObject sfxInstance = LeanPool.Spawn(_sfx2DPrefab, Vector3.zero, Quaternion.identity);
+        AudioSource source = sfxInstance.GetComponent<AudioSource>();
+        source.clip = clip;
+        source.volume = volume;
+        source.pitch = 1f;
+        source.Play();
+        LeanPool.Despawn(sfxInstance, clip.length + DespawnBuffer);
     }
 
     private void PlayAndDespawn(GameObject prefab, AudioClip clip, Vector3 position, float volume, float pitch)
