@@ -16,5 +16,5 @@ public interface IInteractObject
     ItemInstance ItemInstance { get; }
     event Action OnInteract;
     void Interact();
-    void SetActivate();
+    void SetActivate(bool active);
 }

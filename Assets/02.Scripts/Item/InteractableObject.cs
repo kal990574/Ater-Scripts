@@ -44,11 +44,16 @@ public abstract class InteractableObject : MonoBehaviour, IInteractObject, IItem
     }
 
     public abstract void Interact();
-    
-    public void SetActivate()
+
+    private void SetActivate()
     {
-        _isInteractActive = true;
-        Debug.Log("활성화");
+        SetActivate(true);
+    }
+    
+    public void SetActivate(bool active)
+    {
+        _isInteractActive = active;
+        Debug.Log($"활성화 : {active}");
     }
 
     public void SetInstance(IItemInstance itemInstance)

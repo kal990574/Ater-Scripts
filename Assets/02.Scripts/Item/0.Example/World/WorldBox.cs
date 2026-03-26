@@ -31,13 +31,9 @@ public class WorldBox : BindApplierBase
         if (isScanComplete && _scannableObject != null)
         {
             _scannableObject.ForceScanComplete();
+            _interactableObject.SetActivate(true);
         }
-
-        if (isScanComplete && _scannableObject != null)
-        {
-            _interactableObject.SetActivate();
-        }
-
+        
         if (_rewardVisual != null)
         {
             _rewardVisual.SetActive(isOpened && !rewardCollected);
