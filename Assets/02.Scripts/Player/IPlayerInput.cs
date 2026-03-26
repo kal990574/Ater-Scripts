@@ -7,6 +7,7 @@ namespace _02.Scripts.Player
         Vector2 MoveInput { get; }
         Vector2 LookInput { get; }
         bool LmbPressInput { get; }
+        bool LmbHoldInput { get; }
         bool LmbPressingInput { get; }
         bool LmbReleaseInput { get; }
         bool RmbPressInput { get; }

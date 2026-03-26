@@ -19,7 +19,8 @@ namespace _02.Scripts.Player
         
         public Vector2 MoveInput => _moveAction.ReadValue<Vector2>();
         public Vector2 LookInput => _lookAction.ReadValue<Vector2>();
-        public bool LmbPressInput => _lmbAction.WasReleasedThisFrame();
+        public bool LmbPressInput => _lmbAction.WasPressedThisFrame();
+        public bool LmbHoldInput => _lmbAction.IsPressed();
         public bool LmbPressingInput => _lmbAction.IsPressed();
         public bool LmbReleaseInput => _lmbAction.WasReleasedThisFrame();
         public bool RmbPressInput  => _rmbAction.WasPressedThisFrame();

@@ -3,12 +3,16 @@ using UnityEngine;
 
 public class PlayerInventoryAbility : PlayerAbility
 {
-    
     [SerializeField] private float _throwDistance = 1.5f;
+    [SerializeField] private float _throwHoldThreshold = 0.2f;
+    [SerializeField] private float _maxThrowChargeTime = 1.5f;
+    [SerializeField] private float _maxThrowForce = 10.0f;
     [SerializeField] private int _handIndex = -1;
     
     private InventoryManager _inventoryManager;
     private ItemInstance _currentHandItem;
+    private bool _isChargingThrow;
+    private float _throwChargeTime;
     
     private void Start()
     {
@@ -62,25 +66,54 @@ public class PlayerInventoryAbility : PlayerAbility
         return _inventoryManager.ShowHandItem(itemInstance) != null;
     }
     
-    public bool TryThrowItem()
+    public void BeginReleaseHandItem()
     {
         if (_inventoryManager == null || _currentHandItem == null)
         {
+            return;
+        }
+
+        _isChargingThrow = true;
+        _throwChargeTime = 0.0f;
+    }
+
+    public void ChargeReleaseHandItem(float deltaTime)
+    {
+        if (_isChargingThrow == false)
+        {
+            return;
+        }
+
+        _throwChargeTime += deltaTime;
+    }
+
+    public bool ReleaseHandItem()
+    {
+        if (_isChargingThrow == false || _inventoryManager == null || _currentHandItem == null)
+        {
             return false;
         }
-        
+
+        bool shouldThrow = _throwChargeTime >= _throwHoldThreshold;
         GameObject worldObject = _inventoryManager.CreateWorldItem(_currentHandItem, null);
         if (worldObject == null)
         {
+            ResetThrowCharge();
             return false;
         }
 
         worldObject.transform.position = _owner.transform.position + (_owner.transform.forward * _throwDistance);
         worldObject.transform.rotation = Quaternion.identity;
 
+        if (shouldThrow)
+        {
+            ApplyThrowForce(worldObject);
+        }
+
         int nextHandIndex = GetNextHandIndexAfterThrow();
         _inventoryManager.RemoveItem(_handIndex);
         ClearHandItem();
+        ResetThrowCharge();
         TryPickUpItem(nextHandIndex);
         return true;
     }
@@ -89,6 +122,7 @@ public class PlayerInventoryAbility : PlayerAbility
     {
         _handIndex = -1;
         _currentHandItem = null;
+        ResetThrowCharge();
         _inventoryManager?.HideHandItem();
     }
 
@@ -125,5 +159,33 @@ public class PlayerInventoryAbility : PlayerAbility
         }
 
         return itemCountAfterRemoval - 1;
+    }
+
+    private void ApplyThrowForce(GameObject worldObject)
+    {
+        Rigidbody rigidbody = worldObject.GetComponent<Rigidbody>();
+        if (rigidbody == null)
+        {
+            rigidbody = worldObject.GetComponentInChildren<Rigidbody>();
+        }
+
+        if (rigidbody == null)
+        {
+            return;
+        }
+
+        rigidbody.linearVelocity = Vector3.zero;
+        rigidbody.angularVelocity = Vector3.zero;
+
+        float chargeRatio = _maxThrowChargeTime <= 0.0f ? 1.0f : Mathf.Clamp01(_throwChargeTime / _maxThrowChargeTime);
+        float throwForce = _maxThrowForce * chargeRatio;
+
+        rigidbody.AddForce(_owner.transform.forward * throwForce, ForceMode.Impulse);
+    }
+
+    private void ResetThrowCharge()
+    {
+        _isChargingThrow = false;
+        _throwChargeTime = 0.0f;
     }
 }

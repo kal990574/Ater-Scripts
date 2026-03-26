@@ -68,9 +68,23 @@ public class PlayerController : MonoBehaviour
             GetAbility<PlayerInventoryAbility>().TryPickUpItem(_input.ItemSlotInput);
         }
         
-        if (_interactMode == PlayerInteractMode.Item && _input.LmbPressInput)
+        if (_interactMode == PlayerInteractMode.Item)
         {
-            GetAbility<PlayerInventoryAbility>().TryThrowItem();
+            PlayerInventoryAbility inventoryAbility = GetAbility<PlayerInventoryAbility>();
+            if (_input.LmbPressInput)
+            {
+                inventoryAbility.BeginReleaseHandItem();
+            }
+
+            if (_input.LmbHoldInput)
+            {
+                inventoryAbility.ChargeReleaseHandItem(Time.deltaTime);
+            }
+
+            if (_input.LmbReleaseInput)
+            {
+                inventoryAbility.ReleaseHandItem();
+            }
         }
     }
 
