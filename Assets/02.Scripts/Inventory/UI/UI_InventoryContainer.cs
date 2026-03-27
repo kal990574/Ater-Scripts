@@ -11,7 +11,7 @@ public class UI_InventoryContainer : MonoBehaviour
     public event Action<int> OnSlotClicked;
     public event Action<int, int> OnSwapRequested;
 
-    public void Refresh(IReadOnlyList<ItemInstance> items)
+    public void Refresh(IReadOnlyList<string> instanceIds)
     {
         List<GameObject> toDestroy = new List<GameObject>();
 
@@ -25,11 +25,11 @@ public class UI_InventoryContainer : MonoBehaviour
             obj.transform.SetParent(null);
         }
 
-        for (int i = 0; i < items.Count; i++)
+        for (int i = 0; i < instanceIds.Count; i++)
         {
             GameObject obj = Instantiate(_slotUIPrefab, _slotContainer);
             UI_InventorySlotItem slotItem = obj.GetComponent<UI_InventorySlotItem>();
-            slotItem.Setup(items[i], i, _canvas);
+            slotItem.Setup(instanceIds[i], i, _canvas);
             slotItem.OnClicked += HandleSlotClicked;
             slotItem.OnDropped += HandleSlotDropped;
         }

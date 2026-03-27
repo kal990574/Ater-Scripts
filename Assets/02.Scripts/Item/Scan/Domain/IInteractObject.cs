@@ -3,14 +3,14 @@ using System;
 public interface IItemBindable
 {
     int InitialItemKey { get; }
-    ItemInstance ItemInstance { get; }
+    ItemInstanceData ItemInstanceData { get; }
     void SetInstance(IItemInstance itemInstance);
 }
 
 
 public interface IInteractObject
 {
-    ItemInstance ItemInstance { get; }
+    ItemInstanceData ItemInstanceData { get; }
     event Action OnInteract;
     void Interact(UseContext context);
     void SetActivate(bool active);

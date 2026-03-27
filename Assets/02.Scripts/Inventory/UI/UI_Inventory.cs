@@ -68,7 +68,7 @@ public class UI_Inventory : MonoBehaviour
 
     public void Refresh()
     {
-        _uiInventoryContainer.Refresh(InventoryManager.Instance.ReadonlyPlayerInventory);
+        _uiInventoryContainer.Refresh(InventoryManager.Instance.ReadonlyPlayerInventoryInstanceIds);
     }
     
     private void HandleSlotClicked(int index)
@@ -88,9 +88,18 @@ public class UI_Inventory : MonoBehaviour
         {
             return;
         }
-        
+
+        _selectedIndex = index;
         _uiInventoryContainer.SelectSlotAt(index);
-        _uiInventoryItemViewer.ShowItem(InventoryManager.Instance.ReadonlyPlayerInventory[index]);
+
+        string instanceId = InventoryManager.Instance.GetInventoryItemInstanceIdAt(index);
+        if (string.IsNullOrEmpty(instanceId))
+        {
+            _uiInventoryItemViewer.Hide();
+            return;
+        }
+
+        _uiInventoryItemViewer.ShowItem(instanceId);
     }
     
     private void Show(bool isOn)

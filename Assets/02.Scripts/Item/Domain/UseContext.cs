@@ -6,15 +6,16 @@ public class UseContext
     public GameObject TargetObject { get; }
     public UsableObject Target { get; }
     public InventoryManager Inventory { get; }
-    public ItemInstance HandItem { get; }
+    public string HandItemInstanceId { get; }
+    public ItemInstanceData HandItem => Inventory != null ? Inventory.GetItemInstance(HandItemInstanceId) : null;
 
-    public UseContext(GameObject user, GameObject targetObject, UsableObject target, InventoryManager inventory, ItemInstance handItem)
+    public UseContext(GameObject user, GameObject targetObject, UsableObject target, InventoryManager inventory, string handItemInstanceId)
     {
         User = user;
         TargetObject = targetObject;
         Target = target;
         Inventory = inventory;
-        HandItem = handItem;
+        HandItemInstanceId = handItemInstanceId;
     }
 
     public static UseContext For(GameObject user, GameObject targetObject)
@@ -24,14 +25,14 @@ public class UseContext
             : null;
 
         InventoryManager inventory = InventoryManager.Instance;
-        ItemInstance handItem = inventory != null ? inventory.CurrentHandItem : null;
-        return new UseContext(user, targetObject, usableObject, inventory, handItem);
+        string handItemInstanceId = inventory != null ? inventory.CurrentHandItemInstanceId : null;
+        return new UseContext(user, targetObject, usableObject, inventory, handItemInstanceId);
     }
 
     public static UseContext For(GameObject user, UsableObject target)
     {
         InventoryManager inventory = InventoryManager.Instance;
-        ItemInstance handItem = inventory != null ? inventory.CurrentHandItem : null;
-        return new UseContext(user, target != null ? target.gameObject : null, target, inventory, handItem);
+        string handItemInstanceId = inventory != null ? inventory.CurrentHandItemInstanceId : null;
+        return new UseContext(user, target != null ? target.gameObject : null, target, inventory, handItemInstanceId);
     }
 }

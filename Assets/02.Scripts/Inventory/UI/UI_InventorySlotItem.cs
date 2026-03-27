@@ -10,20 +10,20 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
     [SerializeField] private TextMeshProUGUI _indexText;
     [SerializeField] private Image _selected;
 
-    private ItemInstance _itemInstance;
+    private string _instanceId;
     private int _index;
     private Canvas _canvas;
     private GameObject _dragIcon;
 
-    public ItemInstance ItemInstance => _itemInstance;
+    public string InstanceId => _instanceId;
     public int Index => _index;
 
     public event Action<UI_InventorySlotItem> OnClicked;
     public event Action<UI_InventorySlotItem, UI_InventorySlotItem> OnDropped;
 
-    public void Setup(ItemInstance itemInstance, int index, Canvas canvas)
+    public void Setup(string instanceId, int index, Canvas canvas)
     {
-        _itemInstance = itemInstance;
+        _instanceId = instanceId;
         _index = index;
         _canvas = canvas;
         Refresh();
@@ -32,14 +32,15 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
     private void Refresh()
     {
         _indexText.text = _index.ToString();
-        if (_itemInstance == null)
+        ItemInstanceData itemInstanceData = ResolveItemInstance();
+        if (itemInstanceData == null)
         {
             _itemIcon.enabled = false;
             return;
         }
 
         _itemIcon.enabled = true;
-        _itemIcon.sprite = _itemInstance.Icon;
+        _itemIcon.sprite = itemInstanceData.Icon;
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -50,7 +51,8 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (_itemInstance == null)
+        ItemInstanceData itemInstanceData = ResolveItemInstance();
+        if (itemInstanceData == null)
         {
             return;
         }
@@ -60,7 +62,7 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
         _dragIcon.transform.SetAsLastSibling();
 
         Image icon = _dragIcon.AddComponent<Image>();
-        icon.sprite = _itemInstance.Icon;
+        icon.sprite = itemInstanceData.Icon;
         icon.raycastTarget = false;
 
         _itemIcon.enabled = false;
@@ -118,5 +120,12 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
     public void Deselect()
     {
         _selected.gameObject.SetActive(false);
+    }
+
+    private ItemInstanceData ResolveItemInstance()
+    {
+        return InventoryManager.Instance != null
+            ? InventoryManager.Instance.GetItemInstance(_instanceId)
+            : null;
     }
 }

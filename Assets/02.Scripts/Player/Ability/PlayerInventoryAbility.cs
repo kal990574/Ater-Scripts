@@ -10,7 +10,7 @@ public class PlayerInventoryAbility : PlayerAbility
     [SerializeField] private int _handIndex = -1;
     
     private InventoryManager _inventoryManager;
-    private ItemInstance _currentHandItem;
+    private string _currentHandInstanceId;
     private bool _isChargingThrow;
     private float _throwChargeTime;
     
@@ -48,27 +48,27 @@ public class PlayerInventoryAbility : PlayerAbility
             return false;
         }
 
-        if (num < 0 || num >= _inventoryManager.ReadonlyPlayerInventory.Count)
+        if (num < 0 || num >= _inventoryManager.Count)
         {
             return false;
         }
 
-        ItemInstance itemInstance = _inventoryManager.ReadonlyPlayerInventory[num];
-        if (itemInstance == null)
+        string instanceId = _inventoryManager.GetInventoryItemInstanceIdAt(num);
+        if (string.IsNullOrEmpty(instanceId))
         {
             return false;
         }
         
         _inventoryManager.HideHandItem();
         _handIndex = num;
-        _currentHandItem = itemInstance;
+        _currentHandInstanceId = instanceId;
 
-        return _inventoryManager.ShowHandItem(itemInstance) != null;
+        return _inventoryManager.ShowHandItem(instanceId) != null;
     }
     
     public void BeginReleaseHandItem()
     {
-        if (_inventoryManager == null || _currentHandItem == null)
+        if (_inventoryManager == null || string.IsNullOrEmpty(_currentHandInstanceId))
         {
             return;
         }
@@ -89,13 +89,13 @@ public class PlayerInventoryAbility : PlayerAbility
 
     public bool ReleaseHandItem()
     {
-        if (_isChargingThrow == false || _inventoryManager == null || _currentHandItem == null)
+        if (_isChargingThrow == false || _inventoryManager == null || string.IsNullOrEmpty(_currentHandInstanceId))
         {
             return false;
         }
 
         bool shouldThrow = _throwChargeTime >= _throwHoldThreshold;
-        GameObject worldObject = _inventoryManager.CreateWorldItem(_currentHandItem, null);
+        GameObject worldObject = _inventoryManager.CreateWorldItem(_currentHandInstanceId, null);
         if (worldObject == null)
         {
             ResetThrowCharge();
@@ -121,23 +121,23 @@ public class PlayerInventoryAbility : PlayerAbility
     public void ClearHandItem()
     {
         _handIndex = -1;
-        _currentHandItem = null;
+        _currentHandInstanceId = null;
         ResetThrowCharge();
         _inventoryManager?.HideHandItem();
     }
 
     private void SyncCurrentHandItemState()
     {
-        if (_inventoryManager == null || _currentHandItem == null)
+        if (_inventoryManager == null || string.IsNullOrEmpty(_currentHandInstanceId))
         {
             return;
         }
 
-        int currentIndex = _inventoryManager.IndexOf(_currentHandItem);
+        int currentIndex = _inventoryManager.IndexOf(_currentHandInstanceId);
         if (currentIndex < 0)
         {
             _handIndex = -1;
-            _currentHandItem = null;
+            _currentHandInstanceId = null;
             _inventoryManager.HideHandItem();
             return;
         }
@@ -147,7 +147,7 @@ public class PlayerInventoryAbility : PlayerAbility
 
     private int GetNextHandIndexAfterThrow()
     {
-        int itemCountAfterRemoval = _inventoryManager.ReadonlyPlayerInventory.Count - 1;
+        int itemCountAfterRemoval = _inventoryManager.Count - 1;
         if (itemCountAfterRemoval <= 0)
         {
             return -1;

@@ -16,12 +16,12 @@ public class ScanStateApplier : BindApplierBase
 
     public override void ApplyState(InstanceView binder)
     {
-        if (binder?.ItemInstance == null)
+        if (binder?.ItemInstanceData == null)
         {
             return;
         }
 
-        bool isScanComplete = binder.ItemInstance.State.GetBool(_scanCompleteStateKey);
+        bool isScanComplete = binder.ItemInstanceData.State.GetBool(_scanCompleteStateKey);
       
         if (isScanComplete && _scannableObject != null)
         {

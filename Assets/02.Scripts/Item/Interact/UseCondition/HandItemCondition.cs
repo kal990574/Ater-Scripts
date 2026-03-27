@@ -12,7 +12,7 @@ public class HandItemCondition : MonoBehaviour, IUseCondition
             return false;
         }
 
-        ItemInstance currentHandItem = context.HandItem;
+        ItemInstanceData currentHandItem = context.HandItem;
         return currentHandItem != null && currentHandItem.ItemId == _requiredItemId;
     }
 }

@@ -25,7 +25,7 @@ public class ScannableObject : MonoBehaviour,IScannableObject
     [Header("Scene Event")]
     public UnityEvent ScanStartEvent;
     public UnityEvent ScanEndEvent;
-    public UnityEvent ScanCompletEvent;
+    public UnityEvent ScanCompleteEvent;
     
     private void Awake()
     {
@@ -126,17 +126,17 @@ public class ScannableObject : MonoBehaviour,IScannableObject
         if (_itemBinder != null)
         {
             InstanceView instanceView = _itemBinder as InstanceView;
-            ItemInstance itemInstance = instanceView != null ? instanceView.EnsureItemInstance() : _itemBinder.ItemInstance;
-            if (itemInstance?.State != null && _scanCompleteStateKey != null)
+            ItemInstanceData itemInstanceData = instanceView != null ? instanceView.EnsureItemInstance() : _itemBinder.ItemInstanceData;
+            if (itemInstanceData?.State != null && _scanCompleteStateKey != null)
             {
-                itemInstance.State.SetBool(_scanCompleteStateKey, true);
+                itemInstanceData.State.SetBool(_scanCompleteStateKey, true);
             }
         }
 
         ApplyPhysicsState(true);
         
         OnScanComplete?.Invoke();
-        ScanCompletEvent?.Invoke();
+        ScanCompleteEvent?.Invoke();
     }
     
     [ContextMenu("Force")]

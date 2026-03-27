@@ -4,17 +4,19 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public abstract class InteractableObject : MonoBehaviour, IInteractObject, IItemBindable
+public abstract class InteractableObject : DetectableObject, IInteractObject, IItemBindable
 {
     [SerializeField] protected bool _isInteractActive;
-    
+
     private IScannableObject _scannableObject;
     private IItemInstance _instance;
 
     public int InitialItemKey { get; }
-    public ItemInstance ItemInstance => _instance.ItemInstance;
-    
+    public ItemInstanceData ItemInstanceData => _instance.ItemInstanceData;
+    public override bool CanDetect => _isDetectable && _isInteractActive;
+
     public event Action OnInteract;
+
     [Header("Scene Event")]
     public UnityEvent InteractEvent;
 
@@ -49,10 +51,14 @@ public abstract class InteractableObject : MonoBehaviour, IInteractObject, IItem
     {
         SetActivate(true);
     }
-    
+
     public void SetActivate(bool active)
     {
         _isInteractActive = active;
+        if (!_isInteractActive && _isOnDetected)
+        {
+            OnDetectExit();
+        }
     }
 
     public void SetInstance(IItemInstance itemInstance)

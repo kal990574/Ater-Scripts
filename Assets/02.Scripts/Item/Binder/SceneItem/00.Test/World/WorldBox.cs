@@ -19,14 +19,14 @@ public class WorldBox : BindApplierBase
 
     public override void ApplyState(InstanceView binder)
     {
-        if (binder?.ItemInstance == null)
+        if (binder?.ItemInstanceData == null)
         {
             return;
         }
 
-        bool isScanComplete = binder.ItemInstance.State.GetBool(_scanCompleteStateKey);
-        bool isOpened = binder.ItemInstance.State.GetBool(_openStateKey);
-        bool rewardCollected = binder.ItemInstance.State.GetBool(_rewardCollectedStateKey);
+        bool isScanComplete = binder.ItemInstanceData.State.GetBool(_scanCompleteStateKey);
+        bool isOpened = binder.ItemInstanceData.State.GetBool(_openStateKey);
+        bool rewardCollected = binder.ItemInstanceData.State.GetBool(_rewardCollectedStateKey);
 
         if (isScanComplete && _scannableObject != null)
         {
