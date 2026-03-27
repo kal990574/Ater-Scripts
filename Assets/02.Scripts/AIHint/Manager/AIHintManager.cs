@@ -3,9 +3,9 @@ using _02.Scripts.AIHint.Domain.Models;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace _02.Scripts.AIHint.Application.Services
+namespace _02.Scripts.AIHint.Manager
 {
-    public class AIHintService
+    public class AIHintManager
     {
         private readonly ISpeechToText _stt;
         private readonly ILanguageModel _llm;
@@ -15,7 +15,7 @@ namespace _02.Scripts.AIHint.Application.Services
         public ILanguageModel Llm => _llm;
         public ITextToSpeech Tts => _tts;
 
-        public AIHintService(ISpeechToText stt, ILanguageModel llm, ITextToSpeech tts)
+        public AIHintManager(ISpeechToText stt, ILanguageModel llm, ITextToSpeech tts)
         {
             _stt = stt;
             _llm = llm;
