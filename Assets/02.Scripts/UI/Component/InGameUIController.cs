@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 using Michsky.UI.Dark;
 using _02.Scripts.Core;
 using _02.Scripts.Core.Domain;
@@ -10,17 +9,29 @@ namespace _02.Scripts.UI.Component
 {
     public class InGameUIController : MonoBehaviour
     {
-        [Header("In-Game UI")]
+        [Header("HUD")] 
         [SerializeField] private GameObject _hudPanel;
+        
+        [Header("Pause System")]
+        [SerializeField] private GameObject _pauseRoot;
+        [SerializeField] private MainPanelManager _pausePanelManager;
         [SerializeField] private GameObject _pausePanel;
-
-        [Header("Dark UI")]
+        [SerializeField] private GameObject _settingsPanel;
+        
+        [Header("Modals")]
         [SerializeField] private ModalWindowManager _gameOverModal;
-        [SerializeField] private ModalWindowManager _confirmQuitModal;
-
+        [SerializeField] private ModalWindowManager _confirmMainMenuModal;
+        [SerializeField] private ModalWindowManager _confirmExitModal;
+        
         private IUIManager _uiManager;
         private IGameManager _gameManager;
+        private InputAction _pauseAction;
 
+        private void Awake()
+        {
+            _pauseAction = new InputAction("Pause", InputActionType.Button, "<Keyboard>/escape");
+        }
+        
         private void Start()
         {
             _uiManager = ServiceLocator.Get<IUIManager>();
@@ -29,13 +40,17 @@ namespace _02.Scripts.UI.Component
 
             ApplyState(_uiManager.CurrentState);
         }
-
-        private void Update()
+        
+        private void OnEnable()
         {
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-            {
-                TogglePause();
-            }
+            _pauseAction.performed += OnPausePerformed;
+            _pauseAction.Enable();
+        }
+        
+        private void OnDisable()
+        {
+            _pauseAction.performed -= OnPausePerformed;
+            _pauseAction.Disable();
         }
 
         private void OnDestroy()
@@ -45,7 +60,35 @@ namespace _02.Scripts.UI.Component
                 _uiManager.OnUIStateChanged -= HandleUIStateChanged;
             }
         }
+        
+        // --- Input ---
 
+        private void OnPausePerformed(InputAction.CallbackContext context)
+        {
+            if (_confirmMainMenuModal.isOn)
+            {
+                _confirmMainMenuModal.ModalWindowOut();
+                return;
+            }
+
+            if (_confirmExitModal.isOn)
+            {
+                _confirmExitModal.ModalWindowOut();
+                return;
+            }
+
+            if (_uiManager.CurrentState == UIState.GameOver) return;
+
+            if (_uiManager.CurrentState == UIState.Paused &&
+                _settingsPanel.activeInHierarchy)
+            {
+                _pausePanelManager.OpenPanel("Pause");
+                return;
+            }
+
+            TogglePause();
+        }
+        
         private void TogglePause()
         {
             if (_uiManager.CurrentState == UIState.InGame)
@@ -57,7 +100,8 @@ namespace _02.Scripts.UI.Component
                 _gameManager.ResumeGame();
             }
         }
-
+        
+        // --- State ---
         private void HandleUIStateChanged(UIState state)
         {
             ApplyState(state);
@@ -82,22 +126,38 @@ namespace _02.Scripts.UI.Component
         private void ShowHUD()
         {
             _hudPanel.SetActive(true);
-            _pausePanel.SetActive(false);
+            HidePauseRoot();
             SetCursor(false);
         }
-
+        
         private void ShowPause()
         {
             _hudPanel.SetActive(false);
-            _pausePanel.SetActive(true);
+            ShowPauseRoot();
             SetCursor(true);
         }
 
         private void ShowGameOver()
         {
             _hudPanel.SetActive(false);
+            HidePauseRoot();
             _gameOverModal.ModalWindowIn();
             SetCursor(true);
+        }
+
+        private void ShowPauseRoot()
+        {
+            _pauseRoot.SetActive(true);
+        }
+
+        private void HidePauseRoot()
+        {
+            if (!_pauseRoot.activeSelf) return;
+
+            _pausePanelManager.currentPanelIndex = 0;
+            _pausePanel.SetActive(true);
+            _settingsPanel.SetActive(false);
+            _pauseRoot.SetActive(false);
         }
 
         private void SetCursor(bool visible)
@@ -105,32 +165,55 @@ namespace _02.Scripts.UI.Component
             Cursor.visible = visible;
             Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked;
         }
-
+        
+        // --- Pause Panel Callbacks ---
         public void OnResumeClicked()
         {
             _gameManager.ResumeGame();
         }
 
-        public void OnRetryClicked()
+        public void OnMainMenuClicked()
+        {
+            _confirmMainMenuModal.ModalWindowIn();
+        }
+
+        public void OnExitClicked()
+        {
+            _confirmExitModal.ModalWindowIn();
+        }
+        
+        // --- GameOver Modal Callbacks ---
+        public void OnRestartClicked()
         {
             _gameOverModal.ModalWindowOut();
             _gameManager.RestartCurrentChapter();
         }
-
-        public void OnQuitToMenuClicked()
+        
+        // --- Confirm Main Menu Modal ---
+        public void OnMainMenuConfirmed()
         {
-            _confirmQuitModal.ModalWindowIn();
+            _gameManager.ReturnToMainMenu();
         }
 
-        public void OnQuitConfirmed()
+        public void OnMainMenuCanceled()
         {
-            Time.timeScale = 1f;
-            SceneManager.LoadScene("JH_MainScene");
+            _confirmMainMenuModal.ModalWindowOut();
+        }
+        
+        // --- Confirm Exit Modal ---
+
+        public void OnExitConfirmed()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+              Application.Quit();
+#endif
         }
 
-        public void OnQuitCanceled()
+        public void OnExitCanceled()
         {
-            _confirmQuitModal.ModalWindowOut();
+            _confirmExitModal.ModalWindowOut();
         }
     }
 }

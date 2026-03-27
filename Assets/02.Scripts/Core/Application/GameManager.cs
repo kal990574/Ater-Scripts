@@ -9,23 +9,23 @@ namespace _02.Scripts.Core.Application
     public class GameManager : IGameManager
     {
         private readonly Dictionary<int, string> _chapterSceneMap;
+        private readonly string _mainMenuSceneName;
 
         public GameState CurrentState { get; private set; } = GameState.Playing;
         public int CurrentChapter { get; private set; } = 1;
         
         public event Action<GameState> OnGameStateChanged;
 
-        public GameManager(Dictionary<int, string> chapterSceneMap)
+        public GameManager(Dictionary<int, string> chapterSceneMap, string mainMenuSceneName)
         {
             _chapterSceneMap = chapterSceneMap;
+            _mainMenuSceneName = mainMenuSceneName;
         }
 
         public void GameOver()
         {
             CurrentState = GameState.GameOver;
             Time.timeScale = 0;
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
             OnGameStateChanged?.Invoke(GameState.GameOver);
         }
 
@@ -35,8 +35,6 @@ namespace _02.Scripts.Core.Application
 
             CurrentState = GameState.Paused;
             Time.timeScale = 0f;
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
             OnGameStateChanged?.Invoke(GameState.Paused);
         }
 
@@ -46,8 +44,6 @@ namespace _02.Scripts.Core.Application
             
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
             OnGameStateChanged?.Invoke(GameState.Playing);
         }
 
@@ -69,6 +65,13 @@ namespace _02.Scripts.Core.Application
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
             SceneManager.LoadScene(sceneName);
+        }
+
+        public void ReturnToMainMenu()
+        {
+            CurrentState = GameState.Playing;
+            Time.timeScale = 1f;
+            SceneManager.LoadScene(_mainMenuSceneName);
         }
     }
 }

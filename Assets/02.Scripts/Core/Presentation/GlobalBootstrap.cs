@@ -27,7 +27,7 @@ namespace _02.Scripts.Core.Presentation
                 { 1, "PlayerScene" }
             };
 
-            var gameManager = new GameManager(chapterSceneMap);
+            var gameManager = new GameManager(chapterSceneMap, "JH_MainScene");
             ServiceLocator.Register<IGameManager>(gameManager);
         }
 
