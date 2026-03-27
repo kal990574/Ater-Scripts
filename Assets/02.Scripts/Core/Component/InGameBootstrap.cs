@@ -2,7 +2,7 @@ using UnityEngine;
 using _02.Scripts.Core.Domain;
 using _02.Scripts.UI.Domain;
 using _02.Scripts.UI.Manager;
-namespace _02.Scripts.Core.Presentation
+namespace _02.Scripts.Core.Component
 {
     [DefaultExecutionOrder(-50)]
     public class InGameBootstrap : MonoBehaviour
@@ -10,15 +10,15 @@ namespace _02.Scripts.Core.Presentation
         private UIManager _uiManager;
         private void Awake()
         {
-            var gameManager = ServiceLocator.Get<IGameManager>();
+            var gameManager = Managers.Get<IGameManager>();
             _uiManager = new UIManager(gameManager);
-            ServiceLocator.Register<IUIManager>(_uiManager);
+            Managers.Register<IUIManager>(_uiManager);
         }
 
         private void OnDestroy()
         {
             _uiManager?.Dispose();
-            ServiceLocator.Unregister<IUIManager>();
+            Managers.Unregister<IUIManager>();
         }
     }
 }

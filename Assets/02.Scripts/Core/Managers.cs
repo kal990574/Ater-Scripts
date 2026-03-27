@@ -2,23 +2,23 @@ using System;
 using System.Collections.Generic;
 namespace _02.Scripts.Core
 {
-    public static class ServiceLocator
+    public static class Managers
     {
-        private static readonly Dictionary<Type, object> _services = new();
+        private static readonly Dictionary<Type, object> _managers = new();
 
         public static void Register<T>(T service) where T : class
         {
-            _services[typeof(T)] = service;
+            _managers[typeof(T)] = service;
         }
 
         public static void Unregister<T>() where T : class
         {
-            _services.Remove(typeof(T));
+            _managers.Remove(typeof(T));
         }
 
         public static T Get<T>() where T : class
         {
-            if (_services.TryGetValue(typeof(T), out var service))
+            if (_managers.TryGetValue(typeof(T), out var service))
             {
                 return (T)service;
             }
@@ -27,7 +27,7 @@ namespace _02.Scripts.Core
 
         public static void Clear()
         {
-            _services.Clear();
+            _managers.Clear();
         }
     }
 }

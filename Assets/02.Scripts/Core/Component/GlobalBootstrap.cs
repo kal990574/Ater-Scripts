@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
-using _02.Scripts.Core.Application;
+using _02.Scripts.Core.Manager;
 using _02.Scripts.Core.Domain;
 using _02.Scripts.UI.Domain;
 using _02.Scripts.UI.Manager;
 
-namespace _02.Scripts.Core.Presentation
+namespace _02.Scripts.Core.Component
 {
     [DefaultExecutionOrder(-100)]
     public class GlobalBootstrap : MonoBehaviour
@@ -28,13 +28,13 @@ namespace _02.Scripts.Core.Presentation
             };
 
             var gameManager = new GameManager(chapterSceneMap, "JH_MainScene");
-            ServiceLocator.Register<IGameManager>(gameManager);
+            Managers.Register<IGameManager>(gameManager);
         }
 
         private void OnDestroy()
         {
             _initialized = false;
-            ServiceLocator.Clear();
+            Managers.Clear();
         }
     }
 }

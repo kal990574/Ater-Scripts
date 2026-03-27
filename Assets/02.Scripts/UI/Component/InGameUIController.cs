@@ -29,8 +29,8 @@ namespace _02.Scripts.UI.Component
         private IGameManager _gameManager;
         private void Start()
         {
-            _uiManager = ServiceLocator.Get<IUIManager>();
-            _gameManager = ServiceLocator.Get<IGameManager>();
+            _uiManager = Managers.Get<IUIManager>();
+            _gameManager = Managers.Get<IGameManager>();
             _uiManager.OnUIStateChanged += HandleUIStateChanged;
 
             ApplyState(_uiManager.CurrentState);

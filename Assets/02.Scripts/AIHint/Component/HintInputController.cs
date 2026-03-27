@@ -42,7 +42,7 @@ namespace _02.Scripts.AIHint.Component
 
         private void Start()
         {
-            var gameManager = ServiceLocator.Get<IGameManager>();
+            var gameManager = Managers.Get<IGameManager>();
             _gameStateProvider = new GameStateProviderAdapter(gameManager);
 
             var stt = new ClovaSpeechToText(_naverConfig);
