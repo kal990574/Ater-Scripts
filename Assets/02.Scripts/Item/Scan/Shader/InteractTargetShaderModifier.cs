@@ -66,7 +66,12 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void ApplyInitialShaderState()
     {
-        if (_scannableObject != null && _scannableObject.IsProgressComplete)
+        if (_scannableObject == null)
+        {
+            SetOutlineColor(_oultineConfig.OnHoverOutlineColor);
+            ApplyProgressState(1f);
+        }
+        else if (_scannableObject.IsProgressComplete)
         {
             SetOutlineColor(_oultineConfig.OnHoverOutlineColor);
             ApplyProgressState(1f);

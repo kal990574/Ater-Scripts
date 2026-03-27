@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class ScannableObject : MonoBehaviour,IScannableObject
+public class ScannableObject : BindApplierBase, IScannableObject
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
@@ -229,5 +229,20 @@ public class ScannableObject : MonoBehaviour,IScannableObject
 
         _targetRigidbody.useGravity = isScanComplete;
         _targetRigidbody.isKinematic = !isScanComplete;
+    }
+
+    public override void ApplyState(InstanceView binder)
+    {
+        if (binder?.ItemInstanceData == null)
+        {
+            return;
+        }
+
+        bool isScanComplete = binder.ItemInstanceData.State.GetBool(_scanCompleteStateKey);
+      
+        if (isScanComplete)
+        {
+            ForceScanComplete();
+        }
     }
 }

@@ -5,8 +5,7 @@ using UnityEngine.Events;
 [DisallowMultipleComponent]
 public class DetectableObject : MonoBehaviour, IDetectableObject
 {
-    [SerializeField] protected bool _isDetectable = false;
-
+    [SerializeField] protected bool _isDetectable = true;
     protected bool _isOnDetected = false;
 
     public Transform Transform => transform;
