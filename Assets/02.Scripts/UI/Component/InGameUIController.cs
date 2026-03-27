@@ -13,8 +13,7 @@ namespace _02.Scripts.UI.Component
         [SerializeField] private GameObject _hudPanel;
         
         [Header("Pause System")]
-        [SerializeField] private GameObject _pauseRoot;
-        [SerializeField] private MainPanelManager _pausePanelManager;
+        [SerializeField] private MainPanelManager _panelManager;
         [SerializeField] private GameObject _pausePanel;
         [SerializeField] private GameObject _settingsPanel;
         
@@ -23,15 +22,11 @@ namespace _02.Scripts.UI.Component
         [SerializeField] private ModalWindowManager _confirmMainMenuModal;
         [SerializeField] private ModalWindowManager _confirmExitModal;
         
+        [Header("Input")]
+        [SerializeField] private InputActionReference _pauseAction;
+        
         private IUIManager _uiManager;
         private IGameManager _gameManager;
-        private InputAction _pauseAction;
-
-        private void Awake()
-        {
-            _pauseAction = new InputAction("Pause", InputActionType.Button, "<Keyboard>/escape");
-        }
-        
         private void Start()
         {
             _uiManager = ServiceLocator.Get<IUIManager>();
@@ -43,14 +38,14 @@ namespace _02.Scripts.UI.Component
         
         private void OnEnable()
         {
-            _pauseAction.performed += OnPausePerformed;
-            _pauseAction.Enable();
+            _pauseAction.action.performed += OnPausePerformed;
+            _pauseAction.action.Enable();
         }
         
         private void OnDisable()
         {
-            _pauseAction.performed -= OnPausePerformed;
-            _pauseAction.Disable();
+            _pauseAction.action.performed -= OnPausePerformed;
+            _pauseAction.action.Disable();
         }
 
         private void OnDestroy()
@@ -62,7 +57,6 @@ namespace _02.Scripts.UI.Component
         }
         
         // --- Input ---
-
         private void OnPausePerformed(InputAction.CallbackContext context)
         {
             if (_confirmMainMenuModal.isOn)
@@ -79,10 +73,9 @@ namespace _02.Scripts.UI.Component
 
             if (_uiManager.CurrentState == UIState.GameOver) return;
 
-            if (_uiManager.CurrentState == UIState.Paused &&
-                _settingsPanel.activeInHierarchy)
+            if (_uiManager.CurrentState == UIState.Paused && _settingsPanel.activeInHierarchy)
             {
-                _pausePanelManager.OpenPanel("Pause");
+                _panelManager.OpenPanel("Pause");
                 return;
             }
 
@@ -125,39 +118,20 @@ namespace _02.Scripts.UI.Component
 
         private void ShowHUD()
         {
-            _hudPanel.SetActive(true);
-            HidePauseRoot();
+            _panelManager.OpenPanel("HUD");
             SetCursor(false);
         }
         
         private void ShowPause()
         {
-            _hudPanel.SetActive(false);
-            ShowPauseRoot();
+            _panelManager.OpenPanel("Pause");
             SetCursor(true);
         }
 
         private void ShowGameOver()
         {
-            _hudPanel.SetActive(false);
-            HidePauseRoot();
             _gameOverModal.ModalWindowIn();
             SetCursor(true);
-        }
-
-        private void ShowPauseRoot()
-        {
-            _pauseRoot.SetActive(true);
-        }
-
-        private void HidePauseRoot()
-        {
-            if (!_pauseRoot.activeSelf) return;
-
-            _pausePanelManager.currentPanelIndex = 0;
-            _pausePanel.SetActive(true);
-            _settingsPanel.SetActive(false);
-            _pauseRoot.SetActive(false);
         }
 
         private void SetCursor(bool visible)
