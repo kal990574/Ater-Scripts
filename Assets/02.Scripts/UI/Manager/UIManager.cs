@@ -4,7 +4,7 @@ using System;
 
 namespace _02.Scripts.UI.Manager
 {
-    public class UIManager : IUIManager
+    public class UIManager : IUIManager, IDisposable
     {
         private readonly IGameManager _gameManager;
         public UIState CurrentState { get; private set; }
@@ -15,6 +15,11 @@ namespace _02.Scripts.UI.Manager
             _gameManager = gameManager;
             _gameManager.OnGameStateChanged += HandleGameStateChanged;
             CurrentState = UIState.InGame;
+        }
+
+        public void Dispose()
+        {
+            _gameManager.OnGameStateChanged -= HandleGameStateChanged;
         }
 
         private void SetState(UIState newState)
