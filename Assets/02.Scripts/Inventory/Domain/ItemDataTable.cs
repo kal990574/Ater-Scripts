@@ -17,16 +17,5 @@ public class ItemDataTable : ScriptableObject
         
         return data;
     }
-
-    public ItemInstance CreateInstance(int itemId)
-    {
-        ItemData definition = GetItemData(itemId);
-        if (definition == null)
-        {
-            Debug.LogWarning($"Item {itemId} not found");
-            return null;
-        }
-
-        return new ItemInstance(definition);
-    }
+    
 }

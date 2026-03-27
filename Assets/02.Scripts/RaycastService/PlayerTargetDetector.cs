@@ -16,7 +16,7 @@ public class PlayerTargetDetector
         RaycastRequest request = _query.CreateRequest(origin, direction);
         RaycastResult result = _raycastService.Cast(request);
 
-        if (result.Hit == false || result.Collider == null)
+        if (!result.Hit || result.Collider == null)
         {
             return null;
         }
@@ -26,11 +26,18 @@ public class PlayerTargetDetector
 
     private static IDetectableObject FindTargetable(Collider collider)
     {
-        if (collider.TryGetComponent(out IDetectableObject targetable))
+        IDetectableObject detectableObject = collider.GetComponentInChildren<IDetectableObject>();
+        if (detectableObject != null && detectableObject.CanDetect)
         {
-            return targetable;
+            return detectableObject;
         }
-        
+
+        detectableObject = collider.GetComponentInParent<IDetectableObject>();
+        if (detectableObject != null && detectableObject.CanDetect)
+        {
+            return detectableObject;
+        }
+
         return null;
     }
 }

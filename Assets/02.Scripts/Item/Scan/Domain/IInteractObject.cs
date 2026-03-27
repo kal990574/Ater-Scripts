@@ -2,19 +2,16 @@ using System;
 
 public interface IItemBindable
 {
-    ItemInstance ItemInstance { get; }
+    int InitialItemKey { get; }
+    ItemInstanceData ItemInstanceData { get; }
     void SetInstance(IItemInstance itemInstance);
 }
 
-public interface IInitialItemSource
-{
-    int InitialItemKey { get; }
-}
 
 public interface IInteractObject
 {
-    ItemInstance ItemInstance { get; }
+    ItemInstanceData ItemInstanceData { get; }
     event Action OnInteract;
-    void Interact();
-    void SetActivate();
+    void Interact(UseContext context);
+    void SetActivate(bool active);
 }

@@ -17,6 +17,7 @@ public class PlayerInteractAbility : PlayerAbility
             return;
         }
 
-        interactableObject.Interact();
+        UseContext context = UseContext.For(_owner.gameObject, target.Transform.gameObject);
+        interactableObject.Interact(context);
     }
 }

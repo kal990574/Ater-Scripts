@@ -5,14 +5,14 @@ public class HandItemCondition : MonoBehaviour, IUseCondition
 {
     [SerializeField] private int _requiredItemId = -1;
 
-    public bool CanUse(UseableObject useableObject)
+    public bool CanUse(UseContext context)
     {
-        if (_requiredItemId < 0 || InventoryManager.Instance == null)
+        if (_requiredItemId < 0 || context?.Inventory == null)
         {
             return false;
         }
 
-        ItemInstance currentHandItem = InventoryManager.Instance.CurrentHandItem;
+        ItemInstanceData currentHandItem = context.HandItem;
         return currentHandItem != null && currentHandItem.ItemId == _requiredItemId;
     }
 }

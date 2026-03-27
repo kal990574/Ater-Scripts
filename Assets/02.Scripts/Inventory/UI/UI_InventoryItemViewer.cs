@@ -43,14 +43,18 @@ public class UI_InventoryItemViewer : MonoBehaviour
         _itemViewerCamera.fieldOfView = Mathf.Clamp(nextFieldOfView, _minFieldOfView, _maxFieldOfView);
     }
 
-    public void ShowItem(ItemInstance itemInstance)
+    public void ShowItem(string instanceId)
     {
         _itemRoot.rotation = Quaternion.identity;
         _itemViewerCamera.transform.localPosition = _initialCameraLocalPosition;
         _itemViewerCamera.fieldOfView = _maxFieldOfView;
 
-        InventoryManager.Instance.ShowExamineItem(itemInstance);
-        _descriptionText.text = itemInstance != null ? itemInstance.Description : string.Empty;
+        ItemInstanceData itemInstanceData = InventoryManager.Instance != null
+            ? InventoryManager.Instance.GetItemInstance(instanceId)
+            : null;
+
+        InventoryManager.Instance.ShowExamineItem(instanceId);
+        _descriptionText.text = itemInstanceData != null ? itemInstanceData.Description : string.Empty;
     }
 
     public void TryInteract(Vector2 screenPosition, RectTransform rawImageRect)

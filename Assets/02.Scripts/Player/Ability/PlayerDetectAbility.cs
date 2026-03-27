@@ -22,7 +22,6 @@ public class PlayerDetectAbility : PlayerAbility
     {
         IDetectableObject nextDetectTarget =
             _playerTargetDetector.Detect(_camera.transform.position, _camera.transform.forward);
-
         if (ReferenceEquals(_currentTarget, nextDetectTarget))
         {
             return;
