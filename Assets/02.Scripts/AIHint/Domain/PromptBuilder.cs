@@ -2,7 +2,7 @@ using _02.Scripts.AIHint.Domain.Models;
 using System.Text;
 using UnityEngine;
 
-namespace _02.Scripts.AIHint.Application.Services
+namespace _02.Scripts.AIHint.Domain
 {
     public class PromptBuilder
     {

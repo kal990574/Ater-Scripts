@@ -33,8 +33,6 @@ Shader "Custom/SonarScan"
             ZTest Always
             Cull Off
 
-            
-
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag

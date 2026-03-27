@@ -13,6 +13,7 @@ namespace _02.Scripts.Core.Domain
         void LoadChapter(int chapter);
         void PauseGame();
         void ResumeGame();
+        void ReturnToMainMenu();
 
     }
 }
