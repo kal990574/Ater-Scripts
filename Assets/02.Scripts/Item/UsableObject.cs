@@ -32,8 +32,6 @@ public class UsableObject : InteractableObject
         Debug.Log($"{gameObject.name} : used");
         ExecuteActions(resolvedContext);
         OnInteractActivate();
-        
-        _isInteractActive = false;
     }
 
     public bool CanUse(UseContext context)

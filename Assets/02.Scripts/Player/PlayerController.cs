@@ -92,7 +92,7 @@ public class PlayerController : MonoBehaviour
             ScanModeInput();
         }
 
-        if (_input.ScannerToggleInput)
+        if (_input.ModeToggleInput)
         {
             GetAbility<PlayerInventoryAbility>().ClearHandItem();
             SetActionMode(PlayerInteractMode.Scan);
@@ -242,12 +242,12 @@ public class PlayerController : MonoBehaviour
 
     private void HandlePuzzleModeInput()
     {
-        if (_input.InteractInput)
+        if (_input.ConfirmInput)
         {
             _activePadLockController?.ConfirmActivePuzzle();
         }
 
-        if (_input.InventoryToggleInput)
+        if (_input.CancelInput)
         {
             _activePadLockController?.CancelActivePuzzle();
         }

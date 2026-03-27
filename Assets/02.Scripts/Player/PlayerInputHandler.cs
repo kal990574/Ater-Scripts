@@ -11,8 +11,9 @@ namespace _02.Scripts.Player
         private InputAction _lookAction;
         private InputAction _lmbAction;
         private InputAction _rmbAction;
-        private InputAction _interactAction;
-        private InputAction _scannerToggleAction;
+        private InputAction _confirmAction;
+        private InputAction _cancelAction;
+        private InputAction _modeToggleAction;
         private InputAction _inventoryToggleAction;
         private InputAction _hintToggleAction;
         private InputAction[] _itemSlotActions;
@@ -25,8 +26,10 @@ namespace _02.Scripts.Player
         public bool LmbReleaseInput => _lmbAction.WasReleasedThisFrame();
         public bool RmbPressInput  => _rmbAction.WasPressedThisFrame();
         public bool RmbReleaseInput => _rmbAction.WasReleasedThisFrame();
-        public bool InteractInput  => _interactAction.WasPressedThisFrame();
-        public bool ScannerToggleInput => _scannerToggleAction.WasPressedThisFrame();
+        public bool InteractInput => _confirmAction.WasPressedThisFrame();
+        public bool ConfirmInput => _confirmAction.WasPressedThisFrame();
+        public bool CancelInput => _cancelAction.WasPressedThisFrame();
+        public bool ModeToggleInput => _modeToggleAction.WasPressedThisFrame();
         public bool InventoryToggleInput => _inventoryToggleAction.WasPressedThisFrame();
         public bool HintToggleInput => _hintToggleAction.WasPressedThisFrame();
 
@@ -52,8 +55,9 @@ namespace _02.Scripts.Player
             _lookAction = playerMap.FindAction("Look");
             _lmbAction = playerMap.FindAction("LMB");
             _rmbAction = playerMap.FindAction("RMB");
-            _interactAction = playerMap.FindAction("Interact");
-            _scannerToggleAction = playerMap.FindAction("ScannerToggle");
+            _confirmAction = playerMap.FindAction("Confirm");
+            _cancelAction = playerMap.FindAction("Cancel");
+            _modeToggleAction = playerMap.FindAction("Mode");
             _inventoryToggleAction = playerMap.FindAction("InventoryToggle");
             _hintToggleAction = playerMap.FindAction("HintToggle");
             _itemSlotActions = new InputAction[5];

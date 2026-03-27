@@ -13,7 +13,9 @@ namespace _02.Scripts.Player
         bool RmbPressInput { get; }
         bool RmbReleaseInput { get; }
         bool InteractInput { get; }
-        bool ScannerToggleInput { get; }
+        bool ConfirmInput { get; }
+        bool CancelInput { get; }
+        bool ModeToggleInput { get; }
         bool InventoryToggleInput { get; }
         bool HintToggleInput { get; }
         int ItemSlotInput { get; }

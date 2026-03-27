@@ -51,11 +51,6 @@ public class PadLockPuzzleInstance : MonoBehaviour
                 _row4 = value;
                 break;
         }
-
-        if (_checkOnRowClick && !_isInitializing)
-        {
-            TryEvaluate();
-        }
     }
 
     public void TryEvaluate()
