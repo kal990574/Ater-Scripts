@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace _02.Scripts.AIHint.Presentation
+namespace _02.Scripts.AIHint.Component
 {
     public static class WavDecoder
     {

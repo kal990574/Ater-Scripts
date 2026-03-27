@@ -4,7 +4,7 @@ using _02.Scripts.Core.Domain;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace _02.Scripts.Core.Application
+namespace _02.Scripts.Core.Manager
 {
     public class GameManager : IGameManager
     {

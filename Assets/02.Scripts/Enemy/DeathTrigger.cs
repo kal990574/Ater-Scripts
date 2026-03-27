@@ -1,6 +1,5 @@
 using UnityEngine;
 using _02.Scripts.Core;
-using _02.Scripts.Core.Application;
 using _02.Scripts.Core.Domain;
 
 namespace _02.Scripts.Enemy
@@ -14,7 +13,7 @@ namespace _02.Scripts.Enemy
             if (((1 << other.gameObject.layer) & _playerLayer) == 0) return;
             
             Debug.Log("Game Over - 적에게 잡혔습니다");
-            ServiceLocator.Get<IGameManager>().GameOver();
+            Managers.Get<IGameManager>().GameOver();
         }
     }
 }

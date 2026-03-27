@@ -1,4 +1,5 @@
-using _02.Scripts.AIHint.Application.Services;
+using _02.Scripts.AIHint.Domain;
+using _02.Scripts.AIHint.Manager;
 using _02.Scripts.AIHint.Domain.Models;
 using _02.Scripts.Core;
 using _02.Scripts.Core.Domain;
@@ -9,7 +10,7 @@ using _02.Scripts.Player;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace _02.Scripts.AIHint.Presentation
+namespace _02.Scripts.AIHint.Component
 {
     public class HintInputController : MonoBehaviour
     {
@@ -32,7 +33,7 @@ namespace _02.Scripts.AIHint.Presentation
         [SerializeField] private string _testQuery = "금고 비밀번호가 뭐야?";
 #endif
 
-        private AIHintService _hintService;
+        private AIHintManager _hintService;
         private IGameStateProvider _gameStateProvider;
         private AudioClip _recordingClip;
         private bool _isRecording;
@@ -41,7 +42,7 @@ namespace _02.Scripts.AIHint.Presentation
 
         private void Start()
         {
-            var gameManager = ServiceLocator.Get<IGameManager>();
+            var gameManager = Managers.Get<IGameManager>();
             _gameStateProvider = new GameStateProviderAdapter(gameManager);
 
             var stt = new ClovaSpeechToText(_naverConfig);
@@ -53,7 +54,7 @@ namespace _02.Scripts.AIHint.Presentation
             var llm = new GPTLanguageModel(_openAIConfig, systemPrompt);
             var tts = new ClovaTextToSpeech(_naverConfig);
 
-            _hintService = new AIHintService(stt, llm, tts);
+            _hintService = new AIHintManager(stt, llm, tts);
         }
 
         private void Update()

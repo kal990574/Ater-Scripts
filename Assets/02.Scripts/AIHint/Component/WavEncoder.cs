@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace _02.Scripts.AIHint.Presentation
+namespace _02.Scripts.AIHint.Component
 {
   public static class WavEncoder
   {

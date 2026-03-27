@@ -33,12 +33,6 @@ Shader "Custom/SonarScan"
             ZTest Always
             Cull Off
 
-            Stencil
-            {
-                Ref 1
-                Comp NotEqual
-            }
-
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag

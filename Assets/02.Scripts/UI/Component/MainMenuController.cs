@@ -10,7 +10,7 @@ namespace _02.Scripts.UI.Component
 
         private void Start()
         {
-            _gameManager = ServiceLocator.Get<IGameManager>();
+            _gameManager = Managers.Get<IGameManager>();
         }
 
         public void PlayGame()
