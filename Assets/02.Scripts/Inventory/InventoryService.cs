@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 public class InventoryService
 {
@@ -126,30 +125,6 @@ public class InventoryService
     public string GetAt(int index)
     {
         return index < 0 || index >= _itemInstanceIds.Count ? null : _itemInstanceIds[index];
-    }
-
-    public void Restore(List<string> instanceIds, int selectedIndex)
-    {
-        _itemInstanceIds.Clear();
-        if (instanceIds != null)
-        {
-            _itemInstanceIds.AddRange(instanceIds.Where(id => !string.IsNullOrEmpty(id)));
-        }
-
-        _selectedIndex = _itemInstanceIds.Count == 0
-            ? -1
-            : Math.Clamp(selectedIndex, -1, _itemInstanceIds.Count - 1);
-
-        OnInventoryChanged?.Invoke();
-        OnSelectionChanged?.Invoke(_selectedIndex);
-    }
-
-    public void ClearAll()
-    {
-        _itemInstanceIds.Clear();
-        _selectedIndex = -1;
-        OnInventoryChanged?.Invoke();
-        OnSelectionChanged?.Invoke(_selectedIndex);
     }
 
     private string GetSelectedInstanceId()

@@ -23,13 +23,7 @@ public class GettableObject : InteractableObject
             return;
         }
 
-        if (!InventoryManager.Instance.TryAddItem(itemInstanceData))
-        {
-            return;
-        }
-
-        PersistentSceneItem persistentSceneItem = GetComponentInParent<PersistentSceneItem>();
-        persistentSceneItem?.MarkCollected(itemInstanceData.InstanceId);
+        InventoryManager.Instance.TryAddItem(itemInstanceData);
         OnInteractActivate();
         Destroy(gameObject);
     }

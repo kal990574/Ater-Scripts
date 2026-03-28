@@ -4,44 +4,47 @@ using UnityEngine;
 
 public class InventoryManager : MonoBehaviour
 {
-    private const string DefaultSaveKey = "Ater.Inventory.Save";
-
     private static InventoryManager _instance;
     public static InventoryManager Instance => _instance;
-
+    
     [Header("Reference")]
     [SerializeField] private ItemDataTable _table;
     [SerializeField] private Transform _cachedExamineRoot;
     [SerializeField] private Transform _cachedHandRoot;
-
-    [Header("Save")]
-    [SerializeField] private bool _loadFromPlayerPrefsOnAwake = true;
-    [SerializeField] private string _playerPrefsSaveKey = DefaultSaveKey;
-
+    
     [Header("Debug/DontChange")]
     [SerializeField] private bool _isInventoryUIOn = false;
     [SerializeField] private int _selectedIndex = -1;
-
-    private readonly Dictionary<string, PersistentSceneItem> _registeredSceneItems = new();
-    private readonly Dictionary<string, SceneItemSaveData> _sceneItemStates = new();
-
+    
+    //인벤토리 서비스 
     private InventoryService _inventoryService;
+    //생성된 인스턴스 생성 및 관리
     private RuntimeInstanceService _instanceInstanceService;
+    
+    //들고 있는 아이템에 대한 서비스
     private HandService _handService;
+    
+    //조사하기에 대한 서비스
     private ExamineService _examineService;
+    
+    //월드 오브젝트에 대한 서비스
     private WorldService _worldService;
+    
+    //각 아이템을 생성하는 팩토리
     private ItemFactory _itemFactory;
-
+    
     public IReadOnlyList<string> ReadonlyPlayerInventoryInstanceIds => _inventoryService.Items;
     public int Count => _inventoryService.Count;
     public int SelectedIndex => _inventoryService.SelectedIndex;
     public string CurrentHandItemInstanceId => _handService.EquippedInstanceId;
     public ItemInstanceData CurrentHandItem => GetItemInstance(_handService.EquippedInstanceId);
-
+    
     public event Action<bool> OnInventoryToggled;
     public event Action OnDataChanged;
     public event Action<int> OnSelectionChanged;
 
+    
+    
     private void Awake()
     {
         if (_instance == null)
@@ -52,7 +55,6 @@ public class InventoryManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
-            return;
         }
 
         _instanceInstanceService = new RuntimeInstanceService(_table);
@@ -65,13 +67,8 @@ public class InventoryManager : MonoBehaviour
         _inventoryService.OnInventoryChanged += HandleInventoryChanged;
         _inventoryService.OnSelectionChanged += HandleSelectionChanged;
         _inventoryService.OnItemRemoved += HandleItemRemoved;
-
-        if (_loadFromPlayerPrefsOnAwake)
-        {
-            LoadFromPlayerPrefs();
-        }
     }
-
+    
     #region Managing Inventory
     public void ClearSelection()
     {
@@ -142,10 +139,7 @@ public class InventoryManager : MonoBehaviour
         foreach (string instanceId in _inventoryService.Items)
         {
             ItemInstanceData item = GetItemInstance(instanceId);
-            if (item != null && item.ItemId == itemId)
-            {
-                return true;
-            }
+            if (item.ItemId == itemId) return true;
         }
 
         return false;
@@ -186,7 +180,7 @@ public class InventoryManager : MonoBehaviour
         _inventoryService.Swap(index1, index2);
     }
     #endregion
-
+    
     #region Examine
     public GameObject ShowExamineItem(ItemInstanceData itemInstanceData)
     {
@@ -229,7 +223,7 @@ public class InventoryManager : MonoBehaviour
         return _worldService.Create(instanceId, itemRoot);
     }
     #endregion
-
+    
     #region Hand Object
     public GameObject ShowHandItem(ItemInstanceData itemInstanceData)
     {
@@ -254,186 +248,6 @@ public class InventoryManager : MonoBehaviour
     }
     #endregion
 
-    #region Save
-    public InventorySaveData CaptureSaveData()
-    {
-        SyncRegisteredSceneStates();
-
-        InventorySaveData saveData = new InventorySaveData
-        {
-            EquippedHandInstanceId = _handService.EquippedInstanceId,
-            SelectedIndex = _inventoryService.SelectedIndex
-        };
-
-        foreach (ItemInstanceData itemInstanceData in _instanceInstanceService.GetAllInstances())
-        {
-            if (itemInstanceData == null)
-            {
-                continue;
-            }
-
-            saveData.ItemInstances.Add(new ItemInstanceSaveData
-            {
-                InstanceId = itemInstanceData.InstanceId,
-                ItemId = itemInstanceData.ItemId,
-                StateEntries = itemInstanceData.State != null ? itemInstanceData.State.CaptureSaveData() : new List<ItemStateValueSaveData>()
-            });
-        }
-
-        foreach (string instanceId in _inventoryService.Items)
-        {
-            saveData.InventoryInstanceIds.Add(instanceId);
-        }
-
-        foreach (SceneItemSaveData sceneItemState in _sceneItemStates.Values)
-        {
-            saveData.SceneItems.Add(new SceneItemSaveData
-            {
-                SceneObjectId = sceneItemState.SceneObjectId,
-                InstanceId = sceneItemState.InstanceId,
-                IsCollected = sceneItemState.IsCollected
-            });
-        }
-
-        return saveData;
-    }
-
-    public string CaptureSaveJson(bool prettyPrint = false)
-    {
-        return JsonUtility.ToJson(CaptureSaveData(), prettyPrint);
-    }
-
-    public void RestoreSaveData(InventorySaveData saveData)
-    {
-        _handService.ResetState();
-        _examineService.ResetState();
-        _instanceInstanceService.Clear();
-        _sceneItemStates.Clear();
-
-        if (saveData != null)
-        {
-            if (saveData.ItemInstances != null)
-            {
-                foreach (ItemInstanceSaveData itemSaveData in saveData.ItemInstances)
-                {
-                    _instanceInstanceService.RestoreInstance(itemSaveData);
-                }
-            }
-
-            if (saveData.SceneItems != null)
-            {
-                foreach (SceneItemSaveData sceneItem in saveData.SceneItems)
-                {
-                    if (sceneItem == null || string.IsNullOrEmpty(sceneItem.SceneObjectId))
-                    {
-                        continue;
-                    }
-
-                    _sceneItemStates[sceneItem.SceneObjectId] = new SceneItemSaveData
-                    {
-                        SceneObjectId = sceneItem.SceneObjectId,
-                        InstanceId = sceneItem.InstanceId,
-                        IsCollected = sceneItem.IsCollected
-                    };
-                }
-            }
-        }
-
-        _inventoryService.Restore(
-            saveData != null ? saveData.InventoryInstanceIds : null,
-            saveData != null ? saveData.SelectedIndex : -1);
-
-        RebindRegisteredSceneItems();
-
-        string equippedInstanceId = saveData != null ? saveData.EquippedHandInstanceId : null;
-        if (!string.IsNullOrEmpty(equippedInstanceId) && GetItemInstance(equippedInstanceId) != null)
-        {
-            _handService.Show(equippedInstanceId);
-        }
-        else
-        {
-            _handService.Hide();
-        }
-    }
-
-    public void RestoreSaveJson(string saveJson)
-    {
-        if (string.IsNullOrEmpty(saveJson))
-        {
-            RestoreSaveData(null);
-            return;
-        }
-
-        InventorySaveData saveData = JsonUtility.FromJson<InventorySaveData>(saveJson);
-        RestoreSaveData(saveData);
-    }
-
-    public void SaveToPlayerPrefs()
-    {
-        PlayerPrefs.SetString(ResolveSaveKey(), CaptureSaveJson());
-        PlayerPrefs.Save();
-    }
-
-    public bool LoadFromPlayerPrefs()
-    {
-        string saveKey = ResolveSaveKey();
-        if (!PlayerPrefs.HasKey(saveKey))
-        {
-            return false;
-        }
-
-        RestoreSaveJson(PlayerPrefs.GetString(saveKey));
-        return true;
-    }
-
-    public void DeletePlayerPrefsSave()
-    {
-        PlayerPrefs.DeleteKey(ResolveSaveKey());
-        PlayerPrefs.Save();
-    }
-    #endregion
-
-    #region Scene Binding
-    public void RegisterSceneItem(PersistentSceneItem sceneItem)
-    {
-        if (sceneItem == null || string.IsNullOrEmpty(sceneItem.SceneObjectId))
-        {
-            return;
-        }
-
-        _registeredSceneItems[sceneItem.SceneObjectId] = sceneItem;
-        ApplySceneItemState(sceneItem);
-    }
-
-    public void UnregisterSceneItem(PersistentSceneItem sceneItem)
-    {
-        if (sceneItem == null || string.IsNullOrEmpty(sceneItem.SceneObjectId))
-        {
-            return;
-        }
-
-        if (_registeredSceneItems.TryGetValue(sceneItem.SceneObjectId, out PersistentSceneItem current) && current == sceneItem)
-        {
-            _registeredSceneItems.Remove(sceneItem.SceneObjectId);
-        }
-    }
-
-    public void MarkSceneItemCollected(string sceneObjectId, string instanceId)
-    {
-        if (string.IsNullOrEmpty(sceneObjectId))
-        {
-            return;
-        }
-
-        _sceneItemStates[sceneObjectId] = new SceneItemSaveData
-        {
-            SceneObjectId = sceneObjectId,
-            InstanceId = instanceId,
-            IsCollected = true
-        };
-    }
-    #endregion
-
     #region Binding Helpers
     private void HandleInventoryChanged()
     {
@@ -455,95 +269,6 @@ public class InventoryManager : MonoBehaviour
     private Transform ResolveRoot(Transform root)
     {
         return root != null ? root : transform;
-    }
-
-    private string ResolveSaveKey()
-    {
-        return string.IsNullOrEmpty(_playerPrefsSaveKey) ? DefaultSaveKey : _playerPrefsSaveKey;
-    }
-
-    private void RebindRegisteredSceneItems()
-    {
-        foreach (PersistentSceneItem sceneItem in _registeredSceneItems.Values)
-        {
-            ApplySceneItemState(sceneItem);
-        }
-    }
-
-    private void SyncRegisteredSceneStates()
-    {
-        foreach (PersistentSceneItem sceneItem in _registeredSceneItems.Values)
-        {
-            if (sceneItem == null || string.IsNullOrEmpty(sceneItem.SceneObjectId))
-            {
-                continue;
-            }
-
-            string instanceId = sceneItem.InstanceView != null ? sceneItem.InstanceView.InstanceId : null;
-            bool isCollected = _sceneItemStates.TryGetValue(sceneItem.SceneObjectId, out SceneItemSaveData state) && state.IsCollected;
-
-            _sceneItemStates[sceneItem.SceneObjectId] = new SceneItemSaveData
-            {
-                SceneObjectId = sceneItem.SceneObjectId,
-                InstanceId = string.IsNullOrEmpty(instanceId) && state != null ? state.InstanceId : instanceId,
-                IsCollected = isCollected
-            };
-        }
-    }
-
-    private void ApplySceneItemState(PersistentSceneItem sceneItem)
-    {
-        if (sceneItem == null || string.IsNullOrEmpty(sceneItem.SceneObjectId))
-        {
-            return;
-        }
-
-        SceneItemSaveData sceneState = GetOrCreateSceneState(sceneItem);
-        if (sceneState.IsCollected)
-        {
-            sceneItem.ApplyCollectedState(true);
-            return;
-        }
-
-        sceneItem.ApplyCollectedState(false);
-
-        if (sceneItem.InstanceView == null)
-        {
-            return;
-        }
-
-        string instanceId = sceneState.InstanceId;
-        if (string.IsNullOrEmpty(instanceId) || GetItemInstance(instanceId) == null)
-        {
-            ItemInstanceData itemInstanceData = CreateItemInstance(sceneItem.InstanceView.InitialItemKey);
-            if (itemInstanceData == null)
-            {
-                return;
-            }
-
-            instanceId = itemInstanceData.InstanceId;
-            sceneState.InstanceId = instanceId;
-        }
-
-        sceneItem.InstanceView.Bind(instanceId, this);
-    }
-
-    private SceneItemSaveData GetOrCreateSceneState(PersistentSceneItem sceneItem)
-    {
-        if (_sceneItemStates.TryGetValue(sceneItem.SceneObjectId, out SceneItemSaveData existing))
-        {
-            return existing;
-        }
-
-        SceneItemSaveData created = new SceneItemSaveData
-        {
-            SceneObjectId = sceneItem.SceneObjectId,
-            InstanceId = sceneItem.InstanceView != null ? sceneItem.InstanceView.InstanceId : null,
-            IsCollected = false
-        };
-
-        _sceneItemStates[sceneItem.SceneObjectId] = created;
-        return created;
     }
     #endregion
 }

@@ -91,21 +91,6 @@ public class HandService
         }
     }
 
-    public void ResetState()
-    {
-        foreach (GameObject cached in _cache.Values)
-        {
-            if (cached != null)
-            {
-                Object.Destroy(cached);
-            }
-        }
-
-        _cache.Clear();
-        _currentObject = null;
-        Clear();
-    }
-
     private GameObject GetOrCreate(string instanceId)
     {
         if (string.IsNullOrEmpty(instanceId))

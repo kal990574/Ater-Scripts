@@ -29,11 +29,4 @@ public class ItemInstanceData
         this.data = data;
         _state = data != null ? data.CreateDefaultState() : new ItemState();
     }
-
-    public ItemInstanceData(string instanceId, ItemData data, ItemState state = null)
-    {
-        _instanceId = string.IsNullOrEmpty(instanceId) ? Guid.NewGuid().ToString("N") : instanceId;
-        this.data = data;
-        _state = state ?? (data != null ? data.CreateDefaultState() : new ItemState());
-    }
 }

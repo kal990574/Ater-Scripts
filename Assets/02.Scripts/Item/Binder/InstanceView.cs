@@ -16,7 +16,7 @@ public class InstanceView : MonoBehaviour, IItemInstance
 
     private void Start()
     {
-        if (_InstanceOnInit && InventoryManager.Instance != null && ResolveItemInstance() == null)
+        if (_InstanceOnInit && InventoryManager.Instance != null)
         {
             ItemInstanceData itemInstanceData = InventoryManager.Instance.CreateItemInstance(_initialItemKey);
             Bind(itemInstanceData != null ? itemInstanceData.InstanceId : null, InventoryManager.Instance);
