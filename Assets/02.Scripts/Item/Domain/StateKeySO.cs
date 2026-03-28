@@ -4,4 +4,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "StateKey", menuName = "Ater/Inventory/Item/State Key")]
 public class StateKeySO : ScriptableObject
 {
+    [SerializeField] private string _persistentKey;
+
+    public string PersistentKey => string.IsNullOrEmpty(_persistentKey) ? name : _persistentKey;
 }

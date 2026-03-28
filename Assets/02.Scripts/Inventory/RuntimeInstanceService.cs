@@ -18,13 +18,24 @@ public class RuntimeInstanceService
 
     public ItemInstanceData CreateInstance(int itemId)
     {
+        return CreateInstance(itemId, null, null);
+    }
+
+    public ItemInstanceData CreateInstance(int itemId, string instanceId, ItemState state)
+    {
         if (_itemDataTable == null)
         {
             Debug.LogError($"[{nameof(RuntimeInstanceService)}] {nameof(ItemDataTable)} reference is missing.");
             return null;
         }
 
-        ItemInstanceData itemInstance = new ItemInstanceData(_itemDataTable.GetItemData(itemId));
+        ItemData itemData = _itemDataTable.GetItemData(itemId);
+        if (itemData == null)
+        {
+            return null;
+        }
+
+        ItemInstanceData itemInstance = new ItemInstanceData(instanceId, itemData, state);
         if (itemInstance == null)
         {
             return null;
@@ -60,5 +71,27 @@ public class RuntimeInstanceService
     {
         TryGetInstance(instanceId, out ItemInstanceData itemInstance);
         return itemInstance;
+    }
+
+    public IReadOnlyCollection<ItemInstanceData> GetAllInstances()
+    {
+        return _instances.Values;
+    }
+
+    public void Clear()
+    {
+        _instances.Clear();
+    }
+
+    public ItemInstanceData RestoreInstance(ItemInstanceSaveData saveData)
+    {
+        if (saveData == null)
+        {
+            return null;
+        }
+
+        ItemState state = new ItemState();
+        state.RestoreSaveData(saveData.StateEntries);
+        return CreateInstance(saveData.ItemId, saveData.InstanceId, state);
     }
 }
