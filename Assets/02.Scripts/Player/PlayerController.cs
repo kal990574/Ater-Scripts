@@ -29,7 +29,7 @@ public class PlayerController : MonoBehaviour
     public bool CanMove => _canMove;
     public bool CanRotate => _canRotate;
     public PlayerInteractMode InteractMode => _interactMode;
-    public IDetectableObject Target => GetAbility<PlayerDetectAbility>().CurrentTarget;
+    public IDetectable Target => GetAbility<PlayerDetectAbility>().CurrentTarget;
 
     public event Action<PlayerInteractMode> OnModeChanged;
 

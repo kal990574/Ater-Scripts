@@ -1,28 +1,28 @@
 using System;
 using System.Collections.Generic;
 
-public class ScanStateMachine
+public class ScanFSM
 {
-    private readonly Dictionary<EScannableState, IScanState> _states;
-    private readonly Dictionary<EScannableState, Func<IScanState>> _stateFactories;
+    private readonly Dictionary<EScanState, IScanState> _states;
+    private readonly Dictionary<EScanState, Func<IScanState>> _stateFactories;
     private IScanState _currentState;
 
-    public EScannableState CurrentStateType => _currentState == null ? EScannableState.Default : _currentState.StateType;
+    public EScanState CurrentStateType => _currentState == null ? EScanState.Default : _currentState.StateType;
 
-    public ScanStateMachine(ScannableObject owner)
+    public ScanFSM(ScannableObject owner)
     {
-        _states = new Dictionary<EScannableState, IScanState>();
-        _stateFactories = new Dictionary<EScannableState, Func<IScanState>>
+        _states = new Dictionary<EScanState, IScanState>();
+        _stateFactories = new Dictionary<EScanState, Func<IScanState>>
         {
-            { EScannableState.Default, () => new ScanDefaultState(owner) },
-            { EScannableState.OnProgress, () => new ScanProgressState(owner) },
-            { EScannableState.OnReturn, () => new ScanReturnState(owner) },
-            { EScannableState.OnHold, () => new ScanHoldState(owner) },
-            { EScannableState.OnCompleted, () => new ScanCompleteState(owner) }
+            { EScanState.Default, () => new ScanDefaultState(owner) },
+            { EScanState.OnProgress, () => new ScanProgressState(owner) },
+            { EScanState.OnReturn, () => new ScanReturnState(owner) },
+            { EScanState.OnHold, () => new ScanHoldState(owner) },
+            { EScanState.OnCompleted, () => new ScanCompleteState(owner) }
         };
     }
 
-    public void ChangeState(EScannableState nextState, bool force = false)
+    public void ChangeState(EScanState nextState, bool force = false)
     {
         if (force == false && _currentState != null && _currentState.StateType == nextState)
         {
@@ -55,7 +55,7 @@ public class ScanStateMachine
         _currentState?.OnScanLost();
     }
 
-    private IScanState CreateState(EScannableState stateType)
+    private IScanState CreateState(EScanState stateType)
     {
         if (_stateFactories.TryGetValue(stateType, out Func<IScanState> factory) == false)
         {

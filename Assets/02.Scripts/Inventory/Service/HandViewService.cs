@@ -1,50 +1,75 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
-public class ExamineService
+public class HandViewService
 {
+    public string EquippedInstanceId { get; private set; }
+
+    public event Action<string> OnEquippedChanged;
+
     private readonly Dictionary<string, GameObject> _cache = new();
     private readonly ItemFactory _itemFactory;
     private readonly Transform _root;
-
     private GameObject _currentObject;
 
-    public string CurrentInstanceId { get; private set; }
-
-    public ExamineService(ItemFactory itemFactory, Transform root)
+    public HandViewService(ItemFactory itemFactory, Transform root)
     {
         _itemFactory = itemFactory;
         _root = root;
     }
 
+    public bool TryEquip(string instanceId)
+    {
+        if (string.IsNullOrEmpty(instanceId))
+        {
+            return false;
+        }
+
+        EquippedInstanceId = instanceId;
+        OnEquippedChanged?.Invoke(EquippedInstanceId);
+        return true;
+    }
+
     public GameObject Show(string instanceId)
     {
         Hide();
-        GameObject examineObject = GetOrCreate(instanceId);
-        if (examineObject == null)
+        GameObject handObject = GetOrCreate(instanceId);
+        if (handObject == null || !TryEquip(instanceId))
         {
             return null;
         }
 
-        _itemFactory.SetLayerRecursively(examineObject, _root.gameObject.layer);
-        examineObject.SetActive(true);
-        _currentObject = examineObject;
-        CurrentInstanceId = instanceId;
-        return examineObject;
+        _itemFactory.SetLayerRecursively(handObject, _root.gameObject.layer);
+        handObject.SetActive(true);
+        _currentObject = handObject;
+        return handObject;
     }
 
     public void Hide()
     {
         if (_currentObject == null)
         {
-            CurrentInstanceId = null;
+            Clear();
             return;
         }
 
         MoveToRoot(_currentObject);
         _currentObject.SetActive(false);
         _currentObject = null;
-        CurrentInstanceId = null;
+        Clear();
+    }
+
+    public void Clear()
+    {
+        EquippedInstanceId = null;
+        OnEquippedChanged?.Invoke(null);
+    }
+
+    public bool IsEquipped(string instanceId)
+    {
+        return !string.IsNullOrEmpty(instanceId) && EquippedInstanceId == instanceId;
     }
 
     public void Remove(string instanceId)
@@ -59,7 +84,7 @@ public class ExamineService
             if (_currentObject == cached)
             {
                 _currentObject = null;
-                CurrentInstanceId = null;
+                Clear();
             }
 
             Object.Destroy(cached);
@@ -79,7 +104,7 @@ public class ExamineService
             return cached;
         }
 
-        GameObject created = _itemFactory.CreateExamineObject(instanceId, _root);
+        GameObject created = _itemFactory.CreateHandObject(instanceId, _root);
         if (created == null)
         {
             return null;

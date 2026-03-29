@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class InstanceView : MonoBehaviour, IItemInstance
+public class RuntimeView : MonoBehaviour, IRuntimeView
 {
     [SerializeField] private string _instanceId;
     [SerializeField] private int _initialItemKey = -1;
@@ -10,7 +10,7 @@ public class InstanceView : MonoBehaviour, IItemInstance
     private InventoryManager _inventoryManager;
 
     public string InstanceId => _instanceId;
-    public InstanceData InstanceData => ResolveItemInstance();
+    public RuntimeItemData RuntimeItemData => ResolveItemInstance();
     public InventoryManager InventoryManager => _inventoryManager;
     public int InitialItemKey => _initialItemKey;
 
@@ -29,8 +29,8 @@ public class InstanceView : MonoBehaviour, IItemInstance
 
         if (InventoryManager.Instance != null)
         {
-            InstanceData instanceData = InventoryManager.Instance.CreateItemInstance(_initialItemKey);
-            Bind(instanceData != null ? instanceData.InstanceId : null, InventoryManager.Instance);
+            RuntimeItemData runtimeItemData = InventoryManager.Instance.CreateItemInstance(_initialItemKey);
+            Bind(runtimeItemData != null ? runtimeItemData.InstanceId : null, InventoryManager.Instance);
             ActivateInstanceIfNeeded();
         }
     }
@@ -43,45 +43,45 @@ public class InstanceView : MonoBehaviour, IItemInstance
         RefreshView();
     }
 
-    public InstanceData EnsureItemInstance()
+    public RuntimeItemData EnsureItemInstance()
     {
-        InstanceData instanceData = ResolveItemInstance();
-        if (instanceData != null)
+        RuntimeItemData runtimeItemData = ResolveItemInstance();
+        if (runtimeItemData != null)
         {
-            return instanceData;
+            return runtimeItemData;
         }
 
         InventoryManager inventoryManager = ResolveInventoryManager();
         if (inventoryManager == null)
         {
-            Debug.LogError($"[{nameof(InstanceView)}] {nameof(InventoryManager)}.Instance is null.", this);
+            Debug.LogError($"[{nameof(RuntimeView)}] {nameof(InventoryManager)}.Instance is null.", this);
             return null;
         }
 
         if (_initialItemKey < 0)
         {
-            Debug.LogError($"[{nameof(InstanceView)}] Initial item key is missing or invalid.", this);
+            Debug.LogError($"[{nameof(RuntimeView)}] Initial item key is missing or invalid.", this);
             return null;
         }
 
-        instanceData = inventoryManager.CreateItemInstance(_initialItemKey);
-        if (instanceData == null)
+        runtimeItemData = inventoryManager.CreateItemInstance(_initialItemKey);
+        if (runtimeItemData == null)
         {
             return null;
         }
 
-        _instanceId = instanceData.InstanceId;
+        _instanceId = runtimeItemData.InstanceId;
         _inventoryManager = inventoryManager;
         PropagateItemInstance();
         ActivateInstanceIfNeeded();
-        return instanceData;
+        return runtimeItemData;
     }
 
     public void RefreshView()
     {
         EnsureItemInstance();
 
-        IBindApplier binder = GetComponentInChildren<IBindApplier>();
+        IStateApplier binder = GetComponentInChildren<IStateApplier>();
         if (binder == null)
         {
             return;
@@ -103,14 +103,14 @@ public class InstanceView : MonoBehaviour, IItemInstance
     
     private void PropagateItemInstance()
     {
-        IItemBindable[] itemBindables = GetComponentsInChildren<IItemBindable>(true);
-        foreach (IItemBindable itemBindable in itemBindables)
+        INeedItemInstance[] itemBindables = GetComponentsInChildren<INeedItemInstance>(true);
+        foreach (INeedItemInstance itemBindable in itemBindables)
         {
             itemBindable?.SetInstance(this);
         }
     }
 
-    private InstanceData ResolveItemInstance()
+    private RuntimeItemData ResolveItemInstance()
     {
         InventoryManager inventoryManager = ResolveInventoryManager();
         if (inventoryManager == null || string.IsNullOrEmpty(_instanceId))

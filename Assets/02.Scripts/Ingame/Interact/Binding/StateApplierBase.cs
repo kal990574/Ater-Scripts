@@ -1,12 +1,12 @@
 using UnityEngine;
 
-public abstract class BindApplierBase : MonoBehaviour, IBindApplier
+public abstract class StateApplierBase : MonoBehaviour, IStateApplier
 {
-    protected InstanceView _binder;
+    protected RuntimeView _binder;
 
-    public InstanceView Binder => _binder;
+    public RuntimeView Binder => _binder;
     protected bool _isBind = false;
-    public abstract void ApplyState(InstanceView binder);
+    public abstract void ApplyState(RuntimeView binder);
 
     protected virtual bool CheckBindValid(string binderContext = "")
     {

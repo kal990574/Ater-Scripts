@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ExamineBox : BindApplierBase
+public class ExamineBox : StateApplierBase
 {
     [SerializeField] private GameObject _interactObject;
     [SerializeField] private GameObject _keyObject;
@@ -13,13 +13,13 @@ public class ExamineBox : BindApplierBase
     
     
     //해당 아이템이 생성될때 인스턴스의 스테이트 적용
-    public override void ApplyState(InstanceView binder)
+    public override void ApplyState(RuntimeView binder)
     {
         Debug.Log("바인드 적용");
         _binder = binder;
         
-        _isOpened = _binder.InstanceData.State.GetBool(_openStateKey);
-        _isColleced = _binder.InstanceData.State.GetBool(_rewardCollectedStateKey);
+        _isOpened = _binder.RuntimeItemData.State.GetBool(_openStateKey);
+        _isColleced = _binder.RuntimeItemData.State.GetBool(_rewardCollectedStateKey);
 
         //열려있지 않을때만 인터렉터블 포인트를 보이게 한다.
         if (_isOpened)
@@ -51,7 +51,7 @@ public class ExamineBox : BindApplierBase
             return;
         }
 
-        _binder.InstanceData.State.SetBool(_openStateKey, true);
+        _binder.RuntimeItemData.State.SetBool(_openStateKey, true);
         _binder.RefreshView();
     }
 
@@ -63,7 +63,7 @@ public class ExamineBox : BindApplierBase
             return;
         }
 
-        InstanceData reward = _binder.InventoryManager.CreateItemInstance(_rewardItemId);
+        RuntimeItemData reward = _binder.InventoryManager.CreateItemInstance(_rewardItemId);
         if (reward == null)
         {
             return;
@@ -74,7 +74,7 @@ public class ExamineBox : BindApplierBase
             return;
         }
 
-        _binder.InstanceData.State.SetBool(_rewardCollectedStateKey, true);
+        _binder.RuntimeItemData.State.SetBool(_rewardCollectedStateKey, true);
         _binder.RefreshView();
     }
 }

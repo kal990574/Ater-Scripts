@@ -1,6 +1,6 @@
 ﻿public interface IScanState
 {
-    EScannableState StateType { get; }
+    EScanState StateType { get; }
 
     void Enter();
     void Exit();

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public interface IDetectableObject
+public interface IDetectable
 {
     Transform Transform { get; }
     bool CanDetect { get; }

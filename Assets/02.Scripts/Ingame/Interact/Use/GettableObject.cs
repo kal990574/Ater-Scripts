@@ -1,7 +1,8 @@
 using UnityEngine;
 
-public class GettableObject : InteractableObject
+public class GettableObject : Interactable
 {
+    
     public override void Interact(UseContext context)
     {
         if (!_isInteractActive)
@@ -10,8 +11,8 @@ public class GettableObject : InteractableObject
             return;
         }
 
-        InstanceData instanceData = InstanceData;
-        if (instanceData == null)
+        RuntimeItemData runtimeItemData = RuntimeItemData;
+        if (runtimeItemData == null)
         {
             Debug.LogError($"[{nameof(GettableObject)}] {gameObject.name} has no bound ItemInstance.", this);
             return;
@@ -23,7 +24,7 @@ public class GettableObject : InteractableObject
             return;
         }
 
-        InventoryManager.Instance.TryAddItem(instanceData);
+        InventoryManager.Instance.TryAddItem(runtimeItemData);
         OnInteractActivate();
         Destroy(gameObject);
     }

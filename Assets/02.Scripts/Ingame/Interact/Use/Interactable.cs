@@ -4,13 +4,12 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public abstract class InteractableObject : DetectableObject, IInteractObject, IItemBindable
+public abstract class Interactable : DetectableObject, IInteractObject, INeedItemInstance
 {
     [SerializeField] protected bool _isInteractActive;
-    private IItemInstance _instance;
-
-    public int InitialItemKey { get; }
-    public InstanceData InstanceData => _instance.InstanceData;
+    private IRuntimeView _instance;
+    
+    public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
     public override bool CanDetect => _isDetectable && _isInteractActive;
 
     public event Action OnInteract;
@@ -20,7 +19,7 @@ public abstract class InteractableObject : DetectableObject, IInteractObject, II
 
     private void Awake()
     {
-        if (TryGetComponent(out IItemInstance instance))
+        if (TryGetComponent(out IRuntimeView instance))
         {
             _instance = instance;
         }
@@ -48,9 +47,9 @@ public abstract class InteractableObject : DetectableObject, IInteractObject, II
         }
     }
 
-    public void SetInstance(IItemInstance itemInstance)
+    public void SetInstance(IRuntimeView runtimeView)
     {
-        _instance = itemInstance;
+        _instance = runtimeView;
     }
 
     protected void OnInteractActivate()

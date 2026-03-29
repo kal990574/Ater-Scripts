@@ -11,7 +11,7 @@ public class PlayerTargetDetector
         _query = query;
     }
 
-    public IDetectableObject Detect(Vector3 origin, Vector3 direction)
+    public IDetectable Detect(Vector3 origin, Vector3 direction)
     {
         RaycastRequest request = _query.CreateRequest(origin, direction);
         RaycastResult result = _raycastService.Cast(request);
@@ -24,18 +24,18 @@ public class PlayerTargetDetector
         return FindTargetable(result.Collider);
     }
 
-    private static IDetectableObject FindTargetable(Collider collider)
+    private static IDetectable FindTargetable(Collider collider)
     {
-        IDetectableObject detectableObject = collider.GetComponentInChildren<IDetectableObject>();
-        if (detectableObject != null && detectableObject.CanDetect)
+        IDetectable detectable = collider.GetComponentInChildren<IDetectable>();
+        if (detectable != null && detectable.CanDetect)
         {
-            return detectableObject;
+            return detectable;
         }
 
-        detectableObject = collider.GetComponentInParent<IDetectableObject>();
-        if (detectableObject != null && detectableObject.CanDetect)
+        detectable = collider.GetComponentInParent<IDetectable>();
+        if (detectable != null && detectable.CanDetect)
         {
-            return detectableObject;
+            return detectable;
         }
 
         return null;

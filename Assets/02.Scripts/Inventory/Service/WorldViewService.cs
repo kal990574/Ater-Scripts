@@ -1,10 +1,10 @@
 using UnityEngine;
 
-public class WorldService
+public class WorldViewService
 {
     private readonly ItemFactory _itemFactory;
 
-    public WorldService(ItemFactory itemFactory)
+    public WorldViewService(ItemFactory itemFactory)
     {
         _itemFactory = itemFactory;
     }

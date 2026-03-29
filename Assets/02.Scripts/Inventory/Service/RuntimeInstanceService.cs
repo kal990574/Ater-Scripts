@@ -3,62 +3,64 @@ using UnityEngine;
 
 public class RuntimeInstanceService
 {
-    private ItemDataTable _itemDataTable;
-    private readonly Dictionary<string, InstanceData> _instances = new();
+    private ItemDataTableSO itemDataTableSo;
+    
+    //생성된 아이템의 인스턴스를 보관
+    private readonly Dictionary<string, RuntimeItemData> _instances = new();
 
-    public RuntimeInstanceService(ItemDataTable itemDataTable)
+    public RuntimeInstanceService(ItemDataTableSO itemDataTableSo)
     {
-        _itemDataTable = itemDataTable;
+        this.itemDataTableSo = itemDataTableSo;
     }
 
-    public void SetItemDataTable(ItemDataTable itemDataTable)
+    public void SetItemDataTable(ItemDataTableSO itemDataTableSo)
     {
-        _itemDataTable = itemDataTable;
+        this.itemDataTableSo = itemDataTableSo;
     }
 
-    public InstanceData CreateInstance(int itemId)
+    public RuntimeItemData CreateInstance(int itemId)
     {
-        if (_itemDataTable == null)
+        if (itemDataTableSo == null)
         {
-            Debug.LogError($"[{nameof(RuntimeInstanceService)}] {nameof(ItemDataTable)} reference is missing.");
+            Debug.LogError($"[{nameof(RuntimeInstanceService)}] {nameof(ItemDataTableSO)} reference is missing.");
             return null;
         }
 
-        InstanceData instance = new InstanceData(_itemDataTable.GetItemData(itemId));
-        if (instance == null)
+        RuntimeItemData runtimeItem = new RuntimeItemData(itemDataTableSo.GetItemData(itemId));
+        if (runtimeItem == null)
         {
             return null;
         }
 
-        RegisterInstance(instance);
-        return instance;
+        RegisterInstance(runtimeItem);
+        return runtimeItem;
     }
 
-    public bool RegisterInstance(InstanceData instance)
+    public bool RegisterInstance(RuntimeItemData runtimeItem)
     {
-        if (instance == null || string.IsNullOrEmpty(instance.InstanceId))
+        if (runtimeItem == null || string.IsNullOrEmpty(runtimeItem.InstanceId))
         {
             return false;
         }
 
-        _instances[instance.InstanceId] = instance;
+        _instances[runtimeItem.InstanceId] = runtimeItem;
         return true;
     }
 
-    public bool TryGetInstance(string instanceId, out InstanceData instance)
+    public bool TryGetInstance(string instanceId, out RuntimeItemData runtimeItem)
     {
         if (string.IsNullOrEmpty(instanceId))
         {
-            instance = null;
+            runtimeItem = null;
             return false;
         }
 
-        return _instances.TryGetValue(instanceId, out instance);
+        return _instances.TryGetValue(instanceId, out runtimeItem);
     }
 
-    public InstanceData GetInstance(string instanceId)
+    public RuntimeItemData GetInstance(string instanceId)
     {
-        TryGetInstance(instanceId, out InstanceData itemInstance);
+        TryGetInstance(instanceId, out RuntimeItemData itemInstance);
         return itemInstance;
     }
 }

@@ -2,7 +2,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 
-public class UsableObject : InteractableObject
+public class UsableObject : Interactable
 {
     private IUseCondition[] _useConditions;
     private IUseAction[] _useActions;

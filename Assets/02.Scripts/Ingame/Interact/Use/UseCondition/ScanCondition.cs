@@ -7,7 +7,7 @@ public class ScanCondition : MonoBehaviour,IUseCondition
     public bool CanUse(UseContext context)
     {
         if (context?.Target != null &&
-            context.Target.TryGetComponent(out IScannableObject scannableObject) &&
+            context.Target.TryGetComponent(out IScannable scannableObject) &&
             scannableObject.IsProgressComplete == _completeToTrue)
         {
             return true;

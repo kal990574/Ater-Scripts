@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public class HandItemCondition : MonoBehaviour, IUseCondition
+public class RequireItemCondition : MonoBehaviour, IUseCondition
 {
     [SerializeField] private int _requiredItemId = -1;
 
@@ -12,7 +12,7 @@ public class HandItemCondition : MonoBehaviour, IUseCondition
             return false;
         }
 
-        InstanceData currentHand = context.Hand;
+        RuntimeItemData currentHand = context.Hand;
         return currentHand != null && currentHand.ItemId == _requiredItemId;
     }
 }

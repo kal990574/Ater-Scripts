@@ -7,7 +7,7 @@ using Random = UnityEngine.Random;
 public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
 {
     [Header("Required References")]
-    [SerializeField] private ScannableObject _scannableObject;
+    [SerializeField] private ScannableObject scannableObject;
     [SerializeField] private QTEConfigSOBase _qteConfig;
 
     [Header("Optional Settings")]
@@ -22,18 +22,18 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
     private float _nextTriggerTime;
     private bool _isQteActive;
 
-    public bool IsConfigured => _scannableObject != null && _qteConfig != null && _settings != null;
+    public bool IsConfigured => scannableObject != null && _qteConfig != null && _settings != null;
 
     private void Awake()
     {
-        if (_scannableObject == null)
+        if (scannableObject == null)
         {
-            _scannableObject = GetComponent<ScannableObject>();
+            scannableObject = GetComponent<ScannableObject>();
         }
 
-        if (_scannableObject == null)
+        if (scannableObject == null)
         {
-            _scannableObject = GetComponentInParent<ScannableObject>();
+            scannableObject = GetComponentInParent<ScannableObject>();
         }
 
         ResetTriggerTimer();
@@ -46,7 +46,7 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
             return;
         }
 
-        if (_scannableObject.State != EScannableState.OnProgress)
+        if (scannableObject.State != EScanState.OnProgress)
         {
             return;
         }
@@ -79,48 +79,48 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
 
     public void ApplyQTEFailure()
     {
-        if (_scannableObject == null)
+        if (scannableObject == null)
         {
             return;
         }
 
-        _scannableObject.ReduceProgress(_settings.FailPenalty);
-        _scannableObject.ChangeState(
-            _scannableObject.CurrentProgress <= 0.0f
-                ? EScannableState.Default
-                : EScannableState.OnReturn);
+        scannableObject.ReduceProgress(_settings.FailPenalty);
+        scannableObject.ChangeState(
+            scannableObject.CurrentProgress <= 0.0f
+                ? EScanState.Default
+                : EScanState.OnReturn);
         _onQteFail?.Invoke();
     }
 
     public void ApplyQTESuccess()
     {
-        if (_scannableObject == null)
+        if (scannableObject == null)
         {
             return;
         }
 
-        _scannableObject.ChangeState(
-            _scannableObject.IsProgressComplete
-                ? EScannableState.OnCompleted
-                : EScannableState.OnProgress);
+        scannableObject.ChangeState(
+            scannableObject.IsProgressComplete
+                ? EScanState.OnCompleted
+                : EScanState.OnProgress);
         _onQteSuccess?.Invoke();
     }
 
     public void ApplyQTEGreatSuccess()
     {
-        if (_scannableObject == null)
+        if (scannableObject == null)
         {
             return;
         }
 
-        _scannableObject.AddProgress(_settings.GreatSuccessBonus);
-        if (_scannableObject.TryTransitToCompleted())
+        scannableObject.AddProgress(_settings.GreatSuccessBonus);
+        if (scannableObject.TryTransitToCompleted())
         {
             _onQteGreatSuccess?.Invoke();
             return;
         }
 
-        _scannableObject.ChangeState(EScannableState.OnProgress);
+        scannableObject.ChangeState(EScanState.OnProgress);
         _onQteGreatSuccess?.Invoke();
     }
 
@@ -138,7 +138,7 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
         }
 
         _isQteActive = true;
-        _scannableObject.PauseScanning();
+        scannableObject.PauseScanning();
     }
 
     private void HandleQteEnded(EQuickTimeEventResult result)
@@ -157,9 +157,9 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
                 ApplyQTEGreatSuccess();
                 break;
             default:
-                if (_scannableObject != null)
+                if (scannableObject != null)
                 {
-                    _scannableObject.ChangeState(EScannableState.OnProgress);
+                    scannableObject.ChangeState(EScanState.OnProgress);
                 }
                 break;
         }

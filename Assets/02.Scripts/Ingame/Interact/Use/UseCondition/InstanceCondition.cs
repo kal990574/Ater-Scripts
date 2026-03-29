@@ -10,7 +10,7 @@ public class InstanceCondition : MonoBehaviour, IUseCondition
         String
     }
 
-    [SerializeField] private InstanceView _instanceView;
+    [SerializeField] private RuntimeView runtimeView;
     [SerializeField] private StateKeySO _stateKey;
     [SerializeField] private StateValueType _valueType = StateValueType.Bool;
     [SerializeField] private bool _expectedBoolValue;
@@ -24,22 +24,22 @@ public class InstanceCondition : MonoBehaviour, IUseCondition
             return false;
         }
 
-        if (_instanceView == null)
+        if (runtimeView == null)
         {
-            _instanceView = GetComponentInParent<InstanceView>();
+            runtimeView = GetComponentInParent<RuntimeView>();
         }
 
-        InstanceData instanceData = _instanceView != null ? _instanceView.InstanceData : null;
-        if (instanceData?.State == null)
+        RuntimeItemData runtimeItemData = runtimeView != null ? runtimeView.RuntimeItemData : null;
+        if (runtimeItemData?.State == null)
         {
             return false;
         }
 
         return _valueType switch
         {
-            StateValueType.Bool => instanceData.State.GetBool(_stateKey) == _expectedBoolValue,
-            StateValueType.Int => instanceData.State.GetInt(_stateKey) == _expectedIntValue,
-            StateValueType.String => instanceData.State.GetString(_stateKey) == _expectedStringValue,
+            StateValueType.Bool => runtimeItemData.State.GetBool(_stateKey) == _expectedBoolValue,
+            StateValueType.Int => runtimeItemData.State.GetInt(_stateKey) == _expectedIntValue,
+            StateValueType.String => runtimeItemData.State.GetString(_stateKey) == _expectedStringValue,
             _ => false
         };
     }

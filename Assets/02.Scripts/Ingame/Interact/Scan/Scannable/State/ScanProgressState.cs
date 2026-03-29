@@ -1,6 +1,6 @@
 public class ScanProgressState : ScanStateBase
 {
-    public override EScannableState StateType => EScannableState.OnProgress;
+    public override EScanState StateType => EScanState.OnProgress;
 
     public ScanProgressState(ScannableObject owner) : base(owner)
     {
@@ -14,6 +14,6 @@ public class ScanProgressState : ScanStateBase
 
     public override void OnScanLost()
     {
-        Owner.ChangeState(EScannableState.OnReturn);
+        Owner.ChangeState(EScanState.OnReturn);
     }
 }

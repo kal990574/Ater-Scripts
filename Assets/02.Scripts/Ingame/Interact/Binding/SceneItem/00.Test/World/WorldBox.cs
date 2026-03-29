@@ -1,9 +1,9 @@
 using UnityEngine;
 
-public class WorldBox : BindApplierBase
+public class WorldBox : StateApplierBase
 {
-    [SerializeField] private ScannableObject _scannableObject;
-    [SerializeField] private InteractableObject _interactableObject;
+    [SerializeField] private ScannableObject scannableObject;
+    [SerializeField] private Interactable interactable;
     [SerializeField] private GameObject _rewardVisual;
     [SerializeField] private StateKeySO _scanCompleteStateKey;
     [SerializeField] private StateKeySO _openStateKey;
@@ -11,27 +11,27 @@ public class WorldBox : BindApplierBase
 
     private void Awake()
     {
-        if (_scannableObject == null)
+        if (scannableObject == null)
         {
-            _scannableObject = GetComponentInChildren<ScannableObject>();
+            scannableObject = GetComponentInChildren<ScannableObject>();
         }
     }
 
-    public override void ApplyState(InstanceView binder)
+    public override void ApplyState(RuntimeView binder)
     {
-        if (binder?.InstanceData == null)
+        if (binder?.RuntimeItemData == null)
         {
             return;
         }
 
-        bool isScanComplete = binder.InstanceData.State.GetBool(_scanCompleteStateKey);
-        bool isOpened = binder.InstanceData.State.GetBool(_openStateKey);
-        bool rewardCollected = binder.InstanceData.State.GetBool(_rewardCollectedStateKey);
+        bool isScanComplete = binder.RuntimeItemData.State.GetBool(_scanCompleteStateKey);
+        bool isOpened = binder.RuntimeItemData.State.GetBool(_openStateKey);
+        bool rewardCollected = binder.RuntimeItemData.State.GetBool(_rewardCollectedStateKey);
 
-        if (isScanComplete && _scannableObject != null)
+        if (isScanComplete && scannableObject != null)
         {
-            _scannableObject.ForceScanComplete();
-            _interactableObject.SetActivate(true);
+            scannableObject.ForceScanComplete();
+            interactable.SetActivate(true);
         }
         
         if (_rewardVisual != null)

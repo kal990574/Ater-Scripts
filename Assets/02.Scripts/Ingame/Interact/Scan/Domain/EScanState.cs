@@ -1,4 +1,4 @@
-public enum EScannableState
+public enum EScanState
 {
     Default,
     OnProgress,

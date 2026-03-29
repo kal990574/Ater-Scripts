@@ -14,8 +14,8 @@ public class InteractTargetShaderModifier : MonoBehaviour
     [SerializeField] private ScanShaderConfigSO _scanConfig;
     [SerializeField] private OutlineShaderConfigSO _oultineConfig;
     
-    private IScannableObject _scannableObject;
-    private IDetectableObject _detectableObject;
+    private IScannable scannable;
+    private IDetectable detectable;
     
     private Tween _hitBlendTween;
     private float _currentHitBlend;
@@ -42,14 +42,14 @@ public class InteractTargetShaderModifier : MonoBehaviour
             _shaderPropertyController = GetComponentInChildren<AllInOneShaderController>();
         }
 
-        if (_scannableObject == null)
+        if (scannable == null)
         {
-            _scannableObject = GetComponentInParent<ScannableObject>();
+            scannable = GetComponentInParent<ScannableObject>();
         }
 
-        if (_detectableObject == null)
+        if (detectable == null)
         {
-            _detectableObject = GetComponentInParent<IDetectableObject>();
+            detectable = GetComponentInParent<IDetectable>();
         }
     }
 
@@ -66,12 +66,12 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void ApplyInitialShaderState()
     {
-        if (_scannableObject == null)
+        if (scannable == null)
         {
             SetOutlineColor(_oultineConfig.OnHoverOutlineColor);
             ApplyProgressState(1f);
         }
-        else if (_scannableObject.IsProgressComplete)
+        else if (scannable.IsProgressComplete)
         {
             SetOutlineColor(_oultineConfig.OnHoverOutlineColor);
             ApplyProgressState(1f);
@@ -88,29 +88,29 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void SubscribeTargetEvents()
     {
-        if (_scannableObject != null)
+        if (scannable != null)
         {
-            _scannableObject.OnScanProgressChanged += OnScanTargetProgressChanged;
-            _scannableObject.OnScanComplete += OnTargetScanComplete;
+            scannable.OnScanProgressChanged += OnScanTargetProgressChanged;
+            scannable.OnScanComplete += OnTargetScanComplete;
         }
 
-        if (_detectableObject != null)
+        if (detectable != null)
         {
-            _detectableObject.OnDetected += ShowOutline;
+            detectable.OnDetected += ShowOutline;
         }
     }
 
     private void UnsubscribeTargetEvents()
     {
-        if (_scannableObject != null)
+        if (scannable != null)
         {
-            _scannableObject.OnScanProgressChanged -= OnScanTargetProgressChanged;
-            _scannableObject.OnScanComplete -= OnTargetScanComplete;
+            scannable.OnScanProgressChanged -= OnScanTargetProgressChanged;
+            scannable.OnScanComplete -= OnTargetScanComplete;
         }
 
-        if (_detectableObject != null)
+        if (detectable != null)
         {
-            _detectableObject.OnDetected -= ShowOutline;
+            detectable.OnDetected -= ShowOutline;
         }
     }
 
@@ -126,9 +126,9 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void SynchronizeCurrentState()
     {
-        if (_scannableObject != null)
+        if (scannable != null)
         {
-            ApplyProgressState(_scannableObject.ProgressRatio);
+            ApplyProgressState(scannable.ProgressRatio);
         }
     }
 

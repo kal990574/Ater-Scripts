@@ -16,6 +16,7 @@ public class ItemData
     [SerializeField] private GameObject _examinePrefab;
     [SerializeField] private GameObject _handPrefab;
     
+    [Header("생성시 지정할 State")]
     [SerializeField] private InteractState _defaultState = new();
 
     public int ItemId => _itemId;

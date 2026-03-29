@@ -1,6 +1,6 @@
 public class ScanDefaultState : ScanStateBase
 {
-    public override EScannableState StateType => EScannableState.Default;
+    public override EScanState StateType => EScanState.Default;
 
     public ScanDefaultState(ScannableObject owner) : base(owner)
     {
@@ -8,7 +8,7 @@ public class ScanDefaultState : ScanStateBase
 
     public override void OnScanning(float deltaTime)
     {
-        Owner.ChangeState(EScannableState.OnProgress);
+        Owner.ChangeState(EScanState.OnProgress);
         Owner.ApplyScanProgress(deltaTime);
     }
 }

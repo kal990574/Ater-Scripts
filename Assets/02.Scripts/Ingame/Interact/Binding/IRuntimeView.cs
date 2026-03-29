@@ -1,7 +1,7 @@
-public interface IItemInstance
+public interface IRuntimeView
 {
     string InstanceId { get; }
-    InstanceData InstanceData { get; }
+    RuntimeItemData RuntimeItemData { get; }
     InventoryManager InventoryManager { get; }
     void Bind(string instanceId, InventoryManager inventoryManager);
     void RefreshView();

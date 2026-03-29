@@ -2,22 +2,22 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class ScannableObject : BindApplierBase, IScannableObject
+public class ScannableObject : StateApplierBase, IScannable
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
     [SerializeField] private StateKeySO _scanCompleteStateKey;
     [SerializeField] private Rigidbody _targetRigidbody;
     
-    private IItemInstance _itemBinder;
+    private IRuntimeView _itemBinder;
     private ScanProgress _progress;
-    private ScanStateMachine _fsm;
+    private ScanFSM _fsm;
     private ScannableQTEInvoker _qteInvoker;
     
     public bool IsProgressComplete => _progress != null && _progress.IsActivated;
     public float CurrentProgress => _progress != null ? _progress.CurrentProgress : 0.0f;
     public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
-    public EScannableState State => _fsm.CurrentStateType;
+    public EScanState State => _fsm.CurrentStateType;
 
     
     public event Action<float> OnScanProgressChanged; //ratio전달
@@ -71,7 +71,7 @@ public class ScannableObject : BindApplierBase, IScannableObject
             _targetRigidbody = GetComponentInParent<Rigidbody>();
         }
         
-        _itemBinder = GetComponentInParent<InstanceView>();
+        _itemBinder = GetComponentInParent<RuntimeView>();
         _qteInvoker = GetComponent<ScannableQTEInvoker>();
         if (_qteInvoker == null)
         {
@@ -88,8 +88,8 @@ public class ScannableObject : BindApplierBase, IScannableObject
         _progress.OnProgressChanged += HandleProgressChanged;
         _progress.OnActivated += OnScanCompleted;
 
-        _fsm = new ScanStateMachine(this);
-        ChangeState(EScannableState.Default, true);
+        _fsm = new ScanFSM(this);
+        ChangeState(EScanState.Default, true);
         ApplyPhysicsState(false);
     }
 
@@ -97,7 +97,7 @@ public class ScannableObject : BindApplierBase, IScannableObject
     public void ResetAll()
     {
         _progress?.Reset();
-        ChangeState(EScannableState.Default, true);
+        ChangeState(EScanState.Default, true);
         ApplyPhysicsState(false);
     }
 
@@ -136,11 +136,11 @@ public class ScannableObject : BindApplierBase, IScannableObject
     {
         if (_itemBinder != null)
         {
-            InstanceView instanceView = _itemBinder as InstanceView;
-            InstanceData instanceData = instanceView != null ? instanceView.EnsureItemInstance() : _itemBinder.InstanceData;
-            if (instanceData?.State != null && _scanCompleteStateKey != null)
+            RuntimeView runtimeView = _itemBinder as RuntimeView;
+            RuntimeItemData runtimeItemData = runtimeView != null ? runtimeView.EnsureItemInstance() : _itemBinder.RuntimeItemData;
+            if (runtimeItemData?.State != null && _scanCompleteStateKey != null)
             {
-                instanceData.State.SetBool(_scanCompleteStateKey, true);
+                runtimeItemData.State.SetBool(_scanCompleteStateKey, true);
             }
         }
 
@@ -163,19 +163,19 @@ public class ScannableObject : BindApplierBase, IScannableObject
             AddProgress(_settings.RequiredScanTime);
         }
 
-        ChangeState(EScannableState.OnCompleted, true);
+        ChangeState(EScanState.OnCompleted, true);
         ApplyPhysicsState(true);
         
         OnScanProgressChanged?.Invoke(1);
         OnScanComplete?.Invoke();
     }
 
-    public void ChangeState(EScannableState nextState, bool force = false)
+    public void ChangeState(EScanState nextState, bool force = false)
     {
         _fsm.ChangeState(nextState, force);
     }
 
-    public void ChangeState(EScannableState nextState)
+    public void ChangeState(EScanState nextState)
     {
         ChangeState(nextState, false);
     }
@@ -201,7 +201,7 @@ public class ScannableObject : BindApplierBase, IScannableObject
         _progress.Reduce(_settings.ReturnSpeed * deltaTime);
         if (CurrentProgress <= 0.0f)
         {
-            ChangeState(EScannableState.Default);
+            ChangeState(EScanState.Default);
         }
     }
 
@@ -217,7 +217,7 @@ public class ScannableObject : BindApplierBase, IScannableObject
             return false;
         }
 
-        ChangeState(EScannableState.OnCompleted);
+        ChangeState(EScanState.OnCompleted);
         return true;
     }
 
@@ -228,7 +228,7 @@ public class ScannableObject : BindApplierBase, IScannableObject
             return;
         }
 
-        ChangeState(EScannableState.OnHold);
+        ChangeState(EScanState.OnHold);
     }
 
     private void ApplyPhysicsState(bool isScanComplete)
@@ -242,14 +242,14 @@ public class ScannableObject : BindApplierBase, IScannableObject
         _targetRigidbody.isKinematic = !isScanComplete;
     }
 
-    public override void ApplyState(InstanceView binder)
+    public override void ApplyState(RuntimeView binder)
     {
-        if (binder?.InstanceData == null)
+        if (binder?.RuntimeItemData == null)
         {
             return;
         }
 
-        bool isScanComplete = binder.InstanceData.State.GetBool(_scanCompleteStateKey);
+        bool isScanComplete = binder.RuntimeItemData.State.GetBool(_scanCompleteStateKey);
       
         if (isScanComplete)
         {

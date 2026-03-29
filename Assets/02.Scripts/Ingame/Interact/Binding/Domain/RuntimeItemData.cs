@@ -4,7 +4,7 @@ using UnityEngine;
 //런타임에서 생성되는 아이템
 //현재 인스턴스의 상태 보관
 [Serializable]
-public class InstanceData
+public class RuntimeItemData
 {
     [SerializeField] private string _instanceId;
     [SerializeField] private InteractState _state;
@@ -22,7 +22,7 @@ public class InstanceData
     public GameObject HandPrefab => data != null ? data.HandPrefab : null;
 
     //데이터로 인스턴스 제작하기
-    public InstanceData(ItemData data = null)
+    public RuntimeItemData(ItemData data = null)
     {
         _instanceId = Guid.NewGuid().ToString("N");
         this.data = data;

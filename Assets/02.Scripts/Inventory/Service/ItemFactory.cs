@@ -33,7 +33,7 @@ public class ItemFactory
             return;
         }
 
-        if (!itemObject.TryGetComponent(out IItemInstance binder))
+        if (!itemObject.TryGetComponent(out IRuntimeView binder))
         {
             Debug.Log("[ItemFactory] Can't find IItemInstance binder.");
             return;
@@ -56,9 +56,9 @@ public class ItemFactory
         }
     }
 
-    private GameObject CreateBoundObject(string instanceId, Transform parent, System.Func<InstanceData, GameObject> prefabSelector)
+    private GameObject CreateBoundObject(string instanceId, Transform parent, System.Func<RuntimeItemData, GameObject> prefabSelector)
     {
-        if (!_runtimeInstanceService.TryGetInstance(instanceId, out InstanceData itemInstanceData) || itemInstanceData == null)
+        if (!_runtimeInstanceService.TryGetInstance(instanceId, out RuntimeItemData itemInstanceData) || itemInstanceData == null)
         {
             return null;
         }

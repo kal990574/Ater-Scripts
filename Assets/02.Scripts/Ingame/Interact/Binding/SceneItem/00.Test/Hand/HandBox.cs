@@ -1,20 +1,20 @@
 using UnityEngine;
 
-public class HandBox : BindApplierBase
+public class HandBox : StateApplierBase
 {
     [SerializeField] private GameObject _rewardVisual;
     [SerializeField] private StateKeySO _openStateKey;
     [SerializeField] private StateKeySO _rewardCollectedStateKey;
 
-    public override void ApplyState(InstanceView binder)
+    public override void ApplyState(RuntimeView binder)
     {
-        if (binder?.InstanceData == null)
+        if (binder?.RuntimeItemData == null)
         {
             return;
         }
 
-        bool isOpened = binder.InstanceData.State.GetBool(_openStateKey);
-        bool rewardCollected = binder.InstanceData.State.GetBool(_rewardCollectedStateKey);
+        bool isOpened = binder.RuntimeItemData.State.GetBool(_openStateKey);
+        bool rewardCollected = binder.RuntimeItemData.State.GetBool(_rewardCollectedStateKey);
 
         if (_rewardVisual != null)
         {

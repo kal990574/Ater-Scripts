@@ -1,6 +1,6 @@
 public class ScanHoldState : ScanStateBase
 {
-    public override EScannableState StateType => EScannableState.OnHold;
+    public override EScanState StateType => EScanState.OnHold;
 
     public ScanHoldState(ScannableObject owner) : base(owner)
     {
@@ -8,6 +8,6 @@ public class ScanHoldState : ScanStateBase
 
     public override void OnScanLost()
     {
-        Owner.ChangeState(EScannableState.OnReturn);
+        Owner.ChangeState(EScanState.OnReturn);
     }
 }
