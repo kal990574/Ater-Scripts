@@ -8,13 +8,13 @@ public class HandBox : BindApplierBase
 
     public override void ApplyState(InstanceView binder)
     {
-        if (binder?.ItemInstanceData == null)
+        if (binder?.InstanceData == null)
         {
             return;
         }
 
-        bool isOpened = binder.ItemInstanceData.State.GetBool(_openStateKey);
-        bool rewardCollected = binder.ItemInstanceData.State.GetBool(_rewardCollectedStateKey);
+        bool isOpened = binder.InstanceData.State.GetBool(_openStateKey);
+        bool rewardCollected = binder.InstanceData.State.GetBool(_rewardCollectedStateKey);
 
         if (_rewardVisual != null)
         {

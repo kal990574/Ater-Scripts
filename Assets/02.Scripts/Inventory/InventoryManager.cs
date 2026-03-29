@@ -37,7 +37,7 @@ public class InventoryManager : MonoBehaviour
     public int Count => _inventoryService.Count;
     public int SelectedIndex => _inventoryService.SelectedIndex;
     public string CurrentHandItemInstanceId => _handService.EquippedInstanceId;
-    public ItemInstanceData CurrentHandItem => GetItemInstance(_handService.EquippedInstanceId);
+    public InstanceData CurrentHand => GetItemInstance(_handService.EquippedInstanceId);
     
     public event Action<bool> OnInventoryToggled;
     public event Action OnInventoryItemChanged;
@@ -88,28 +88,28 @@ public class InventoryManager : MonoBehaviour
     }
     
     //아이템 아이디로 새로운 인스턴스 제작
-    public ItemInstanceData CreateItemInstance(int itemId)
+    public InstanceData CreateItemInstance(int itemId)
     {
-        ItemInstanceData itemInstanceData = _instanceInstanceService.CreateInstance(itemId);
-        if (itemInstanceData == null)
+        InstanceData instanceData = _instanceInstanceService.CreateInstance(itemId);
+        if (instanceData == null)
         {
             Debug.LogError($"[{nameof(InventoryManager)}] Failed to create ItemInstance for item id {itemId}.", this);
         }
 
-        return itemInstanceData;
+        return instanceData;
     }
 
     //아이템 인스턴스로 인벤토리에 아이템 추가
-    public bool TryAddItem(ItemInstanceData itemInstanceData)
+    public bool TryAddItem(InstanceData instanceData)
     {
-        if (itemInstanceData == null)
+        if (instanceData == null)
         {
             Debug.LogError($"[{nameof(InventoryManager)}] Tried to add a null ItemInstance to inventory.", this);
             return false;
         }
 
-        _instanceInstanceService.RegisterInstance(itemInstanceData);
-        return _inventoryService.TryAdd(itemInstanceData.InstanceId);
+        _instanceInstanceService.RegisterInstance(instanceData);
+        return _inventoryService.TryAdd(instanceData.InstanceId);
     }
 
     //인벤토리의 해당칸에 위치한 아이템 제거
@@ -142,7 +142,7 @@ public class InventoryManager : MonoBehaviour
     }
 
     //인스턴스 아이디로 데이터 탐색후 반환
-    public ItemInstanceData GetItemInstance(string instanceId)
+    public InstanceData GetItemInstance(string instanceId)
     {
         return _instanceInstanceService.GetInstance(instanceId);
     }
@@ -163,8 +163,8 @@ public class InventoryManager : MonoBehaviour
     #region Examine
     public GameObject ShowExamineItem(string instanceId)
     {
-        ItemInstanceData itemInstanceData = GetItemInstance(instanceId);
-        if (itemInstanceData == null)
+        InstanceData instanceData = GetItemInstance(instanceId);
+        if (instanceData == null)
         {
             Debug.LogError($"[{nameof(InventoryManager)}] Cannot show examine item because ItemInstance is null.", this);
             return null;
@@ -182,8 +182,8 @@ public class InventoryManager : MonoBehaviour
     #region World Object
     public GameObject CreateWorldItem(string instanceId, Transform itemRoot)
     {
-        ItemInstanceData itemInstanceData = GetItemInstance(instanceId);
-        if (itemInstanceData == null)
+        InstanceData instanceData = GetItemInstance(instanceId);
+        if (instanceData == null)
         {
             Debug.LogError($"[{nameof(InventoryManager)}] Cannot create a world item from a null ItemInstance.", this);
             return null;
@@ -196,8 +196,8 @@ public class InventoryManager : MonoBehaviour
     #region Hand Object
     public GameObject ShowHandItem(string instanceId)
     {
-        ItemInstanceData itemInstanceData = GetItemInstance(instanceId);
-        if (itemInstanceData == null)
+        InstanceData instanceData = GetItemInstance(instanceId);
+        if (instanceData == null)
         {
             Debug.LogError($"[{nameof(InventoryManager)}] Cannot show hand item because ItemInstance is null.", this);
             return null;

@@ -12,7 +12,7 @@ public abstract class InteractableObject : DetectableObject, IInteractObject, II
     private IItemInstance _instance;
 
     public int InitialItemKey { get; }
-    public ItemInstanceData ItemInstanceData => _instance.ItemInstanceData;
+    public InstanceData InstanceData => _instance.InstanceData;
     public override bool CanDetect => _isDetectable && _isInteractActive;
 
     public event Action OnInteract;

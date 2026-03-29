@@ -4,7 +4,7 @@ using UnityEngine;
 public class RuntimeInstanceService
 {
     private ItemDataTable _itemDataTable;
-    private readonly Dictionary<string, ItemInstanceData> _instances = new();
+    private readonly Dictionary<string, InstanceData> _instances = new();
 
     public RuntimeInstanceService(ItemDataTable itemDataTable)
     {
@@ -16,7 +16,7 @@ public class RuntimeInstanceService
         _itemDataTable = itemDataTable;
     }
 
-    public ItemInstanceData CreateInstance(int itemId)
+    public InstanceData CreateInstance(int itemId)
     {
         if (_itemDataTable == null)
         {
@@ -24,41 +24,41 @@ public class RuntimeInstanceService
             return null;
         }
 
-        ItemInstanceData itemInstance = new ItemInstanceData(_itemDataTable.GetItemData(itemId));
-        if (itemInstance == null)
+        InstanceData instance = new InstanceData(_itemDataTable.GetItemData(itemId));
+        if (instance == null)
         {
             return null;
         }
 
-        RegisterInstance(itemInstance);
-        return itemInstance;
+        RegisterInstance(instance);
+        return instance;
     }
 
-    public bool RegisterInstance(ItemInstanceData itemInstance)
+    public bool RegisterInstance(InstanceData instance)
     {
-        if (itemInstance == null || string.IsNullOrEmpty(itemInstance.InstanceId))
+        if (instance == null || string.IsNullOrEmpty(instance.InstanceId))
         {
             return false;
         }
 
-        _instances[itemInstance.InstanceId] = itemInstance;
+        _instances[instance.InstanceId] = instance;
         return true;
     }
 
-    public bool TryGetInstance(string instanceId, out ItemInstanceData itemInstance)
+    public bool TryGetInstance(string instanceId, out InstanceData instance)
     {
         if (string.IsNullOrEmpty(instanceId))
         {
-            itemInstance = null;
+            instance = null;
             return false;
         }
 
-        return _instances.TryGetValue(instanceId, out itemInstance);
+        return _instances.TryGetValue(instanceId, out instance);
     }
 
-    public ItemInstanceData GetInstance(string instanceId)
+    public InstanceData GetInstance(string instanceId)
     {
-        TryGetInstance(instanceId, out ItemInstanceData itemInstance);
+        TryGetInstance(instanceId, out InstanceData itemInstance);
         return itemInstance;
     }
 }

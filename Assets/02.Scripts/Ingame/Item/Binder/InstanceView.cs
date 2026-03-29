@@ -10,7 +10,7 @@ public class InstanceView : MonoBehaviour, IItemInstance
     private InventoryManager _inventoryManager;
 
     public string InstanceId => _instanceId;
-    public ItemInstanceData ItemInstanceData => ResolveItemInstance();
+    public InstanceData InstanceData => ResolveItemInstance();
     public InventoryManager InventoryManager => _inventoryManager;
     public int InitialItemKey => _initialItemKey;
 
@@ -18,8 +18,8 @@ public class InstanceView : MonoBehaviour, IItemInstance
     {
         if (_InstanceOnInit && InventoryManager.Instance != null)
         {
-            ItemInstanceData itemInstanceData = InventoryManager.Instance.CreateItemInstance(_initialItemKey);
-            Bind(itemInstanceData != null ? itemInstanceData.InstanceId : null, InventoryManager.Instance);
+            InstanceData instanceData = InventoryManager.Instance.CreateItemInstance(_initialItemKey);
+            Bind(instanceData != null ? instanceData.InstanceId : null, InventoryManager.Instance);
             ActivateInstanceIfNeeded();
         }
     }
@@ -32,12 +32,12 @@ public class InstanceView : MonoBehaviour, IItemInstance
         RefreshView();
     }
 
-    public ItemInstanceData EnsureItemInstance()
+    public InstanceData EnsureItemInstance()
     {
-        ItemInstanceData itemInstanceData = ResolveItemInstance();
-        if (itemInstanceData != null)
+        InstanceData instanceData = ResolveItemInstance();
+        if (instanceData != null)
         {
-            return itemInstanceData;
+            return instanceData;
         }
 
         InventoryManager inventoryManager = ResolveInventoryManager();
@@ -53,17 +53,17 @@ public class InstanceView : MonoBehaviour, IItemInstance
             return null;
         }
 
-        itemInstanceData = inventoryManager.CreateItemInstance(_initialItemKey);
-        if (itemInstanceData == null)
+        instanceData = inventoryManager.CreateItemInstance(_initialItemKey);
+        if (instanceData == null)
         {
             return null;
         }
 
-        _instanceId = itemInstanceData.InstanceId;
+        _instanceId = instanceData.InstanceId;
         _inventoryManager = inventoryManager;
         PropagateItemInstance();
         ActivateInstanceIfNeeded();
-        return itemInstanceData;
+        return instanceData;
     }
 
     public void RefreshView()
@@ -99,7 +99,7 @@ public class InstanceView : MonoBehaviour, IItemInstance
         }
     }
 
-    private ItemInstanceData ResolveItemInstance()
+    private InstanceData ResolveItemInstance()
     {
         InventoryManager inventoryManager = ResolveInventoryManager();
         if (inventoryManager == null || string.IsNullOrEmpty(_instanceId))

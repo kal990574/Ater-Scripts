@@ -16,7 +16,7 @@ public class ItemData
     [SerializeField] private GameObject _examinePrefab;
     [SerializeField] private GameObject _handPrefab;
     
-    [SerializeField] private ItemState _defaultState = new();
+    [SerializeField] private InteractState _defaultState = new();
 
     public int ItemId => _itemId;
     public string ItemName => _itemName;
@@ -26,9 +26,9 @@ public class ItemData
     public GameObject ExaminePrefab => _examinePrefab;
     public GameObject HandPrefab => _handPrefab;
 
-    public ItemState CreateDefaultState()
+    public InteractState CreateDefaultState()
     {
-        return _defaultState != null ? _defaultState.Clone() : new ItemState();
+        return _defaultState != null ? _defaultState.Clone() : new InteractState();
     }
 
 }

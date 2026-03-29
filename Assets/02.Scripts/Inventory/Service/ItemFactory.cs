@@ -56,9 +56,9 @@ public class ItemFactory
         }
     }
 
-    private GameObject CreateBoundObject(string instanceId, Transform parent, System.Func<ItemInstanceData, GameObject> prefabSelector)
+    private GameObject CreateBoundObject(string instanceId, Transform parent, System.Func<InstanceData, GameObject> prefabSelector)
     {
-        if (!_runtimeInstanceService.TryGetInstance(instanceId, out ItemInstanceData itemInstanceData) || itemInstanceData == null)
+        if (!_runtimeInstanceService.TryGetInstance(instanceId, out InstanceData itemInstanceData) || itemInstanceData == null)
         {
             return null;
         }

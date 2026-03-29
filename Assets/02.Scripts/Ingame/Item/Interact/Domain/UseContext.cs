@@ -7,7 +7,7 @@ public class UseContext
     public UsableObject Target { get; }
     public InventoryManager Inventory { get; }
     public string HandItemInstanceId { get; }
-    public ItemInstanceData HandItem => Inventory != null ? Inventory.GetItemInstance(HandItemInstanceId) : null;
+    public InstanceData Hand => Inventory != null ? Inventory.GetItemInstance(HandItemInstanceId) : null;
 
     public UseContext(GameObject user, GameObject targetObject, UsableObject target, InventoryManager inventory, string handItemInstanceId)
     {

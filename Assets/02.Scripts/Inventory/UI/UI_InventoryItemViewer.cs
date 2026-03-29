@@ -49,12 +49,12 @@ public class UI_InventoryItemViewer : MonoBehaviour
         _itemViewerCamera.transform.localPosition = _initialCameraLocalPosition;
         _itemViewerCamera.fieldOfView = _maxFieldOfView;
 
-        ItemInstanceData itemInstanceData = InventoryManager.Instance != null
+        InstanceData instanceData = InventoryManager.Instance != null
             ? InventoryManager.Instance.GetItemInstance(instanceId)
             : null;
 
         InventoryManager.Instance.ShowExamineItem(instanceId);
-        _descriptionText.text = itemInstanceData != null ? itemInstanceData.Description : string.Empty;
+        _descriptionText.text = instanceData != null ? instanceData.Description : string.Empty;
     }
 
     public void TryInteract(Vector2 screenPosition, RectTransform rawImageRect)

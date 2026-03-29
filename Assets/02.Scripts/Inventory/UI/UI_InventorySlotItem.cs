@@ -32,15 +32,15 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
     private void Refresh()
     {
         _indexText.text = _index.ToString();
-        ItemInstanceData itemInstanceData = ResolveItemInstance();
-        if (itemInstanceData == null)
+        InstanceData instanceData = ResolveItemInstance();
+        if (instanceData == null)
         {
             _itemIcon.enabled = false;
             return;
         }
 
         _itemIcon.enabled = true;
-        _itemIcon.sprite = itemInstanceData.Icon;
+        _itemIcon.sprite = instanceData.Icon;
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -51,8 +51,8 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        ItemInstanceData itemInstanceData = ResolveItemInstance();
-        if (itemInstanceData == null)
+        InstanceData instanceData = ResolveItemInstance();
+        if (instanceData == null)
         {
             return;
         }
@@ -62,7 +62,7 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
         _dragIcon.transform.SetAsLastSibling();
 
         Image icon = _dragIcon.AddComponent<Image>();
-        icon.sprite = itemInstanceData.Icon;
+        icon.sprite = instanceData.Icon;
         icon.raycastTarget = false;
 
         _itemIcon.enabled = false;
@@ -122,7 +122,7 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
         _selected.gameObject.SetActive(false);
     }
 
-    private ItemInstanceData ResolveItemInstance()
+    private InstanceData ResolveItemInstance()
     {
         return InventoryManager.Instance != null
             ? InventoryManager.Instance.GetItemInstance(_instanceId)

@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
-public class ItemState
+public class InteractState
 {
     [SerializeField] private List<StateEntry> _entries = new();
 
     private Dictionary<StateKeySO, StateEntry> _cachedEntries;
 
-    public ItemState Clone()
+    public InteractState Clone()
     {
-        ItemState clone = new ItemState();
+        InteractState clone = new InteractState();
         foreach (StateEntry entry in _entries)
         {
             clone._entries.Add(entry.Clone());
@@ -20,7 +20,7 @@ public class ItemState
         return clone;
     }
 
-    public void ApplyOverrides(ItemState overrides)
+    public void ApplyOverrides(InteractState overrides)
     {
         if (overrides == null)
         {

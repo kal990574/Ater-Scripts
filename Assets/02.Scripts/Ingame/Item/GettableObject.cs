@@ -10,8 +10,8 @@ public class GettableObject : InteractableObject
             return;
         }
 
-        ItemInstanceData itemInstanceData = ItemInstanceData;
-        if (itemInstanceData == null)
+        InstanceData instanceData = InstanceData;
+        if (instanceData == null)
         {
             Debug.LogError($"[{nameof(GettableObject)}] {gameObject.name} has no bound ItemInstance.", this);
             return;
@@ -23,7 +23,7 @@ public class GettableObject : InteractableObject
             return;
         }
 
-        InventoryManager.Instance.TryAddItem(itemInstanceData);
+        InventoryManager.Instance.TryAddItem(instanceData);
         OnInteractActivate();
         Destroy(gameObject);
     }

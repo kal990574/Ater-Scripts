@@ -9,8 +9,6 @@ public class InventoryService
     public IReadOnlyList<string> Items => _itemInstanceIds;
     public int Count => _itemInstanceIds.Count;
     public int SelectedIndex => _selectedIndex;
-    public string SelectedInstanceId => GetSelectedInstanceId();
-
     public event Action OnInventoryChanged;
     public event Action<int> OnSelectionChanged;
     public event Action<string> OnItemAdded;

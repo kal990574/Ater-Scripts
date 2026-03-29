@@ -126,10 +126,10 @@ public class ScannableObject : BindApplierBase, IScannableObject
         if (_itemBinder != null)
         {
             InstanceView instanceView = _itemBinder as InstanceView;
-            ItemInstanceData itemInstanceData = instanceView != null ? instanceView.EnsureItemInstance() : _itemBinder.ItemInstanceData;
-            if (itemInstanceData?.State != null && _scanCompleteStateKey != null)
+            InstanceData instanceData = instanceView != null ? instanceView.EnsureItemInstance() : _itemBinder.InstanceData;
+            if (instanceData?.State != null && _scanCompleteStateKey != null)
             {
-                itemInstanceData.State.SetBool(_scanCompleteStateKey, true);
+                instanceData.State.SetBool(_scanCompleteStateKey, true);
             }
         }
 
@@ -233,12 +233,12 @@ public class ScannableObject : BindApplierBase, IScannableObject
 
     public override void ApplyState(InstanceView binder)
     {
-        if (binder?.ItemInstanceData == null)
+        if (binder?.InstanceData == null)
         {
             return;
         }
 
-        bool isScanComplete = binder.ItemInstanceData.State.GetBool(_scanCompleteStateKey);
+        bool isScanComplete = binder.InstanceData.State.GetBool(_scanCompleteStateKey);
       
         if (isScanComplete)
         {
