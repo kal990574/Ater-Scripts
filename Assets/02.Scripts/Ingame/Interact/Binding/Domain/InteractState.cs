@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 [Serializable]
@@ -7,7 +8,7 @@ public class InteractState
 {
     [SerializeField] private List<StateEntry> _entries = new();
 
-    private Dictionary<StateKeySO, StateEntry> _cachedEntries;
+    private Dictionary<string, StateEntry> _cachedEntries;
 
     public InteractState Clone()
     {
@@ -36,7 +37,7 @@ public class InteractState
         }
     }
 
-    public bool GetBool(StateKeySO key, bool defaultValue = false)
+    public bool GetBool(string key, bool defaultValue = false)
     {
         if (!TryGetEntry(key, out StateEntry entry))
         {
@@ -46,7 +47,7 @@ public class InteractState
         return entry.BoolValue;
     }
 
-    public int GetInt(StateKeySO key, int defaultValue = 0)
+    public int GetInt(string key, int defaultValue = 0)
     {
         if (!TryGetEntry(key, out StateEntry entry))
         {
@@ -56,7 +57,7 @@ public class InteractState
         return entry.IntValue;
     }
 
-    public string GetString(StateKeySO key, string defaultValue = "")
+    public string GetString(string key, string defaultValue = "")
     {
         if (!TryGetEntry(key, out StateEntry entry))
         {
@@ -66,29 +67,67 @@ public class InteractState
         return entry.StringValue;
     }
 
-    public bool HasKey(StateKeySO key)
+    public bool HasKey(string key)
     {
         return TryGetEntry(key, out _);
     }
 
-    public void SetBool(StateKeySO key, bool value)
+    public void SetBool(string key, bool value)
     {
         GetOrCreateEntry(key).BoolValue = value;
     }
 
-    public void SetInt(StateKeySO key, int value)
+    public void SetInt(string key, int value)
     {
         GetOrCreateEntry(key).IntValue = value;
     }
 
-    public void SetString(StateKeySO key, string value)
+    public void SetString(string key, string value)
     {
         GetOrCreateEntry(key).StringValue = value;
     }
 
-    private bool TryGetEntry(StateKeySO key, out StateEntry entry)
+    public string ToDebugString()
     {
-        if (key == null)
+        if (_entries == null || _entries.Count == 0)
+        {
+            return "[]";
+        }
+
+        StringBuilder builder = new StringBuilder();
+        builder.Append('[');
+
+        bool isFirst = true;
+        foreach (StateEntry entry in _entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Key))
+            {
+                continue;
+            }
+
+            if (!isFirst)
+            {
+                builder.Append(", ");
+            }
+
+            builder.Append(entry.Key);
+            builder.Append("={bool:");
+            builder.Append(entry.BoolValue);
+            builder.Append(", int:");
+            builder.Append(entry.IntValue);
+            builder.Append(", string:\"");
+            builder.Append(entry.StringValue);
+            builder.Append("\"}");
+            isFirst = false;
+        }
+
+        builder.Append(']');
+        return builder.ToString();
+    }
+
+    private bool TryGetEntry(string key, out StateEntry entry)
+    {
+        if (string.IsNullOrWhiteSpace(key))
         {
             entry = null;
             return false;
@@ -98,11 +137,11 @@ public class InteractState
         return _cachedEntries.TryGetValue(key, out entry);
     }
 
-    private StateEntry GetOrCreateEntry(StateKeySO key)
+    private StateEntry GetOrCreateEntry(string key)
     {
-        if (key == null)
+        if (string.IsNullOrWhiteSpace(key))
         {
-            throw new ArgumentNullException(nameof(key));
+            throw new ArgumentException("State key cannot be null or whitespace.", nameof(key));
         }
 
         EnsureCache();
@@ -124,10 +163,10 @@ public class InteractState
             return;
         }
 
-        _cachedEntries = new Dictionary<StateKeySO, StateEntry>();
+        _cachedEntries = new Dictionary<string, StateEntry>(StringComparer.Ordinal);
         foreach (StateEntry entry in _entries)
         {
-            if (entry.Key == null)
+            if (string.IsNullOrWhiteSpace(entry.Key))
             {
                 continue;
             }
@@ -140,7 +179,7 @@ public class InteractState
     {
         foreach (StateEntry entry in _entries)
         {
-            if (entry.Key == null)
+            if (string.IsNullOrWhiteSpace(entry.Key))
             {
                 continue;
             }
@@ -152,17 +191,17 @@ public class InteractState
     [Serializable]
     private class StateEntry
     {
-        [SerializeField] private StateKeySO _key;
+        [SerializeField] private string _key;
         [SerializeField] private bool _boolValue;
         [SerializeField] private int _intValue;
         [SerializeField] private string _stringValue;
 
-        public StateEntry(StateKeySO key)
+        public StateEntry(string key)
         {
             _key = key;
         }
 
-        public StateKeySO Key => _key;
+        public string Key => _key;
 
         public bool BoolValue
         {
@@ -195,7 +234,7 @@ public class InteractState
 
     private readonly struct StateSnapshot
     {
-        public StateSnapshot(StateKeySO key, bool boolValue, int intValue, string stringValue)
+        public StateSnapshot(string key, bool boolValue, int intValue, string stringValue)
         {
             Key = key;
             BoolValue = boolValue;
@@ -203,7 +242,7 @@ public class InteractState
             StringValue = stringValue;
         }
 
-        public StateKeySO Key { get; }
+        public string Key { get; }
         public bool BoolValue { get; }
         public int IntValue { get; }
         public string StringValue { get; }

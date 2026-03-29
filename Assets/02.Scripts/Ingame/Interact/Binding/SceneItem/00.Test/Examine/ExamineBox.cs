@@ -5,8 +5,8 @@ public class ExamineBox : StateApplierBase
     [SerializeField] private GameObject _interactObject;
     [SerializeField] private GameObject _keyObject;
     [SerializeField] private int  _rewardItemId;
-    [SerializeField] private StateKeySO _openStateKey;
-    [SerializeField] private StateKeySO _rewardCollectedStateKey;
+    [SerializeField] private string _openStateKey = string.Empty;
+    [SerializeField] private string _rewardCollectedStateKey = string.Empty;
 
     private bool _isOpened = false;
     private bool _isColleced = false;

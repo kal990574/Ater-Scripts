@@ -6,7 +6,7 @@ public class ScannableObject : StateApplierBase, IScannable
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
-    [SerializeField] private StateKeySO _scanCompleteStateKey;
+    [SerializeField] private string _scanCompleteStateKey = string.Empty;
     [SerializeField] private Rigidbody _targetRigidbody;
     
     private IRuntimeView _itemBinder;
@@ -138,7 +138,7 @@ public class ScannableObject : StateApplierBase, IScannable
         {
             RuntimeView runtimeView = _itemBinder as RuntimeView;
             RuntimeData runtimeData = runtimeView != null ? runtimeView.EnsureRuntimeData() : _itemBinder.RuntimeData;
-            if (runtimeData?.State != null && _scanCompleteStateKey != null)
+            if (runtimeData?.State != null && !string.IsNullOrWhiteSpace(_scanCompleteStateKey))
             {
                 runtimeData.State.SetBool(_scanCompleteStateKey, true);
             }

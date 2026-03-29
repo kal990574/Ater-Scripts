@@ -3,8 +3,8 @@ using UnityEngine;
 public class HandBox : StateApplierBase
 {
     [SerializeField] private GameObject _rewardVisual;
-    [SerializeField] private StateKeySO _openStateKey;
-    [SerializeField] private StateKeySO _rewardCollectedStateKey;
+    [SerializeField] private string _openStateKey = string.Empty;
+    [SerializeField] private string _rewardCollectedStateKey = string.Empty;
 
     public override void ApplyState(RuntimeView binder)
     {

@@ -102,9 +102,12 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
         string itemInfo = runtimeData is RuntimeItemData runtimeItemData
             ? $", itemId={runtimeItemData.ItemId}, itemName={runtimeItemData.ItemName}"
             : string.Empty;
+        string stateInfo = runtimeData?.State != null
+            ? $", state={runtimeData.State.ToDebugString()}"
+            : ", state=null";
 
         Debug.Log(
-            $"[{nameof(RuntimeView)}] Bound '{gameObject.name}' to {runtimeType} (instanceId={_instanceId}{itemInfo})",
+            $"[{nameof(RuntimeView)}] Bound '{gameObject.name}' to {runtimeType} (instanceId={_instanceId}{itemInfo}{stateInfo})",
             this);
     }
 }

@@ -11,7 +11,7 @@ public class InstanceCondition : MonoBehaviour, IUseCondition
     }
 
     [SerializeField] private RuntimeView runtimeView;
-    [SerializeField] private StateKeySO _stateKey;
+    [SerializeField] private string _stateKey = string.Empty;
     [SerializeField] private StateValueType _valueType = StateValueType.Bool;
     [SerializeField] private bool _expectedBoolValue;
     [SerializeField] private int _expectedIntValue;
@@ -19,7 +19,7 @@ public class InstanceCondition : MonoBehaviour, IUseCondition
 
     public bool CanUse(UseContext context)
     {
-        if (_stateKey == null)
+        if (string.IsNullOrWhiteSpace(_stateKey))
         {
             return false;
         }

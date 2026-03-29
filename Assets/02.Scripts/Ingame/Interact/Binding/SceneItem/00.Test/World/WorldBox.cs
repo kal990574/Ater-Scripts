@@ -5,9 +5,9 @@ public class WorldBox : StateApplierBase
     [SerializeField] private ScannableObject scannableObject;
     [SerializeField] private Interactable interactable;
     [SerializeField] private GameObject _rewardVisual;
-    [SerializeField] private StateKeySO _scanCompleteStateKey;
-    [SerializeField] private StateKeySO _openStateKey;
-    [SerializeField] private StateKeySO _rewardCollectedStateKey;
+    [SerializeField] private string _scanCompleteStateKey = string.Empty;
+    [SerializeField] private string _openStateKey = string.Empty;
+    [SerializeField] private string _rewardCollectedStateKey = string.Empty;
 
     private void Awake()
     {
