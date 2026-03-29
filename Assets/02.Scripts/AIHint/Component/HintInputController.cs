@@ -60,7 +60,14 @@ namespace _02.Scripts.AIHint.Component
         private void Update()
         {
             if (_isProcessing) return;
-
+            
+#if UNITY_EDITOR
+            if (Input.GetKeyDown(KeyCode.T))
+            {
+                TestHintWithText().Forget();
+                return;
+            }
+#endif
             if (_isRecording && Time.time - _recordStartTime >= _maxRecordSeconds)
             {
                 StopRecordingAndRecognize().Forget();
