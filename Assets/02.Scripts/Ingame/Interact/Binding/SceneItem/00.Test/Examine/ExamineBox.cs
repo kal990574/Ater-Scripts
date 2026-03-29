@@ -16,10 +16,10 @@ public class ExamineBox : StateApplierBase
     public override void ApplyState(RuntimeView binder)
     {
         Debug.Log("바인드 적용");
-        _binder = binder;
+        _runtimeView = binder;
         
-        _isOpened = _binder.RuntimeItemData.State.GetBool(_openStateKey);
-        _isColleced = _binder.RuntimeItemData.State.GetBool(_rewardCollectedStateKey);
+        _isOpened = _runtimeView.RuntimeItemData.State.GetBool(_openStateKey);
+        _isColleced = _runtimeView.RuntimeItemData.State.GetBool(_rewardCollectedStateKey);
 
         //열려있지 않을때만 인터렉터블 포인트를 보이게 한다.
         if (_isOpened)
@@ -51,8 +51,8 @@ public class ExamineBox : StateApplierBase
             return;
         }
 
-        _binder.RuntimeItemData.State.SetBool(_openStateKey, true);
-        _binder.RefreshView();
+        _runtimeView.RuntimeItemData.State.SetBool(_openStateKey, true);
+        _runtimeView.RefreshView();
     }
 
     
@@ -63,18 +63,18 @@ public class ExamineBox : StateApplierBase
             return;
         }
 
-        RuntimeItemData reward = _binder.InventoryManager.CreateItemInstance(_rewardItemId);
+        RuntimeItemData reward = _runtimeView.InventoryManager.CreateItemInstance(_rewardItemId);
         if (reward == null)
         {
             return;
         }
 
-        if (!_binder.InventoryManager.TryAddItem(reward))
+        if (!_runtimeView.InventoryManager.TryAddItem(reward))
         {
             return;
         }
 
-        _binder.RuntimeItemData.State.SetBool(_rewardCollectedStateKey, true);
-        _binder.RefreshView();
+        _runtimeView.RuntimeItemData.State.SetBool(_rewardCollectedStateKey, true);
+        _runtimeView.RefreshView();
     }
 }

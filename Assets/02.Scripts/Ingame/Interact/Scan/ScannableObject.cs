@@ -2,14 +2,12 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class ScannableObject : StateApplierBase, IScannable
+public class ScannableObject : MonoBehaviour, IScannable
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
-    [SerializeField] private string _scanCompleteStateKey = string.Empty;
     [SerializeField] private Rigidbody _targetRigidbody;
     
-    private IRuntimeView _itemBinder;
     private ScanProgress _progress;
     private ScanFSM _fsm;
     private ScannableQTEInvoker _qteInvoker;
@@ -71,7 +69,6 @@ public class ScannableObject : StateApplierBase, IScannable
             _targetRigidbody = GetComponentInParent<Rigidbody>();
         }
         
-        _itemBinder = GetComponentInParent<RuntimeView>();
         _qteInvoker = GetComponent<ScannableQTEInvoker>();
         if (_qteInvoker == null)
         {
@@ -134,52 +131,11 @@ public class ScannableObject : StateApplierBase, IScannable
    
     public void OnScanCompleted()
     {
-        if (_itemBinder != null)
-        {
-            RuntimeView runtimeView = _itemBinder as RuntimeView;
-            RuntimeData runtimeData = runtimeView != null ? runtimeView.EnsureRuntimeData() : _itemBinder.RuntimeData;
-            if (runtimeData?.State != null && !string.IsNullOrWhiteSpace(_scanCompleteStateKey))
-            {
-                runtimeData.State.SetBool(_scanCompleteStateKey, true);
-            }
-        }
-
         ApplyPhysicsState(true);
         
         OnScanComplete?.Invoke();
         ScanCompleteEvent?.Invoke();
     }
-    
-    [ContextMenu("Force")]
-    public void ForceScanComplete()
-    {
-        if (_progress == null || _fsm == null)
-        {
-            Init();
-        }
-
-        if (IsProgressComplete == false)
-        {
-            AddProgress(_settings.RequiredScanTime);
-        }
-
-        ChangeState(EScanState.OnCompleted, true);
-        ApplyPhysicsState(true);
-        
-        OnScanProgressChanged?.Invoke(1);
-        OnScanComplete?.Invoke();
-    }
-
-    public void ChangeState(EScanState nextState, bool force = false)
-    {
-        _fsm.ChangeState(nextState, force);
-    }
-
-    public void ChangeState(EScanState nextState)
-    {
-        ChangeState(nextState, false);
-    }
-    
     
     public void AddProgress(float amount)
     {
@@ -194,6 +150,16 @@ public class ScannableObject : StateApplierBase, IScannable
     private void HandleProgressChanged(float ratio)
     {
         OnScanProgressChanged?.Invoke(ratio);
+    }
+
+    public void ChangeState(EScanState nextState, bool force = false)
+    {
+        _fsm.ChangeState(nextState, force);
+    }
+
+    public void ChangeState(EScanState nextState)
+    {
+        ChangeState(nextState, false);
     }
 
     public void ReduceProgressByReturn(float deltaTime)
@@ -230,6 +196,26 @@ public class ScannableObject : StateApplierBase, IScannable
 
         ChangeState(EScanState.OnHold);
     }
+    
+    [ContextMenu("Force")]
+    public void ForceScanComplete()
+    {
+        if (_progress == null || _fsm == null)
+        {
+            Init();
+        }
+
+        if (IsProgressComplete == false)
+        {
+            AddProgress(_settings.RequiredScanTime);
+        }
+
+        ChangeState(EScanState.OnCompleted, true);
+        ApplyPhysicsState(true);
+        
+        OnScanProgressChanged?.Invoke(1);
+        OnScanComplete?.Invoke();
+    }
 
     private void ApplyPhysicsState(bool isScanComplete)
     {
@@ -241,19 +227,5 @@ public class ScannableObject : StateApplierBase, IScannable
         _targetRigidbody.useGravity = isScanComplete;
         _targetRigidbody.isKinematic = !isScanComplete;
     }
-
-    public override void ApplyState(RuntimeView binder)
-    {
-        if (binder?.RuntimeData == null)
-        {
-            return;
-        }
-
-        bool isScanComplete = binder.RuntimeData.State.GetBool(_scanCompleteStateKey);
-      
-        if (isScanComplete)
-        {
-            ForceScanComplete();
-        }
-    }
+    
 }

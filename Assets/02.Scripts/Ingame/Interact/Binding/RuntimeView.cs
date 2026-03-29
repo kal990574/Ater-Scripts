@@ -55,13 +55,67 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
             return;
         }
 
-        IStateApplier binder = GetComponentInChildren<IStateApplier>();
-        if (binder == null)
+        IStateApplier[] binders = GetComponentsInChildren<IStateApplier>(true);
+        if (binders == null || binders.Length == 0)
         {
             return;
         }
+        Debug.Log($"[{gameObject.name}] : ApplierCount = {binders.Length}");
+        foreach (IStateApplier binder in binders)
+        {
+            binder?.ApplyState(this);
+        }
+    }
 
-        binder.ApplyState(this);
+    public bool SetBoolState(string key, bool value, bool refreshView = true)
+    {
+        RuntimeData runtimeData = EnsureRuntimeData();
+        if (runtimeData?.State == null || string.IsNullOrWhiteSpace(key))
+        {
+            return false;
+        }
+
+        runtimeData.State.SetBool(key, value);
+        if (refreshView)
+        {
+            RefreshView();
+        }
+
+        return true;
+    }
+
+    public bool SetIntState(string key, int value, bool refreshView = true)
+    {
+        RuntimeData runtimeData = EnsureRuntimeData();
+        if (runtimeData?.State == null || string.IsNullOrWhiteSpace(key))
+        {
+            return false;
+        }
+
+        runtimeData.State.SetInt(key, value);
+        if (refreshView)
+        {
+            RefreshView();
+        }
+
+        return true;
+    }
+
+    public bool SetStringState(string key, string value, bool refreshView = true)
+    {
+        RuntimeData runtimeData = EnsureRuntimeData();
+        if (runtimeData?.State == null || string.IsNullOrWhiteSpace(key))
+        {
+            return false;
+        }
+
+        runtimeData.State.SetString(key, value ?? string.Empty);
+        if (refreshView)
+        {
+            RefreshView();
+        }
+
+        return true;
     }
 
     private InventoryManager ResolveInventoryManager()

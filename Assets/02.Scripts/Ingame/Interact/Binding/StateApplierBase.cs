@@ -2,10 +2,19 @@ using UnityEngine;
 
 public abstract class StateApplierBase : MonoBehaviour, IStateApplier
 {
-    protected RuntimeView _binder;
+    [SerializeField]protected RuntimeView _runtimeView;
 
-    public RuntimeView Binder => _binder;
+    public RuntimeView RuntimeView => _runtimeView;
     protected bool _isBind = false;
+    
+    private void Awake()
+    {
+        if (_runtimeView == null)
+        {
+            _runtimeView = GetComponentInParent<RuntimeView>();
+        }
+    }
+
     public abstract void ApplyState(RuntimeView binder);
 
     protected virtual bool CheckBindValid(string binderContext = "")
@@ -16,13 +25,13 @@ public abstract class StateApplierBase : MonoBehaviour, IStateApplier
             return false;
         }
 
-        if (_binder == null)
+        if (_runtimeView == null)
         {
             Debug.LogError("[BindApplierBase] InstanceView is missing.", this);
             return false;
         }
 
-        if (_binder.EnsureRuntimeData() == null)
+        if (_runtimeView.EnsureRuntimeData() == null)
         {
             Debug.LogError("[BindApplierBase] RuntimeData is missing.", this);
             return false;
