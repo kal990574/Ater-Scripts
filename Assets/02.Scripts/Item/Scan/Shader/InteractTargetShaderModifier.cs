@@ -17,27 +17,13 @@ public class InteractTargetShaderModifier : MonoBehaviour
     private IScannableObject _scannableObject;
     private IDetectableObject _detectableObject;
     
-    [Header("Debug")]
-    [SerializeField] private float _currentHitBlend;
-
     private Tween _hitBlendTween;
-
+    private float _currentHitBlend;
+    
     private void Start()
     {
         CacheReferences();
-        InitializeShaderController();
-
-        if (enabled == false || _scanConfig == null)
-        {
-            if (_scanConfig == null)
-            {
-                Debug.LogError($"[{nameof(InteractTargetShaderModifier)}] {nameof(ScanShaderConfigSO)} is missing.", this);
-            }
-
-            enabled = false;
-            return;
-        }
-
+        InitShaderController();
         ApplyInitialShaderState();
         SubscribeTargetEvents();
         SynchronizeCurrentState();
@@ -67,11 +53,10 @@ public class InteractTargetShaderModifier : MonoBehaviour
         }
     }
 
-    private void InitializeShaderController()
+    private void InitShaderController()
     {
         if (_shaderPropertyController == null)
         {
-            Debug.LogError($"[{nameof(InteractTargetShaderModifier)}] {nameof(AllInOneShaderController)} is missing.", this);
             enabled = false;
             return;
         }
@@ -81,9 +66,23 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void ApplyInitialShaderState()
     {
-        SetOutlineColor(_oultineConfig.AbstractOutlineColor);
+        if (_scannableObject == null)
+        {
+            SetOutlineColor(_oultineConfig.OnHoverOutlineColor);
+            ApplyProgressState(1f);
+        }
+        else if (_scannableObject.IsProgressComplete)
+        {
+            SetOutlineColor(_oultineConfig.OnHoverOutlineColor);
+            ApplyProgressState(1f);
+        }
+        else
+        {
+            SetOutlineColor(_oultineConfig.AbstractOutlineColor);
+            ApplyProgressState(0.0f);
+        }
+        
         ShowOutline(false);
-        ApplyProgressState(0.0f);
         SetHitBlend(0.0f);
     }
 
@@ -179,7 +178,7 @@ public class InteractTargetShaderModifier : MonoBehaviour
             value =>
             {
                 _currentHitBlend = value;
-                SetHitBlend(_currentHitBlend);
+                SetHitBlend(value);
             },
             targetValue,
             duration);

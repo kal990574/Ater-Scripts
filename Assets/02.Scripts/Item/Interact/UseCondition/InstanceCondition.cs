@@ -17,7 +17,7 @@ public class InstanceCondition : MonoBehaviour, IUseCondition
     [SerializeField] private int _expectedIntValue;
     [SerializeField] private string _expectedStringValue = string.Empty;
 
-    public bool CanUse(UseableObject useableObject)
+    public bool CanUse(UseContext context)
     {
         if (_stateKey == null)
         {
@@ -29,17 +29,17 @@ public class InstanceCondition : MonoBehaviour, IUseCondition
             _instanceView = GetComponentInParent<InstanceView>();
         }
 
-        ItemInstance itemInstance = _instanceView != null ? _instanceView.ItemInstance : null;
-        if (itemInstance?.State == null)
+        ItemInstanceData itemInstanceData = _instanceView != null ? _instanceView.ItemInstanceData : null;
+        if (itemInstanceData?.State == null)
         {
             return false;
         }
 
         return _valueType switch
         {
-            StateValueType.Bool => itemInstance.State.GetBool(_stateKey) == _expectedBoolValue,
-            StateValueType.Int => itemInstance.State.GetInt(_stateKey) == _expectedIntValue,
-            StateValueType.String => itemInstance.State.GetString(_stateKey) == _expectedStringValue,
+            StateValueType.Bool => itemInstanceData.State.GetBool(_stateKey) == _expectedBoolValue,
+            StateValueType.Int => itemInstanceData.State.GetInt(_stateKey) == _expectedIntValue,
+            StateValueType.String => itemInstanceData.State.GetString(_stateKey) == _expectedStringValue,
             _ => false
         };
     }

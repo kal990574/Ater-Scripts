@@ -1,7 +1,8 @@
 public interface IItemInstance
 {
-    ItemInstance ItemInstance { get; }
+    string InstanceId { get; }
+    ItemInstanceData ItemInstanceData { get; }
     InventoryManager InventoryManager { get; }
-    void Bind(ItemInstance itemInstance, InventoryManager inventoryManager);
+    void Bind(string instanceId, InventoryManager inventoryManager);
     void RefreshView();
 }

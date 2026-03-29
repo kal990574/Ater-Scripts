@@ -1,6 +1,7 @@
 using UnityEngine;
 
-public class WorldKey : BindApplierBase
+//기본적으로 스캔 동기화
+public class ScanStateApplier : BindApplierBase
 {
     [SerializeField] private ScannableObject _scannableObject;
     [SerializeField] private StateKeySO _scanCompleteStateKey;
@@ -15,12 +16,12 @@ public class WorldKey : BindApplierBase
 
     public override void ApplyState(InstanceView binder)
     {
-        if (binder?.ItemInstance == null)
+        if (binder?.ItemInstanceData == null)
         {
             return;
         }
 
-        bool isScanComplete = binder.ItemInstance.State.GetBool(_scanCompleteStateKey);
+        bool isScanComplete = binder.ItemInstanceData.State.GetBool(_scanCompleteStateKey);
       
         if (isScanComplete && _scannableObject != null)
         {
