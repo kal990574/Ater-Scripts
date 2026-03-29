@@ -137,10 +137,10 @@ public class ScannableObject : StateApplierBase, IScannable
         if (_itemBinder != null)
         {
             RuntimeView runtimeView = _itemBinder as RuntimeView;
-            RuntimeItemData runtimeItemData = runtimeView != null ? runtimeView.EnsureItemInstance() : _itemBinder.RuntimeItemData;
-            if (runtimeItemData?.State != null && _scanCompleteStateKey != null)
+            RuntimeData runtimeData = runtimeView != null ? runtimeView.EnsureRuntimeData() : _itemBinder.RuntimeData;
+            if (runtimeData?.State != null && _scanCompleteStateKey != null)
             {
-                runtimeItemData.State.SetBool(_scanCompleteStateKey, true);
+                runtimeData.State.SetBool(_scanCompleteStateKey, true);
             }
         }
 
@@ -244,12 +244,12 @@ public class ScannableObject : StateApplierBase, IScannable
 
     public override void ApplyState(RuntimeView binder)
     {
-        if (binder?.RuntimeItemData == null)
+        if (binder?.RuntimeData == null)
         {
             return;
         }
 
-        bool isScanComplete = binder.RuntimeItemData.State.GetBool(_scanCompleteStateKey);
+        bool isScanComplete = binder.RuntimeData.State.GetBool(_scanCompleteStateKey);
       
         if (isScanComplete)
         {

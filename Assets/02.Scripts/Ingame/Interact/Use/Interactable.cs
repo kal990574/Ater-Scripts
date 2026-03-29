@@ -4,11 +4,12 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public abstract class Interactable : DetectableObject, IInteractObject, INeedItemInstance
+public abstract class Interactable : DetectableObject, IInteractObject, INeedRuntimeData
 {
     [SerializeField] protected bool _isInteractActive;
     private IRuntimeView _instance;
     
+    public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
     public override bool CanDetect => _isDetectable && _isInteractActive;
 
@@ -47,7 +48,7 @@ public abstract class Interactable : DetectableObject, IInteractObject, INeedIte
         }
     }
 
-    public void SetInstance(IRuntimeView runtimeView)
+    public void SetRuntimeData(IRuntimeView runtimeView)
     {
         _instance = runtimeView;
     }

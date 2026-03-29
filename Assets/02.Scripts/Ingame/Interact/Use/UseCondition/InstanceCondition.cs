@@ -29,17 +29,17 @@ public class InstanceCondition : MonoBehaviour, IUseCondition
             runtimeView = GetComponentInParent<RuntimeView>();
         }
 
-        RuntimeItemData runtimeItemData = runtimeView != null ? runtimeView.RuntimeItemData : null;
-        if (runtimeItemData?.State == null)
+        RuntimeData runtimeData = runtimeView != null ? runtimeView.RuntimeData : null;
+        if (runtimeData?.State == null)
         {
             return false;
         }
 
         return _valueType switch
         {
-            StateValueType.Bool => runtimeItemData.State.GetBool(_stateKey) == _expectedBoolValue,
-            StateValueType.Int => runtimeItemData.State.GetInt(_stateKey) == _expectedIntValue,
-            StateValueType.String => runtimeItemData.State.GetString(_stateKey) == _expectedStringValue,
+            StateValueType.Bool => runtimeData.State.GetBool(_stateKey) == _expectedBoolValue,
+            StateValueType.Int => runtimeData.State.GetInt(_stateKey) == _expectedIntValue,
+            StateValueType.String => runtimeData.State.GetString(_stateKey) == _expectedStringValue,
             _ => false
         };
     }

@@ -19,7 +19,7 @@ public class InventoryManager : MonoBehaviour
     //인벤토리 서비스 
     private InventoryService _inventoryService;
     //생성된 인스턴스 생성 및 관리
-    private RuntimeInstanceService _instanceInstanceService;
+    private RuntimeInstanceService _runtimeInstanceService;
     
     //들고 있는 아이템에 대한 서비스
     private HandViewService handViewService;
@@ -57,10 +57,10 @@ public class InventoryManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        _instanceInstanceService = new RuntimeInstanceService(tableSo);
-        _instanceInstanceService.SetItemDataTable(tableSo);
+        _runtimeInstanceService = new RuntimeInstanceService(tableSo);
+        _runtimeInstanceService.SetItemDataTable(tableSo);
         _inventoryService = new InventoryService();
-        _itemFactory = new ItemFactory(_instanceInstanceService, this);
+        _itemFactory = new ItemFactory(_runtimeInstanceService, this);
         handViewService = new HandViewService(_itemFactory, ResolveRoot(_cachedHandRoot));
         examineViewService = new ExamineViewService(_itemFactory, ResolveRoot(_cachedExamineRoot));
         worldViewService = new WorldViewService(_itemFactory);
@@ -90,10 +90,43 @@ public class InventoryManager : MonoBehaviour
     //아이템 아이디로 새로운 인스턴스 제작
     public RuntimeItemData CreateItemInstance(int itemId)
     {
-        RuntimeItemData runtimeItemData = _instanceInstanceService.CreateInstance(itemId);
+        RuntimeItemData runtimeItemData = _runtimeInstanceService.CreateInstance(itemId);
         if (runtimeItemData == null)
         {
             Debug.LogError($"[{nameof(InventoryManager)}] Failed to create ItemInstance for item id {itemId}.", this);
+        }
+
+        return runtimeItemData;
+    }
+
+    public RuntimeData CreateRuntimeData(InteractState defaultState = null)
+    {
+        RuntimeData runtimeData = _runtimeInstanceService.CreateRuntimeData(defaultState);
+        if (runtimeData == null)
+        {
+            Debug.LogError($"[{nameof(InventoryManager)}] Failed to create runtime data.", this);
+        }
+
+        return runtimeData;
+    }
+
+    public RuntimeData GetOrCreateRuntimeData(string instanceId, InteractState defaultState = null)
+    {
+        RuntimeData runtimeData = _runtimeInstanceService.GetOrCreateRuntimeData(instanceId, defaultState);
+        if (runtimeData == null)
+        {
+            Debug.LogError($"[{nameof(InventoryManager)}] Failed to get or create runtime data for instance id '{instanceId}'.", this);
+        }
+
+        return runtimeData;
+    }
+
+    public RuntimeItemData GetOrCreateItemInstance(string instanceId, int itemId)
+    {
+        RuntimeItemData runtimeItemData = _runtimeInstanceService.GetOrCreateItemInstance(instanceId, itemId);
+        if (runtimeItemData == null)
+        {
+            Debug.LogError($"[{nameof(InventoryManager)}] Failed to get or create item instance '{instanceId}' for item id {itemId}.", this);
         }
 
         return runtimeItemData;
@@ -108,7 +141,7 @@ public class InventoryManager : MonoBehaviour
             return false;
         }
 
-        _instanceInstanceService.RegisterInstance(runtimeItemData);
+        _runtimeInstanceService.RegisterInstance(runtimeItemData);
         return _inventoryService.TryAdd(runtimeItemData.InstanceId);
     }
 
@@ -144,7 +177,12 @@ public class InventoryManager : MonoBehaviour
     //인스턴스 아이디로 데이터 탐색후 반환
     public RuntimeItemData GetItemInstance(string instanceId)
     {
-        return _instanceInstanceService.GetInstance(instanceId);
+        return _runtimeInstanceService.GetItemInstance(instanceId);
+    }
+
+    public RuntimeData GetRuntimeData(string instanceId)
+    {
+        return _runtimeInstanceService.GetRuntimeData(instanceId);
     }
 
     public string GetInventoryItemInstanceIdAt(int index)

@@ -22,9 +22,9 @@ public abstract class StateApplierBase : MonoBehaviour, IStateApplier
             return false;
         }
 
-        if (_binder.EnsureItemInstance() == null)
+        if (_binder.EnsureRuntimeData() == null)
         {
-            Debug.LogError("[BindApplierBase] ItemInstance is missing.", this);
+            Debug.LogError("[BindApplierBase] RuntimeData is missing.", this);
             return false;
         }
 

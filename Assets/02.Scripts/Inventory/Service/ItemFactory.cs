@@ -58,7 +58,7 @@ public class ItemFactory
 
     private GameObject CreateBoundObject(string instanceId, Transform parent, System.Func<RuntimeItemData, GameObject> prefabSelector)
     {
-        if (!_runtimeInstanceService.TryGetInstance(instanceId, out RuntimeItemData itemInstanceData) || itemInstanceData == null)
+        if (!_runtimeInstanceService.TryGetItemInstance(instanceId, out RuntimeItemData itemInstanceData) || itemInstanceData == null)
         {
             return null;
         }

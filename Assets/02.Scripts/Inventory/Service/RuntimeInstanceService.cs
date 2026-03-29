@@ -4,9 +4,7 @@ using UnityEngine;
 public class RuntimeInstanceService
 {
     private ItemDataTableSO itemDataTableSo;
-    
-    //생성된 아이템의 인스턴스를 보관
-    private readonly Dictionary<string, RuntimeItemData> _instances = new();
+    private readonly Dictionary<string, RuntimeData> _instances = new();
 
     public RuntimeInstanceService(ItemDataTableSO itemDataTableSo)
     {
@@ -16,6 +14,25 @@ public class RuntimeInstanceService
     public void SetItemDataTable(ItemDataTableSO itemDataTableSo)
     {
         this.itemDataTableSo = itemDataTableSo;
+    }
+
+    public RuntimeData CreateRuntimeData(InteractState defaultState = null)
+    {
+        RuntimeData runtimeData = new RuntimeData(defaultState);
+        RegisterInstance(runtimeData);
+        return runtimeData;
+    }
+
+    public RuntimeData GetOrCreateRuntimeData(string instanceId, InteractState defaultState = null)
+    {
+        if (TryGetRuntimeData(instanceId, out RuntimeData runtimeData))
+        {
+            return runtimeData;
+        }
+
+        runtimeData = new RuntimeData(instanceId, defaultState);
+        RegisterInstance(runtimeData);
+        return runtimeData;
     }
 
     public RuntimeItemData CreateInstance(int itemId)
@@ -36,31 +53,72 @@ public class RuntimeInstanceService
         return runtimeItem;
     }
 
-    public bool RegisterInstance(RuntimeItemData runtimeItem)
+    public RuntimeItemData GetOrCreateItemInstance(string instanceId, int itemId)
     {
-        if (runtimeItem == null || string.IsNullOrEmpty(runtimeItem.InstanceId))
+        if (TryGetRuntimeData(instanceId, out RuntimeData runtimeData))
+        {
+            if (runtimeData is RuntimeItemData runtimeItemData)
+            {
+                return runtimeItemData;
+            }
+
+            Debug.LogError($"[{nameof(RuntimeInstanceService)}] Instance '{instanceId}' already exists as {nameof(RuntimeData)}.");
+            return null;
+        }
+
+        if (itemDataTableSo == null)
+        {
+            Debug.LogError($"[{nameof(RuntimeInstanceService)}] {nameof(ItemDataTableSO)} reference is missing.");
+            return null;
+        }
+
+        ItemData itemData = itemDataTableSo.GetItemData(itemId);
+        if (itemData == null)
+        {
+            return null;
+        }
+
+        RuntimeItemData runtimeItem = new RuntimeItemData(instanceId, itemData);
+        RegisterInstance(runtimeItem);
+        return runtimeItem;
+    }
+
+    public bool RegisterInstance(RuntimeData runtimeData)
+    {
+        if (runtimeData == null || string.IsNullOrEmpty(runtimeData.InstanceId))
         {
             return false;
         }
 
-        _instances[runtimeItem.InstanceId] = runtimeItem;
+        _instances[runtimeData.InstanceId] = runtimeData;
         return true;
     }
 
-    public bool TryGetInstance(string instanceId, out RuntimeItemData runtimeItem)
+    public bool TryGetRuntimeData(string instanceId, out RuntimeData runtimeData)
     {
         if (string.IsNullOrEmpty(instanceId))
         {
-            runtimeItem = null;
+            runtimeData = null;
             return false;
         }
 
-        return _instances.TryGetValue(instanceId, out runtimeItem);
+        return _instances.TryGetValue(instanceId, out runtimeData);
     }
 
-    public RuntimeItemData GetInstance(string instanceId)
+    public RuntimeData GetRuntimeData(string instanceId)
     {
-        TryGetInstance(instanceId, out RuntimeItemData itemInstance);
-        return itemInstance;
+        TryGetRuntimeData(instanceId, out RuntimeData runtimeData);
+        return runtimeData;
+    }
+
+    public bool TryGetItemInstance(string instanceId, out RuntimeItemData runtimeItem)
+    {
+        runtimeItem = GetRuntimeData(instanceId) as RuntimeItemData;
+        return runtimeItem != null;
+    }
+
+    public RuntimeItemData GetItemInstance(string instanceId)
+    {
+        return GetRuntimeData(instanceId) as RuntimeItemData;
     }
 }

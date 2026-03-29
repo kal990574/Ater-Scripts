@@ -1,18 +1,12 @@
 using System;
 using UnityEngine;
 
-//런타임에서 생성되는 아이템
-//현재 인스턴스의 상태 보관
 [Serializable]
-public class RuntimeItemData
+public class RuntimeItemData : RuntimeData
 {
-    [SerializeField] private string _instanceId;
-    [SerializeField] private InteractState _state;
     [SerializeField] private ItemData data;
-    public string InstanceId => _instanceId;
-    public ItemData Data => data;
-    public InteractState State => _state;
 
+    public ItemData Data => data;
     public int ItemId => data != null ? data.ItemId : -1;
     public string ItemName => data != null ? data.ItemName : string.Empty;
     public string Description => data != null ? data.Description : string.Empty;
@@ -21,11 +15,14 @@ public class RuntimeItemData
     public GameObject ExaminePrefab => data != null ? data.ExaminePrefab : null;
     public GameObject HandPrefab => data != null ? data.HandPrefab : null;
 
-    //데이터로 인스턴스 제작하기
     public RuntimeItemData(ItemData data = null)
+        : this(null, data)
     {
-        _instanceId = Guid.NewGuid().ToString("N");
+    }
+
+    public RuntimeItemData(string instanceId, ItemData data = null)
+        : base(instanceId, data != null ? data.CreateDefaultState() : null)
+    {
         this.data = data;
-        _state = data != null ? data.CreateDefaultState() : new InteractState();
     }
 }

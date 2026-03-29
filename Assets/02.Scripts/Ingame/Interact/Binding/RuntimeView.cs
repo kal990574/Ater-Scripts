@@ -1,85 +1,59 @@
-using System;
 using UnityEngine;
 
+[DisallowMultipleComponent]
 public class RuntimeView : MonoBehaviour, IRuntimeView
 {
-    [SerializeField] private string _instanceId;
-    [SerializeField] private int _initialItemKey = -1;
-    [SerializeField] private bool _InstanceOnInit = false;
-    
+    [SerializeField, HideInInspector] private string _instanceId;
+
     private InventoryManager _inventoryManager;
 
     public string InstanceId => _instanceId;
-    public RuntimeItemData RuntimeItemData => ResolveItemInstance();
+    public RuntimeData RuntimeData => ResolveRuntimeData();
+    public RuntimeItemData RuntimeItemData => RuntimeData as RuntimeItemData;
     public InventoryManager InventoryManager => _inventoryManager;
-    public int InitialItemKey => _initialItemKey;
-
-    private void Start()
-    {
-        if (!_InstanceOnInit)
-        {
-            return;
-        }
-
-        if (ResolveItemInstance() != null)
-        {
-            ActivateInstanceIfNeeded();
-            return;
-        }
-
-        if (InventoryManager.Instance != null)
-        {
-            RuntimeItemData runtimeItemData = InventoryManager.Instance.CreateItemInstance(_initialItemKey);
-            Bind(runtimeItemData != null ? runtimeItemData.InstanceId : null, InventoryManager.Instance);
-            ActivateInstanceIfNeeded();
-        }
-    }
 
     public virtual void Bind(string instanceId, InventoryManager inventoryManager)
     {
-        _instanceId = instanceId;
+        SetInstanceId(instanceId);
         _inventoryManager = inventoryManager;
-        PropagateItemInstance();
+        LogBoundRuntimeData();
+        PropagateRuntimeData();
         RefreshView();
+    }
+
+    public void SetInstanceId(string instanceId)
+    {
+        _instanceId = instanceId;
+    }
+
+    public RuntimeData EnsureRuntimeData()
+    {
+        RuntimeData runtimeData = ResolveRuntimeData();
+        if (runtimeData == null)
+        {
+            Debug.LogError($"[{nameof(RuntimeView)}] RuntimeData is not registered for '{_instanceId}'.", this);
+        }
+
+        return runtimeData;
     }
 
     public RuntimeItemData EnsureItemInstance()
     {
-        RuntimeItemData runtimeItemData = ResolveItemInstance();
-        if (runtimeItemData != null)
-        {
-            return runtimeItemData;
-        }
-
-        InventoryManager inventoryManager = ResolveInventoryManager();
-        if (inventoryManager == null)
-        {
-            Debug.LogError($"[{nameof(RuntimeView)}] {nameof(InventoryManager)}.Instance is null.", this);
-            return null;
-        }
-
-        if (_initialItemKey < 0)
-        {
-            Debug.LogError($"[{nameof(RuntimeView)}] Initial item key is missing or invalid.", this);
-            return null;
-        }
-
-        runtimeItemData = inventoryManager.CreateItemInstance(_initialItemKey);
+        RuntimeItemData runtimeItemData = ResolveRuntimeData() as RuntimeItemData;
         if (runtimeItemData == null)
         {
-            return null;
+            Debug.LogError($"[{nameof(RuntimeView)}] RuntimeItemData is not registered for '{_instanceId}'.", this);
         }
 
-        _instanceId = runtimeItemData.InstanceId;
-        _inventoryManager = inventoryManager;
-        PropagateItemInstance();
-        ActivateInstanceIfNeeded();
         return runtimeItemData;
     }
 
     public void RefreshView()
     {
-        EnsureItemInstance();
+        if (ResolveRuntimeData() == null)
+        {
+            return;
+        }
 
         IStateApplier binder = GetComponentInChildren<IStateApplier>();
         if (binder == null)
@@ -100,17 +74,17 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
         _inventoryManager = InventoryManager.Instance;
         return _inventoryManager;
     }
-    
-    private void PropagateItemInstance()
+
+    private void PropagateRuntimeData()
     {
-        INeedItemInstance[] itemBindables = GetComponentsInChildren<INeedItemInstance>(true);
-        foreach (INeedItemInstance itemBindable in itemBindables)
+        INeedRuntimeData[] runtimeBindables = GetComponentsInChildren<INeedRuntimeData>(true);
+        foreach (INeedRuntimeData runtimeBindable in runtimeBindables)
         {
-            itemBindable?.SetInstance(this);
+            runtimeBindable?.SetRuntimeData(this);
         }
     }
 
-    private RuntimeItemData ResolveItemInstance()
+    private RuntimeData ResolveRuntimeData()
     {
         InventoryManager inventoryManager = ResolveInventoryManager();
         if (inventoryManager == null || string.IsNullOrEmpty(_instanceId))
@@ -118,14 +92,19 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
             return null;
         }
 
-        return inventoryManager.GetItemInstance(_instanceId);
+        return inventoryManager.GetRuntimeData(_instanceId);
     }
 
-    private void ActivateInstanceIfNeeded()
+    private void LogBoundRuntimeData()
     {
-        if (_InstanceOnInit && !string.IsNullOrEmpty(_instanceId))
-        {
-            gameObject.SetActive(true);
-        }
+        RuntimeData runtimeData = ResolveRuntimeData();
+        string runtimeType = runtimeData != null ? runtimeData.GetType().Name : "null";
+        string itemInfo = runtimeData is RuntimeItemData runtimeItemData
+            ? $", itemId={runtimeItemData.ItemId}, itemName={runtimeItemData.ItemName}"
+            : string.Empty;
+
+        Debug.Log(
+            $"[{nameof(RuntimeView)}] Bound '{gameObject.name}' to {runtimeType} (instanceId={_instanceId}{itemInfo})",
+            this);
     }
 }
