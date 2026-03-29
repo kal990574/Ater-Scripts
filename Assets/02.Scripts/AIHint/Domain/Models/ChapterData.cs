@@ -17,7 +17,9 @@ namespace _02.Scripts.AIHint.Domain.Models
     {
         public string Id;
         public string Name;
+        public string Description;
         public List<string> RequiredItems;
+        public string SolutionContext;
         public List<string> Hints;
     }
 
@@ -26,7 +28,9 @@ namespace _02.Scripts.AIHint.Domain.Models
     {
         public string Id;
         public string Name;
+        public string Description;
         public string Location;
+        public string DiscoveryMethod;
         public string HintDirection;
     }
 }

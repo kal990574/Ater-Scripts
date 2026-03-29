@@ -12,7 +12,7 @@ namespace _02.Scripts.Core.Manager
         private readonly string _mainMenuSceneName;
 
         public GameState CurrentState { get; private set; } = GameState.Playing;
-        public int CurrentChapter { get; private set; } = 1;
+        public int CurrentChapter { get; private set; } = 0;
         
         public event Action<GameState> OnGameStateChanged;
 
