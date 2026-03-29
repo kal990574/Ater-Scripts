@@ -7,8 +7,6 @@ using UnityEngine.Events;
 public abstract class InteractableObject : DetectableObject, IInteractObject, IItemBindable
 {
     [SerializeField] protected bool _isInteractActive;
-
-    private IScannableObject _scannableObject;
     private IItemInstance _instance;
 
     public int InitialItemKey { get; }
@@ -27,23 +25,7 @@ public abstract class InteractableObject : DetectableObject, IInteractObject, II
             _instance = instance;
         }
     }
-
-    protected virtual void Start()
-    {
-        if (TryGetComponent(out IScannableObject scannableObject))
-        {
-            _scannableObject = scannableObject;
-            _scannableObject.OnScanComplete += SetActivate;
-        }
-    }
-
-    private void OnDestroy()
-    {
-        if (_scannableObject != null)
-        {
-            _scannableObject.OnScanComplete -= SetActivate;
-        }
-    }
+    
 
     public abstract void Interact(UseContext context);
 
