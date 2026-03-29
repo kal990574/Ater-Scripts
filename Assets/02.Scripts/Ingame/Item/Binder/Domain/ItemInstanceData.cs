@@ -7,9 +7,8 @@ using UnityEngine;
 public class ItemInstanceData
 {
     [SerializeField] private string _instanceId;
-    [SerializeField] private ItemData data;
     [SerializeField] private ItemState _state;
-
+    [SerializeField] private ItemData data;
     public string InstanceId => _instanceId;
     public ItemData Data => data;
     public ItemState State => _state;
