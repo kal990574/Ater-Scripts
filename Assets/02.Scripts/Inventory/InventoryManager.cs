@@ -40,7 +40,7 @@ public class InventoryManager : MonoBehaviour
     public ItemInstanceData CurrentHandItem => GetItemInstance(_handService.EquippedInstanceId);
     
     public event Action<bool> OnInventoryToggled;
-    public event Action OnDataChanged;
+    public event Action OnInventoryItemChanged;
     public event Action<int> OnSelectionChanged;
 
     
@@ -64,6 +64,7 @@ public class InventoryManager : MonoBehaviour
         _handService = new HandService(_itemFactory, ResolveRoot(_cachedHandRoot));
         _examineService = new ExamineService(_itemFactory, ResolveRoot(_cachedExamineRoot));
         _worldService = new WorldService(_itemFactory);
+        
         _inventoryService.OnInventoryChanged += HandleInventoryChanged;
         _inventoryService.OnSelectionChanged += HandleSelectionChanged;
         _inventoryService.OnItemRemoved += HandleItemRemoved;
@@ -85,7 +86,8 @@ public class InventoryManager : MonoBehaviour
     {
         _inventoryService.Select(index);
     }
-
+    
+    //아이템 아이디로 새로운 인스턴스 제작
     public ItemInstanceData CreateItemInstance(int itemId)
     {
         ItemInstanceData itemInstanceData = _instanceInstanceService.CreateInstance(itemId);
@@ -97,6 +99,7 @@ public class InventoryManager : MonoBehaviour
         return itemInstanceData;
     }
 
+    //아이템 인스턴스로 인벤토리에 아이템 추가
     public bool TryAddItem(ItemInstanceData itemInstanceData)
     {
         if (itemInstanceData == null)
@@ -109,21 +112,19 @@ public class InventoryManager : MonoBehaviour
         return _inventoryService.TryAdd(itemInstanceData.InstanceId);
     }
 
+    //인벤토리의 해당칸에 위치한 아이템 제거
     public void RemoveItem(int index)
     {
         _inventoryService.RemoveAt(index);
     }
-
-    public bool RemoveItem(ItemInstanceData itemInstanceData)
+    
+    //아이템의 위치 변경
+    public void SwapItem(int index1, int index2)
     {
-        if (itemInstanceData == null)
-        {
-            return false;
-        }
-
-        return _inventoryService.Remove(itemInstanceData.InstanceId);
+        _inventoryService.Swap(index1, index2);
     }
-
+    
+    //현재 손에든 아이템을 제거함
     public bool RemoveCurrentHandItem()
     {
         if (string.IsNullOrEmpty(_handService.EquippedInstanceId))
@@ -134,35 +135,16 @@ public class InventoryManager : MonoBehaviour
         return _inventoryService.Remove(_handService.EquippedInstanceId);
     }
 
-    public bool HasItem(int itemId)
-    {
-        foreach (string instanceId in _inventoryService.Items)
-        {
-            ItemInstanceData item = GetItemInstance(instanceId);
-            if (item.ItemId == itemId) return true;
-        }
-
-        return false;
-    }
-
-    public int IndexOf(ItemInstanceData itemInstanceData)
-    {
-        return itemInstanceData == null ? -1 : _inventoryService.IndexOf(itemInstanceData.InstanceId);
-    }
-
+    //해당 인스턴스 아이디를 가진 아이템이 몇번째 칸에 있는지 확인
     public int IndexOf(string instanceId)
     {
         return _inventoryService.IndexOf(instanceId);
     }
 
+    //인스턴스 아이디로 데이터 탐색후 반환
     public ItemInstanceData GetItemInstance(string instanceId)
     {
         return _instanceInstanceService.GetInstance(instanceId);
-    }
-
-    public bool TryGetItemInstance(string instanceId, out ItemInstanceData itemInstanceData)
-    {
-        return _instanceInstanceService.TryGetInstance(instanceId, out itemInstanceData);
     }
 
     public string GetInventoryItemInstanceIdAt(int index)
@@ -175,18 +157,10 @@ public class InventoryManager : MonoBehaviour
         return _inventoryService.GetAt(index);
     }
 
-    public void SwapItem(int index1, int index2)
-    {
-        _inventoryService.Swap(index1, index2);
-    }
+
     #endregion
     
     #region Examine
-    public GameObject ShowExamineItem(ItemInstanceData itemInstanceData)
-    {
-        return ShowExamineItem(itemInstanceData != null ? itemInstanceData.InstanceId : null);
-    }
-
     public GameObject ShowExamineItem(string instanceId)
     {
         ItemInstanceData itemInstanceData = GetItemInstance(instanceId);
@@ -206,11 +180,6 @@ public class InventoryManager : MonoBehaviour
     #endregion
 
     #region World Object
-    public GameObject CreateWorldItem(ItemInstanceData itemInstanceData, Transform itemRoot)
-    {
-        return CreateWorldItem(itemInstanceData != null ? itemInstanceData.InstanceId : null, itemRoot);
-    }
-
     public GameObject CreateWorldItem(string instanceId, Transform itemRoot)
     {
         ItemInstanceData itemInstanceData = GetItemInstance(instanceId);
@@ -225,11 +194,6 @@ public class InventoryManager : MonoBehaviour
     #endregion
     
     #region Hand Object
-    public GameObject ShowHandItem(ItemInstanceData itemInstanceData)
-    {
-        return ShowHandItem(itemInstanceData != null ? itemInstanceData.InstanceId : null);
-    }
-
     public GameObject ShowHandItem(string instanceId)
     {
         ItemInstanceData itemInstanceData = GetItemInstance(instanceId);
@@ -251,7 +215,7 @@ public class InventoryManager : MonoBehaviour
     #region Binding Helpers
     private void HandleInventoryChanged()
     {
-        OnDataChanged?.Invoke();
+        OnInventoryItemChanged?.Invoke();
     }
 
     private void HandleSelectionChanged(int selectedIndex)
