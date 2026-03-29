@@ -61,13 +61,24 @@ public class QTEManager : MonoBehaviour
 
     public bool TryPlay(IQTEInvoker owner, Action<EQuickTimeEventResult> onEnded)
     {
+        return TryPlay(owner, _qteConfig, onEnded);
+    }
+
+    public bool TryPlay(IQTEInvoker owner, QTEConfigSOBase config, Action<EQuickTimeEventResult> onEnded)
+    {
         if (owner == null || IsPlaying)
         {
             return false;
         }
 
         _currentOwner = owner;
-        _currentEvent = new TimingQTERunner(_qteConfig, TimingQuickTimeEventView);
+        _currentEvent = CreateEvent(config);
+        if (_currentEvent == null)
+        {
+            _currentOwner = null;
+            return false;
+        }
+
         _onEnded = onEnded;
 
         _currentEvent.Begin();
@@ -132,5 +143,22 @@ public class QTEManager : MonoBehaviour
         _onEnded = null;
 
         callback?.Invoke(result);
+    }
+
+    private IQuickTimeEvent CreateEvent(QTEConfigSOBase config)
+    {
+        if (config == null)
+        {
+            Debug.LogError($"[{nameof(QTEManager)}] QTE config is missing.", this);
+            return null;
+        }
+
+        if (config is TimingQuickTimeEventConfig timingConfig)
+        {
+            return new TimingQTERunner(timingConfig, TimingQuickTimeEventView);
+        }
+
+        Debug.LogError($"[{nameof(QTEManager)}] Unsupported QTE config type: {config.GetType().Name}", this);
+        return null;
     }
 }

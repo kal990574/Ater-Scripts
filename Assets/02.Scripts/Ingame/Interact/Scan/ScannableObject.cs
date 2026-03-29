@@ -12,6 +12,7 @@ public class ScannableObject : BindApplierBase, IScannableObject
     private IItemInstance _itemBinder;
     private ScanProgress _progress;
     private ScanStateMachine _fsm;
+    private ScannableQTEInvoker _qteInvoker;
     
     public bool IsProgressComplete => _progress != null && _progress.IsActivated;
     public float CurrentProgress => _progress != null ? _progress.CurrentProgress : 0.0f;
@@ -71,6 +72,11 @@ public class ScannableObject : BindApplierBase, IScannableObject
         }
         
         _itemBinder = GetComponentInParent<InstanceView>();
+        _qteInvoker = GetComponent<ScannableQTEInvoker>();
+        if (_qteInvoker == null)
+        {
+            _qteInvoker = GetComponentInChildren<ScannableQTEInvoker>();
+        }
         
         if (_progress != null)
         {
@@ -108,6 +114,7 @@ public class ScannableObject : BindApplierBase, IScannableObject
         }
 
         _fsm.OnScanning(deltaTime);
+        _qteInvoker?.HandleScanning(deltaTime);
     }
 
     public void OnScanStopped()
@@ -117,8 +124,12 @@ public class ScannableObject : BindApplierBase, IScannableObject
             return;
         }
 
-        _fsm.OnScanStopped();
-        ScanEndEvent?.Invoke();
+        bool shouldNotifyScanLost = _qteInvoker == null || _qteInvoker.HandleScanStopped();
+        if (shouldNotifyScanLost)
+        {
+            _fsm.OnScanStopped();
+            ScanEndEvent?.Invoke();
+        }
     }
    
     public void OnScanCompleted()

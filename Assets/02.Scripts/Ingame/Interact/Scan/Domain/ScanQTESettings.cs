@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 [Serializable]
-public class LidarScanQTESettings
+public class ScanQTESettings
 {
     [Min(0f)] public float MinInterval = 1.5f;
     [Min(0f)] public float MaxInterval = 4.0f;

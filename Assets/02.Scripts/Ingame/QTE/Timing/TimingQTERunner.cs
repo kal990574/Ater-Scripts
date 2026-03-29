@@ -8,6 +8,7 @@ public class TimingQTERunner : IQuickTimeEvent
     private readonly TimingQuickTimeEventConfig _config;
     private readonly ITimingQuickTimeEventView _view;
 
+    private float _notificationRemainingTime;
     private float _previousNeedleProgress;
     private float _needleProgress;
     private float _successZoneStartProgress;
@@ -36,26 +37,24 @@ public class TimingQTERunner : IQuickTimeEvent
         IsPlaying = true;
         IsFinished = false;
         Result = EQuickTimeEventResult.Default;
+        _notificationRemainingTime = Mathf.Max(0f, _config.NotificationDuration);
 
-        _previousNeedleProgress = 0f;
-        _needleProgress = 0f;
+        PlayNotification();
 
-        _successZoneSizeProgress = UnityEngine.Random.Range(_config.SuccessZoneSizeRange.x, _config.SuccessZoneSizeRange.y);
-        _greatZonePercent = UnityEngine.Random.Range(_config.GreatZonePercentRange.x, _config.GreatZonePercentRange.y);
-
-        float maxStartProgress = MaxProgress - _successZoneSizeProgress;
-        _successZoneStartProgress = UnityEngine.Random.Range(0f, maxStartProgress);
-
-        if (_view != null)
+        if (_notificationRemainingTime <= 0f)
         {
-            _view.Show();
-            UpdateView();
+            BeginJudgementPhase();
         }
     }
 
     public void Tick(float deltaTime)
     {
         if (IsPlaying == false)
+        {
+            return;
+        }
+
+        if (UpdateNotification(deltaTime))
         {
             return;
         }
@@ -68,7 +67,7 @@ public class TimingQTERunner : IQuickTimeEvent
 
     public void Submit()
     {
-        if (IsPlaying == false)
+        if (IsPlaying == false || _notificationRemainingTime > 0f)
         {
             return;
         }
@@ -110,6 +109,81 @@ public class TimingQTERunner : IQuickTimeEvent
         }
     }
 
+    private bool UpdateNotification(float deltaTime)
+    {
+        if (_notificationRemainingTime <= 0f)
+        {
+            return false;
+        }
+
+        _notificationRemainingTime = Mathf.Max(0f, _notificationRemainingTime - deltaTime);
+        if (_notificationRemainingTime > 0f)
+        {
+            return true;
+        }
+
+        BeginJudgementPhase();
+        return false;
+    }
+
+    private void BeginJudgementPhase()
+    {
+        _previousNeedleProgress = 0f;
+        _needleProgress = 0f;
+
+        _successZoneSizeProgress = UnityEngine.Random.Range(_config.SuccessZoneSizeRange.x, _config.SuccessZoneSizeRange.y);
+        _greatZonePercent = UnityEngine.Random.Range(_config.GreatZonePercentRange.x, _config.GreatZonePercentRange.y);
+
+        float maxStartProgress = MaxProgress - _successZoneSizeProgress;
+        _successZoneStartProgress = UnityEngine.Random.Range(0f, maxStartProgress);
+
+        if (_view != null)
+        {
+            _view.Show();
+            UpdateView();
+        }
+    }
+
+    private void PlayNotification()
+    {
+        if (_config.NotificationClip == null)
+        {
+            return;
+        }
+
+        SoundManager soundManager = UnityEngine.Object.FindFirstObjectByType<SoundManager>();
+        if (soundManager == null)
+        {
+            return;
+        }
+
+        soundManager.PlaySFX2D(_config.NotificationClip);
+    }
+
+    private void PlayResultFeedback(EQuickTimeEventResult result)
+    {
+        AudioClip clip = result switch
+        {
+            EQuickTimeEventResult.Success => _config.SuccessClip,
+            EQuickTimeEventResult.GreatSuccess => _config.GreatSuccessClip,
+            EQuickTimeEventResult.Fail => _config.FailClip,
+            _ => null
+        };
+
+        if (clip == null)
+        {
+            return;
+        }
+
+        SoundManager soundManager = UnityEngine.Object.FindFirstObjectByType<SoundManager>();
+        if (soundManager == null)
+        {
+            return;
+        }
+
+        soundManager.PlaySFX2D(clip);
+    }
+
     private EQuickTimeEventResult JudgeCurrentNeedleProgress()
     {
         float currentProgress = GetNormalizedProgress(_needleProgress);
@@ -146,6 +220,7 @@ public class TimingQTERunner : IQuickTimeEvent
         IsPlaying = false;
         IsFinished = true;
         Result = result;
+        PlayResultFeedback(result);
 
         if (_view != null)
         {

@@ -48,11 +48,6 @@ public class PlayerScanAbility : PlayerAbility
         _lidarScanFeature.StopScan();
     }
 
-    public void LidarSubmitQTE()
-    {
-        _lidarScanFeature.SubmitCurrentQte();
-    }
-
     public void LidarScanActiveAndUpdate()
     {
         _lidarScanFeature.UpdateScan(Time.deltaTime);

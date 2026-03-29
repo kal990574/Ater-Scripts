@@ -144,7 +144,7 @@ public class PlayerController : MonoBehaviour
 
         if (_input.InteractInput)
         {
-            scanAbility.LidarSubmitQTE();
+            QTEManager.Instance?.SubmitCurrent();
         }
 
         if (_input.LmbReleaseInput)
