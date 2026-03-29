@@ -34,6 +34,11 @@ public abstract class InteractableObject : DetectableObject, IInteractObject, II
         SetActivate(true);
     }
 
+    public void SetDetectable(bool isDetectable)
+    {
+        _isDetectable = isDetectable;
+    }
+
     public void SetActivate(bool active)
     {
         _isInteractActive = active;
