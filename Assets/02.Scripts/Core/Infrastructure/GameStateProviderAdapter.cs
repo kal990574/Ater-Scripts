@@ -18,13 +18,13 @@ namespace _02.Scripts.Core.Infrastructure
         // Inventory Manager에서 받아옴
         public IReadOnlyList<string> GetInventory()
         {
-            return new List<string> {"item_old_key"};
+            return new List<string> ();
         }
         
         // 해결 퍼즐 아이템 관리소에서 받아옴
         public IReadOnlyList<string> GetSolvedPuzzles()
         {
-            return new List<string> {"puzzle_drawer"};
+            return new List<string> ();
         }
     }
 }

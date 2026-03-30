@@ -18,9 +18,11 @@ namespace _02.Scripts.Sonar
         private Coroutine _shakeCoroutine;
         private Coroutine _fovCoroutine;
         private float _baseFov;
+        private Vector3 _baseLocalPosition;
 
         private void Start()
         {
+            _baseLocalPosition = transform.localPosition;
             if (_virtualCamera != null)
             {
                 _baseFov = _virtualCamera.Lens.FieldOfView;
@@ -32,7 +34,7 @@ namespace _02.Scripts.Sonar
             if (_shakeCoroutine != null)
             {
                 StopCoroutine(_shakeCoroutine);
-                transform.localPosition = Vector3.zero;
+                transform.localPosition = _baseLocalPosition;
             }
 
             _shakeCoroutine = StartCoroutine(ShakeCoroutine());
@@ -57,11 +59,11 @@ namespace _02.Scripts.Sonar
                 elapsed += Time.deltaTime;
                 float t = 1f - (elapsed / _shakeDuration);
                 Vector3 offset = Random.insideUnitSphere * (_shakeIntensity * t);
-                transform.localPosition += offset;
+                transform.localPosition = _baseLocalPosition + offset;
                 yield return null;
             }
 
-            transform.localPosition = Vector3.zero;
+            transform.localPosition = _baseLocalPosition;
             _shakeCoroutine = null;
         }
 
