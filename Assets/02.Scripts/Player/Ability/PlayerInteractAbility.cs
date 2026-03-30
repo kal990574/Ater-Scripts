@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PlayerInteractAbility : PlayerAbility
 {
-    public void Interact(IDetectableObject target)
+    public void Interact(IDetectable target)
     {
         if (target == null)
         {

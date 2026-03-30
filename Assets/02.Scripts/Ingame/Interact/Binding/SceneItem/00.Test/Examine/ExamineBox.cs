@@ -1,0 +1,80 @@
+using UnityEngine;
+
+public class ExamineBox : StateApplierBase
+{
+    [SerializeField] private GameObject _interactObject;
+    [SerializeField] private GameObject _keyObject;
+    [SerializeField] private int  _rewardItemId;
+    [SerializeField] private string _openStateKey = string.Empty;
+    [SerializeField] private string _rewardCollectedStateKey = string.Empty;
+
+    private bool _isOpened = false;
+    private bool _isColleced = false;
+    
+    
+    //해당 아이템이 생성될때 인스턴스의 스테이트 적용
+    public override void ApplyState(RuntimeView binder)
+    {
+        Debug.Log("바인드 적용");
+        _runtimeView = binder;
+        
+        _isOpened = _runtimeView.RuntimeItemData.State.GetBool(_openStateKey);
+        _isColleced = _runtimeView.RuntimeItemData.State.GetBool(_rewardCollectedStateKey);
+
+        //열려있지 않을때만 인터렉터블 포인트를 보이게 한다.
+        if (_isOpened)
+        {
+            _interactObject.SetActive(false);
+        }
+        else
+        {
+            _interactObject.SetActive(true);
+        }
+        
+        //상자가 열려있고 , 열쇄를 수집하지 않았다면 키를 보여준다.
+        if (_isOpened && !_isColleced)
+        {
+            _keyObject.SetActive(true);
+        }
+        else
+        {
+            _keyObject.SetActive(false);
+        }
+
+        _isBind = true;
+    }
+  
+    public void Open()
+    {
+        if (!CheckBindValid())
+        {
+            return;
+        }
+
+        _runtimeView.RuntimeItemData.State.SetBool(_openStateKey, true);
+        _runtimeView.RefreshView();
+    }
+
+    
+    public void GetKey()
+    {
+        if (!CheckBindValid())
+        {
+            return;
+        }
+
+        RuntimeItemData reward = _runtimeView.InventoryManager.CreateItemInstance(_rewardItemId);
+        if (reward == null)
+        {
+            return;
+        }
+
+        if (!_runtimeView.InventoryManager.TryAddItem(reward))
+        {
+            return;
+        }
+
+        _runtimeView.RuntimeItemData.State.SetBool(_rewardCollectedStateKey, true);
+        _runtimeView.RefreshView();
+    }
+}

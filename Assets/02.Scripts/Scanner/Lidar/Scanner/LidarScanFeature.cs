@@ -12,11 +12,9 @@ public class LidarScanFeature : MonoBehaviour
 
     [Header("Optional Settings")]
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
-    [SerializeField] private LidarScanQTESettings _qteSettings;
 
     private LidarEffect _lidarEffect;
     private LidarRaycast _lidarRay;
-    private LidarScanQTE _qte;
 
     public ScannableObject CurrentTarget { get; private set; }
 
@@ -51,7 +49,6 @@ public class LidarScanFeature : MonoBehaviour
 
         _lidarRay = new(this);
         _lidarEffect = new(this);
-        _qte = _qteSettings == null ? null : new LidarScanQTE(_qteSettings);
     }
 
     public void StopScan()
@@ -59,12 +56,7 @@ public class LidarScanFeature : MonoBehaviour
         if (CurrentTarget != null)
         {
             OnTargetLost?.Invoke();
-
-            bool shouldNotifyScanLost = _qte == null || _qte.HandleStop(CurrentTarget);
-            if (shouldNotifyScanLost)
-            {
-                CurrentTarget.OnScanStopped();
-            }
+            CurrentTarget.OnScanStopped();
 
             CurrentTarget = null;
         }
@@ -72,16 +64,6 @@ public class LidarScanFeature : MonoBehaviour
         _lidarRay.ClearScanResults();
         LidarEffect.ResetLine();
         IsOnScan = false;
-    }
-
-    public void SubmitCurrentQte()
-    {
-        if (_qte == null)
-        {
-            return;
-        }
-
-        _qte.SubmitCurrent();
     }
 
     public void UpdateScan(float deltaTime)
@@ -96,20 +78,18 @@ public class LidarScanFeature : MonoBehaviour
         ScannableObject previousTarget = CurrentTarget;
         ScannableObject newTarget = ResolveTarget(_lidarRay.HitMap, StartPos, transform.forward);
 
-        bool shouldNotifyScanLost = _qte == null || _qte.HandleTargetChanged(previousTarget, newTarget);
-        HandleTargetChanged(previousTarget, newTarget, shouldNotifyScanLost);
+        HandleTargetChanged(previousTarget, newTarget);
         CurrentTarget = newTarget;
 
         if (CurrentTarget != null)
         {
             CurrentTarget.OnScanning(deltaTime);
-            _qte?.UpdateCurrentTarget(CurrentTarget, deltaTime);
         }
 
         LidarEffect.DrawLidarEffect(_lidarRay.RayResults, CurrentTarget);
     }
 
-    private void HandleTargetChanged(ScannableObject previous, ScannableObject current, bool shouldNotifyScanLost)
+    private void HandleTargetChanged(ScannableObject previous, ScannableObject current)
     {
         if (previous == null && current != null)
         {
@@ -120,11 +100,7 @@ public class LidarScanFeature : MonoBehaviour
         if (previous != null && current != null && previous != current)
         {
             OnTargetLost?.Invoke();
-            if (shouldNotifyScanLost)
-            {
-                previous.OnScanStopped();
-            }
-
+            previous.OnScanStopped();
             OnTargetFind?.Invoke(current);
             return;
         }
@@ -132,10 +108,7 @@ public class LidarScanFeature : MonoBehaviour
         if (previous != null && current == null)
         {
             OnTargetLost?.Invoke();
-            if (shouldNotifyScanLost)
-            {
-                previous.OnScanStopped();
-            }
+            previous.OnScanStopped();
         }
     }
 

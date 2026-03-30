@@ -8,7 +8,7 @@ public class InventoryManager : MonoBehaviour
     public static InventoryManager Instance => _instance;
     
     [Header("Reference")]
-    [SerializeField] private ItemDataTable _table;
+    [SerializeField] private ItemDataTableSO tableSo;
     [SerializeField] private Transform _cachedExamineRoot;
     [SerializeField] private Transform _cachedHandRoot;
     
@@ -19,16 +19,16 @@ public class InventoryManager : MonoBehaviour
     //인벤토리 서비스 
     private InventoryService _inventoryService;
     //생성된 인스턴스 생성 및 관리
-    private RuntimeInstanceService _instanceInstanceService;
+    private RuntimeInstanceService _runtimeInstanceService;
     
     //들고 있는 아이템에 대한 서비스
-    private HandService _handService;
+    private HandViewService handViewService;
     
     //조사하기에 대한 서비스
-    private ExamineService _examineService;
+    private ExamineViewService examineViewService;
     
     //월드 오브젝트에 대한 서비스
-    private WorldService _worldService;
+    private WorldViewService worldViewService;
     
     //각 아이템을 생성하는 팩토리
     private ItemFactory _itemFactory;
@@ -36,11 +36,11 @@ public class InventoryManager : MonoBehaviour
     public IReadOnlyList<string> ReadonlyPlayerInventoryInstanceIds => _inventoryService.Items;
     public int Count => _inventoryService.Count;
     public int SelectedIndex => _inventoryService.SelectedIndex;
-    public string CurrentHandItemInstanceId => _handService.EquippedInstanceId;
-    public ItemInstanceData CurrentHandItem => GetItemInstance(_handService.EquippedInstanceId);
+    public string CurrentHandItemInstanceId => handViewService.EquippedInstanceId;
+    public RuntimeItemData CurrentHand => GetItemInstance(handViewService.EquippedInstanceId);
     
     public event Action<bool> OnInventoryToggled;
-    public event Action OnDataChanged;
+    public event Action OnInventoryItemChanged;
     public event Action<int> OnSelectionChanged;
 
     
@@ -57,13 +57,14 @@ public class InventoryManager : MonoBehaviour
             Destroy(gameObject);
         }
 
-        _instanceInstanceService = new RuntimeInstanceService(_table);
-        _instanceInstanceService.SetItemDataTable(_table);
+        _runtimeInstanceService = new RuntimeInstanceService(tableSo);
+        _runtimeInstanceService.SetItemDataTable(tableSo);
         _inventoryService = new InventoryService();
-        _itemFactory = new ItemFactory(_instanceInstanceService, this);
-        _handService = new HandService(_itemFactory, ResolveRoot(_cachedHandRoot));
-        _examineService = new ExamineService(_itemFactory, ResolveRoot(_cachedExamineRoot));
-        _worldService = new WorldService(_itemFactory);
+        _itemFactory = new ItemFactory(_runtimeInstanceService, this);
+        handViewService = new HandViewService(_itemFactory, ResolveRoot(_cachedHandRoot));
+        examineViewService = new ExamineViewService(_itemFactory, ResolveRoot(_cachedExamineRoot));
+        worldViewService = new WorldViewService(_itemFactory);
+        
         _inventoryService.OnInventoryChanged += HandleInventoryChanged;
         _inventoryService.OnSelectionChanged += HandleSelectionChanged;
         _inventoryService.OnItemRemoved += HandleItemRemoved;
@@ -85,84 +86,103 @@ public class InventoryManager : MonoBehaviour
     {
         _inventoryService.Select(index);
     }
-
-    public ItemInstanceData CreateItemInstance(int itemId)
+    
+    //아이템 아이디로 새로운 인스턴스 제작
+    public RuntimeItemData CreateItemInstance(int itemId)
     {
-        ItemInstanceData itemInstanceData = _instanceInstanceService.CreateInstance(itemId);
-        if (itemInstanceData == null)
+        RuntimeItemData runtimeItemData = _runtimeInstanceService.CreateInstance(itemId);
+        if (runtimeItemData == null)
         {
             Debug.LogError($"[{nameof(InventoryManager)}] Failed to create ItemInstance for item id {itemId}.", this);
         }
 
-        return itemInstanceData;
+        return runtimeItemData;
     }
 
-    public bool TryAddItem(ItemInstanceData itemInstanceData)
+    public RuntimeData CreateRuntimeData(InteractState defaultState = null)
     {
-        if (itemInstanceData == null)
+        RuntimeData runtimeData = _runtimeInstanceService.CreateRuntimeData(defaultState);
+        if (runtimeData == null)
+        {
+            Debug.LogError($"[{nameof(InventoryManager)}] Failed to create runtime data.", this);
+        }
+
+        return runtimeData;
+    }
+
+    public RuntimeData GetOrCreateRuntimeData(string instanceId, InteractState defaultState = null)
+    {
+        RuntimeData runtimeData = _runtimeInstanceService.GetOrCreateRuntimeData(instanceId, defaultState);
+        if (runtimeData == null)
+        {
+            Debug.LogError($"[{nameof(InventoryManager)}] Failed to get or create runtime data for instance id '{instanceId}'.", this);
+        }
+
+        return runtimeData;
+    }
+
+    public RuntimeItemData GetOrCreateItemInstance(string instanceId, int itemId)
+    {
+        RuntimeItemData runtimeItemData = _runtimeInstanceService.GetOrCreateItemInstance(instanceId, itemId);
+        if (runtimeItemData == null)
+        {
+            Debug.LogError($"[{nameof(InventoryManager)}] Failed to get or create item instance '{instanceId}' for item id {itemId}.", this);
+        }
+
+        return runtimeItemData;
+    }
+
+    //아이템 인스턴스로 인벤토리에 아이템 추가
+    public bool TryAddItem(RuntimeItemData runtimeItemData)
+    {
+        if (runtimeItemData == null)
         {
             Debug.LogError($"[{nameof(InventoryManager)}] Tried to add a null ItemInstance to inventory.", this);
             return false;
         }
 
-        _instanceInstanceService.RegisterInstance(itemInstanceData);
-        return _inventoryService.TryAdd(itemInstanceData.InstanceId);
+        _runtimeInstanceService.RegisterInstance(runtimeItemData);
+        return _inventoryService.TryAdd(runtimeItemData.InstanceId);
     }
 
+    //인벤토리의 해당칸에 위치한 아이템 제거
     public void RemoveItem(int index)
     {
         _inventoryService.RemoveAt(index);
     }
-
-    public bool RemoveItem(ItemInstanceData itemInstanceData)
+    
+    //아이템의 위치 변경
+    public void SwapItem(int index1, int index2)
     {
-        if (itemInstanceData == null)
-        {
-            return false;
-        }
-
-        return _inventoryService.Remove(itemInstanceData.InstanceId);
+        _inventoryService.Swap(index1, index2);
     }
-
+    
+    //현재 손에든 아이템을 제거함
     public bool RemoveCurrentHandItem()
     {
-        if (string.IsNullOrEmpty(_handService.EquippedInstanceId))
+        if (string.IsNullOrEmpty(handViewService.EquippedInstanceId))
         {
             return false;
         }
 
-        return _inventoryService.Remove(_handService.EquippedInstanceId);
+        return _inventoryService.Remove(handViewService.EquippedInstanceId);
     }
 
-    public bool HasItem(int itemId)
-    {
-        foreach (string instanceId in _inventoryService.Items)
-        {
-            ItemInstanceData item = GetItemInstance(instanceId);
-            if (item.ItemId == itemId) return true;
-        }
-
-        return false;
-    }
-
-    public int IndexOf(ItemInstanceData itemInstanceData)
-    {
-        return itemInstanceData == null ? -1 : _inventoryService.IndexOf(itemInstanceData.InstanceId);
-    }
-
+    //해당 인스턴스 아이디를 가진 아이템이 몇번째 칸에 있는지 확인
     public int IndexOf(string instanceId)
     {
         return _inventoryService.IndexOf(instanceId);
     }
 
-    public ItemInstanceData GetItemInstance(string instanceId)
+    //인스턴스 아이디로 데이터 탐색후 반환
+    public RuntimeItemData GetItemInstance(string instanceId)
     {
-        return _instanceInstanceService.GetInstance(instanceId);
+        return _runtimeInstanceService.GetItemInstance(instanceId);
     }
 
-    public bool TryGetItemInstance(string instanceId, out ItemInstanceData itemInstanceData)
+    public RuntimeData GetRuntimeData(string instanceId)
     {
-        return _instanceInstanceService.TryGetInstance(instanceId, out itemInstanceData);
+        return _runtimeInstanceService.GetRuntimeData(instanceId);
     }
 
     public string GetInventoryItemInstanceIdAt(int index)
@@ -175,83 +195,65 @@ public class InventoryManager : MonoBehaviour
         return _inventoryService.GetAt(index);
     }
 
-    public void SwapItem(int index1, int index2)
-    {
-        _inventoryService.Swap(index1, index2);
-    }
+
     #endregion
     
     #region Examine
-    public GameObject ShowExamineItem(ItemInstanceData itemInstanceData)
-    {
-        return ShowExamineItem(itemInstanceData != null ? itemInstanceData.InstanceId : null);
-    }
-
     public GameObject ShowExamineItem(string instanceId)
     {
-        ItemInstanceData itemInstanceData = GetItemInstance(instanceId);
-        if (itemInstanceData == null)
+        RuntimeItemData runtimeItemData = GetItemInstance(instanceId);
+        if (runtimeItemData == null)
         {
             Debug.LogError($"[{nameof(InventoryManager)}] Cannot show examine item because ItemInstance is null.", this);
             return null;
         }
 
-        return _examineService.Show(instanceId);
+        return examineViewService.Show(instanceId);
     }
 
     public void HideExamineItem()
     {
-        _examineService.Hide();
+        examineViewService.Hide();
     }
     #endregion
 
     #region World Object
-    public GameObject CreateWorldItem(ItemInstanceData itemInstanceData, Transform itemRoot)
-    {
-        return CreateWorldItem(itemInstanceData != null ? itemInstanceData.InstanceId : null, itemRoot);
-    }
-
     public GameObject CreateWorldItem(string instanceId, Transform itemRoot)
     {
-        ItemInstanceData itemInstanceData = GetItemInstance(instanceId);
-        if (itemInstanceData == null)
+        RuntimeItemData runtimeItemData = GetItemInstance(instanceId);
+        if (runtimeItemData == null)
         {
             Debug.LogError($"[{nameof(InventoryManager)}] Cannot create a world item from a null ItemInstance.", this);
             return null;
         }
 
-        return _worldService.Create(instanceId, itemRoot);
+        return worldViewService.Create(instanceId, itemRoot);
     }
     #endregion
     
     #region Hand Object
-    public GameObject ShowHandItem(ItemInstanceData itemInstanceData)
-    {
-        return ShowHandItem(itemInstanceData != null ? itemInstanceData.InstanceId : null);
-    }
-
     public GameObject ShowHandItem(string instanceId)
     {
-        ItemInstanceData itemInstanceData = GetItemInstance(instanceId);
-        if (itemInstanceData == null)
+        RuntimeItemData runtimeItemData = GetItemInstance(instanceId);
+        if (runtimeItemData == null)
         {
             Debug.LogError($"[{nameof(InventoryManager)}] Cannot show hand item because ItemInstance is null.", this);
             return null;
         }
 
-        return _handService.Show(instanceId);
+        return handViewService.Show(instanceId);
     }
 
     public void HideHandItem()
     {
-        _handService.Hide();
+        handViewService.Hide();
     }
     #endregion
 
     #region Binding Helpers
     private void HandleInventoryChanged()
     {
-        OnDataChanged?.Invoke();
+        OnInventoryItemChanged?.Invoke();
     }
 
     private void HandleSelectionChanged(int selectedIndex)
@@ -262,8 +264,8 @@ public class InventoryManager : MonoBehaviour
 
     private void HandleItemRemoved(string instanceId)
     {
-        _examineService.Remove(instanceId);
-        _handService.Remove(instanceId);
+        examineViewService.Remove(instanceId);
+        handViewService.Remove(instanceId);
     }
 
     private Transform ResolveRoot(Transform root)

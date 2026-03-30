@@ -22,7 +22,7 @@ public class UI_Inventory : MonoBehaviour
             return;
         }
 
-        InventoryManager.Instance.OnDataChanged += Refresh;
+        InventoryManager.Instance.OnInventoryItemChanged += Refresh;
         InventoryManager.Instance.OnSelectionChanged += HandleSelectionChanged;
         _uiInventoryContainer.OnSlotClicked += HandleSlotClicked;
         _uiInventoryContainer.OnSwapRequested += HandleSwapRequested;
@@ -41,7 +41,7 @@ public class UI_Inventory : MonoBehaviour
             return;
         }
 
-        InventoryManager.Instance.OnDataChanged -= Refresh;
+        InventoryManager.Instance.OnInventoryItemChanged -= Refresh;
         InventoryManager.Instance.OnSelectionChanged -= HandleSelectionChanged;
         _uiInventoryContainer.OnSlotClicked -= HandleSlotClicked;
         _uiInventoryContainer.OnSwapRequested -= HandleSwapRequested;

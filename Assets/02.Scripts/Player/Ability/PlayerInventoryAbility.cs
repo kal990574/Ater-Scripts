@@ -19,7 +19,7 @@ public class PlayerInventoryAbility : PlayerAbility
         _inventoryManager = InventoryManager.Instance;
         if (_inventoryManager != null)
         {
-            _inventoryManager.OnDataChanged += SyncCurrentHandItemState;
+            _inventoryManager.OnInventoryItemChanged += SyncCurrentHandItemState;
         }
     }
 
@@ -27,7 +27,7 @@ public class PlayerInventoryAbility : PlayerAbility
     {
         if (_inventoryManager != null)
         {
-            _inventoryManager.OnDataChanged -= SyncCurrentHandItemState;
+            _inventoryManager.OnInventoryItemChanged -= SyncCurrentHandItemState;
         }
     }
     
