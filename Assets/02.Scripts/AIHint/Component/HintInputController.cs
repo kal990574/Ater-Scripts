@@ -163,7 +163,7 @@ namespace _02.Scripts.AIHint.Component
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"[AIHint-Test] 예외: {e.Message}");
+                Debug.LogError($"[AIHint-Test] 예외: {e}");
             }
             finally
             {
