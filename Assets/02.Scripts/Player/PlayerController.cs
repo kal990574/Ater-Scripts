@@ -166,9 +166,10 @@ public class PlayerController : MonoBehaviour
 
     private void ToggleInventoryUI()
     {
+        bool wasInUIMode = _interactMode == PlayerInteractMode.UI;
         GetAbility<PlayerInventoryAbility>().ToggleInventory();
 
-        if (_interactMode == PlayerInteractMode.UI)
+        if (wasInUIMode)
         {
             ExitUIMode();
             return;
