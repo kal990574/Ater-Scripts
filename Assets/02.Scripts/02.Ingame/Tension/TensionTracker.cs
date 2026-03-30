@@ -1,3 +1,5 @@
-﻿public class TensionTracker
+﻿using UnityEngine;
+
+public class TensionTracker : MonoBehaviour
 {
 }
