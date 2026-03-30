@@ -4,7 +4,7 @@ using UnityEngine.Serialization;
 public class QuickTimeEventTester : MonoBehaviour
 {
     [Header("Required References")]
-    [SerializeField] private CircleTimingQTEUI _timingView;
+    [SerializeField] private UI_CircleTimingQTE _timingView;
     [FormerlySerializedAs("config")]
     [SerializeField] private TimingQuickTimeEventConfig _config;
 

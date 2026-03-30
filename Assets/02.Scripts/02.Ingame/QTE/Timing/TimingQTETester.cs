@@ -3,7 +3,7 @@ using UnityEngine;
 public class TimingQTETester : MonoBehaviour
 {
     [Header("Required References")]
-    [SerializeField] private CircleTimingQTEUI _timingView;
+    [SerializeField] private UI_CircleTimingQTE _timingView;
     [SerializeField] private TimingQuickTimeEventConfig _config;
 
     [Header("Input")]
