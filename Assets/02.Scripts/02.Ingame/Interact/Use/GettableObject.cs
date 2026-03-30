@@ -24,21 +24,23 @@ public class GettableObject : Interactable
         }
 
         InventoryManager.Instance.TryAddItem(runtimeItemData);
+        OnInteractActivate();
         
         if (TryGetHub(out GameEventHub hub) == false)
         {
             Debug.LogWarning("[PickupEventEmitter] GameEventHub가 존재하지 않습니다.");
+            Destroy(gameObject);
             return;
         }
         
         GameEventContext eventContext = CreateContext();
-        ItemGetEvent gameEvent = new ItemGetEvent(
+        GetInteractEvent gameInteractEvent = new GetInteractEvent(
              eventContext, 
             runtimeItemData.InstanceId, 
-            runtimeItemData.ItemId);
+            runtimeItemData.ItemId,
+             gameObject.name);
 
-        hub.Publish(in gameEvent);
-        OnInteractActivate();
+        hub.Publish(in gameInteractEvent);
         Destroy(gameObject);
     }
 }

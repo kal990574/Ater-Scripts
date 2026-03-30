@@ -1,10 +1,10 @@
-﻿public readonly struct ScanInteractEvent
+﻿public readonly struct ScanCompleteEvent: IGameEvent
 {
     public GameEventContext Context { get; }
     public string InstanceId { get; }
     public string GameObjectName { get; }
 
-    public ScanInteractEvent(GameEventContext context, string instanceId, string gameObjectName)
+    public ScanCompleteEvent(GameEventContext context, string instanceId, string gameObjectName)
     {
         Context = context;
         InstanceId = instanceId;

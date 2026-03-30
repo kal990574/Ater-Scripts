@@ -2,12 +2,13 @@ using System;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class ScannableObject : MonoBehaviour, IScannable
+public class ScannableObject : GameEventPublisher, IScannable
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
     [SerializeField] private Rigidbody _targetRigidbody;
     
+    private IRuntimeView _instance;
     private ScanProgress _progress;
     private ScanFSM _fsm;
     private ScannableQTEInvoker _qteInvoker;
@@ -58,15 +59,15 @@ public class ScannableObject : MonoBehaviour, IScannable
             enabled = false;
             return;
         }
-
-        if (_targetRigidbody == null)
-        {
-            _targetRigidbody = GetComponent<Rigidbody>();
-        }
-
+        
         if (_targetRigidbody == null)
         {
             _targetRigidbody = GetComponentInParent<Rigidbody>();
+        }
+
+        if (_instance == null)
+        {
+            _instance = GetComponentInParent<IRuntimeView>();
         }
         
         _qteInvoker = GetComponent<ScannableQTEInvoker>();
@@ -135,6 +136,26 @@ public class ScannableObject : MonoBehaviour, IScannable
         
         OnScanComplete?.Invoke();
         ScanCompleteEvent?.Invoke();
+        
+        if (TryGetHub(out GameEventHub hub) == false)
+        {
+            Debug.LogWarning("[PickupEventEmitter] GameEventHub가 존재하지 않습니다.");
+            return;
+        }
+
+        if (_instance == null)
+        {
+            Debug.LogWarning($"[{nameof(ScannableObject)}] {nameof(IRuntimeView)} is missing. Event publish skipped.", this);
+            return;
+        }
+        
+        GameEventContext eventContext = CreateContext();
+        ScanCompleteEvent gameCompleteEvent = new ScanCompleteEvent(
+            eventContext, 
+            _instance.InstanceId, 
+            gameObject.name);
+
+        hub.Publish(in gameCompleteEvent);
     }
     
     public void AddProgress(float amount)
