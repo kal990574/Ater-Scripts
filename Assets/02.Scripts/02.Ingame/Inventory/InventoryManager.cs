@@ -14,7 +14,7 @@ public class InventoryManager : MonoBehaviour
     
     [Header("Debug/DontChange")]
     [SerializeField] private bool _isInventoryUIOn = false;
-    [SerializeField] private int _selectedIndex = -1;
+    
     
     //인벤토리 서비스 
     private InventoryService _inventoryService;
@@ -258,7 +258,6 @@ public class InventoryManager : MonoBehaviour
 
     private void HandleSelectionChanged(int selectedIndex)
     {
-        _selectedIndex = selectedIndex;
         OnSelectionChanged?.Invoke(selectedIndex);
     }
 

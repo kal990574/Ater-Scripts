@@ -84,7 +84,7 @@ public class ExamineViewService
         {
             return null;
         }
-
+        MoveToRoot(created);
         created.SetActive(false);
         _cache[instanceId] = created;
         return created;
