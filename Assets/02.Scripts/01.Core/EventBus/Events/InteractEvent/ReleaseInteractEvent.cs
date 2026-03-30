@@ -1,10 +1,10 @@
-﻿public readonly struct ItemGetEvent : IGameEvent
+﻿public readonly struct ReleaseInteractEvent
 {
     public GameEventContext Context { get; }
     public string InstanceId { get; }
     public int ItemId { get; }
 
-    public ItemGetEvent(GameEventContext context, string instanceId , int itemID)
+    public ReleaseInteractEvent(GameEventContext context, string instanceId , int itemID)
     {
         Context = context;
         InstanceId = instanceId;
