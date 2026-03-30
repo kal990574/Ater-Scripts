@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CircleTimingQTEUI : MonoBehaviour, ITimingQuickTimeEventView
+public class UI_CircleTimingQTE : MonoBehaviour, ITimingQuickTimeEventView
 {
     private const float MaxProgress = 100f;
     private const float FullCircleAngle = 360f;

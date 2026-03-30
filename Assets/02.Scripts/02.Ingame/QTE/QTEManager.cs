@@ -8,7 +8,7 @@ public class QTEManager : MonoBehaviour
     public static QTEManager Instance { get; private set; }
 
     [Header("Required References")]
-    [SerializeField] private CircleTimingQTEUI _circleTimingQteUi;
+    [SerializeField] private UI_CircleTimingQTE uiCircleTimingQteUi;
     [FormerlySerializedAs("QteConfig")]
     [SerializeField] private TimingQuickTimeEventConfig _qteConfig;
 
@@ -16,7 +16,7 @@ public class QTEManager : MonoBehaviour
     private IQTEInvoker _currentOwner;
     private Action<EQuickTimeEventResult> _onEnded;
 
-    public ITimingQuickTimeEventView TimingQuickTimeEventView => _circleTimingQteUi;
+    public ITimingQuickTimeEventView TimingQuickTimeEventView => uiCircleTimingQteUi;
     public bool IsPlaying => _currentEvent != null && _currentEvent.IsPlaying;
     public IQTEInvoker CurrentOwner => _currentOwner;
     public IQuickTimeEvent CurrentEvent => _currentEvent;
@@ -31,14 +31,14 @@ public class QTEManager : MonoBehaviour
 
         Instance = this;
 
-        if (_circleTimingQteUi == null || _qteConfig == null)
+        if (uiCircleTimingQteUi == null || _qteConfig == null)
         {
             Debug.LogError($"[{nameof(QTEManager)}] Required references are missing.", this);
             enabled = false;
             return;
         }
 
-        _circleTimingQteUi.Hide();
+        uiCircleTimingQteUi.Hide();
     }
 
     private void Update()
