@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class DetectableObject : MonoBehaviour, IDetectable
+public class DetectableObject : GameEventPublisher , IDetectable
 {
     [SerializeField] protected bool _isDetectable = true;
     protected bool _isOnDetected = false;

@@ -12,7 +12,8 @@ public class LidarScanFeature : MonoBehaviour
 
     [Header("Optional Settings")]
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
-
+    
+    
     private LidarEffect _lidarEffect;
     private LidarRaycast _lidarRay;
 
