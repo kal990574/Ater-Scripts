@@ -19,6 +19,8 @@ public class InteractTargetShaderModifier : MonoBehaviour
     
     private Tween _hitBlendTween;
     private float _currentHitBlend;
+    private bool _isDetected;
+    private float _currentScanRatio;
     
     private void Start()
     {
@@ -82,7 +84,7 @@ public class InteractTargetShaderModifier : MonoBehaviour
             ApplyProgressState(0.0f);
         }
         
-        ShowOutline(false);
+        RefreshOutlineState();
         SetHitBlend(0.0f);
     }
 
@@ -130,13 +132,17 @@ public class InteractTargetShaderModifier : MonoBehaviour
         {
             ApplyProgressState(scannable.ProgressRatio);
         }
+
+        RefreshOutlineState();
     }
 
     private void ApplyProgressState(float ratio)
     {
+        _currentScanRatio = ratio;
         SetBlendCutOffRatio(ratio);
         UpdateOptionalEffects(1.0f - ratio);
         UpdateOutlineColor(ratio);
+        RefreshOutlineState();
     }
 
     private void UpdateOptionalEffects(float inverseRatio)
@@ -228,6 +234,18 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void ShowOutline(bool show)
     {
-        _shaderPropertyController.SetOutlineEnabled(show);
+        _isDetected = show;
+        RefreshOutlineState();
+    }
+
+    private void RefreshOutlineState()
+    {
+        bool shouldShowOutline = _isDetected || IsScanInProgress();
+        _shaderPropertyController.SetOutlineEnabled(shouldShowOutline);
+    }
+
+    private bool IsScanInProgress()
+    {
+        return _currentScanRatio > 0.0f && _currentScanRatio < 1.0f;
     }
 }
