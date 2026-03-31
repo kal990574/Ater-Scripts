@@ -137,6 +137,14 @@ public class PlayerController : MonoBehaviour
                 HandleItemModeInput();
                 break;
         }
+
+        float scroll = Input.ScrollInput;
+        if(!Mathf.Approximately(scroll, 0f))
+        {
+            SetActionMode(PlayerInteractMode.Item);
+            int direction = scroll > 0f ? 1 : -1;
+            GetAbility<PlayerInventoryAbility>().CycleHandItem(direction);
+        }
     }
 
     private void HandleItemModeInput()
