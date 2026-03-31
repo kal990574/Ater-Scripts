@@ -126,6 +126,14 @@ public class PlayerInventoryAbility : PlayerAbility
         _inventoryManager?.HideHandItem();
     }
 
+    public void CycleHandItem(int direction)
+    {
+        if (_inventoryManager == null || _inventoryManager.Count == 0) return;
+        int current = _handIndex < 0 ? 0 : _handIndex;
+        int newIndex = (current + direction + _inventoryManager.Count) % _inventoryManager.Count;
+        TryPickUpItem(newIndex);
+    }
+
     private void SyncCurrentHandItemState()
     {
         if (_inventoryManager == null || string.IsNullOrEmpty(_currentHandInstanceId))
