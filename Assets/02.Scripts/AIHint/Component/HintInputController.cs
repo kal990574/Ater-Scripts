@@ -28,6 +28,9 @@ namespace _02.Scripts.AIHint.Component
         [Header("오디오 출력")]
         [SerializeField] private AudioSource _audioSource;
 
+        [Header("UI")]
+        [SerializeField] private HintUIComponent _hintUI;
+
 #if UNITY_EDITOR
         [Header("테스트")]
         [SerializeField] private string _testQuery = "금고 비밀번호가 뭐야?";
@@ -100,6 +103,7 @@ namespace _02.Scripts.AIHint.Component
 
             _isRecording = true;
             _recordStartTime = Time.time;
+            _hintUI.ShowRecording();
             Debug.Log("[AIHint] 녹음 시작...");
         }
 
@@ -120,6 +124,8 @@ namespace _02.Scripts.AIHint.Component
             _recordingClip.GetData(samples, 0);
             byte[] wavData = WavEncoder.Encode(samples, _sampleRate);
 
+            _hintUI.ShowProcessing();
+
             try
             {
                 var playerState = CollectPlayerState();
@@ -129,6 +135,7 @@ namespace _02.Scripts.AIHint.Component
             catch (System.Exception e)
             {
                 Debug.LogError($"[AIHint] 처리 실패: {e.Message}");
+                _hintUI.Hide();
             }
             finally
             {
@@ -140,10 +147,12 @@ namespace _02.Scripts.AIHint.Component
         private async UniTaskVoid TestHintWithText()
         {
             _isProcessing = true;
+            _hintUI.ShowRecording();
             Debug.Log($"[AIHint-Test] 질문: {_testQuery}");
 
             try
             {
+                _hintUI.ShowProcessing();
                 var playerState = CollectPlayerState();
                 var request = new HintRequest(_testQuery, playerState);
                 HintResponse response = await _hintService.Llm.GenerateHintAsync(request);
@@ -151,10 +160,12 @@ namespace _02.Scripts.AIHint.Component
                 if (!response.IsSuccess)
                 {
                     Debug.LogWarning($"[AIHint-Test] LLM 실패: {response.HintText}");
+                    _hintUI.Hide();
                     return;
                 }
 
                 Debug.Log($"[AIHint-Test] 힌트: {response.HintText}");
+                _hintUI.ShowResponse(response.HintText);
 
                 byte[] ttsAudio = await _hintService.Tts.SynthesizeAsync(response.HintText);
                 Debug.Log($"[AIHint-Test] TTS 완료: {ttsAudio.Length} bytes");
@@ -164,6 +175,7 @@ namespace _02.Scripts.AIHint.Component
             catch (System.Exception e)
             {
                 Debug.LogError($"[AIHint-Test] 예외: {e}");
+                _hintUI.Hide();
             }
             finally
             {
@@ -177,14 +189,20 @@ namespace _02.Scripts.AIHint.Component
             if (!result.IsSuccess)
             {
                 Debug.LogWarning($"[AIHint] 실패: {result.HintText}");
+                _hintUI.Hide();
                 return;
             }
-            
+
             Debug.Log($"[AIHint] 힌트: {result.HintText}");
+            _hintUI.ShowResponse(result.HintText);
 
             if (result.AudioData != null && result.AudioData.Length > 0)
             {
                 PlayHintAudio(result.AudioData);
+            }
+            else
+            {
+                _hintUI.HideAfterDelay(0f).Forget();
             }
         }
 
@@ -193,6 +211,7 @@ namespace _02.Scripts.AIHint.Component
             var clip = WavDecoder.Decode(wavData);
             _audioSource.PlayOneShot(clip);
             Debug.Log($"[AIHint] 음성 재생 시작({clip.length:F1}초");
+            _hintUI.HideAfterDelay(clip.length).Forget();
         }
 
         private PlayerHintState CollectPlayerState()
