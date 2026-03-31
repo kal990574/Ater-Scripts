@@ -8,7 +8,7 @@ public class InvenTester : MonoBehaviour
     [ContextMenu("add")]
     void AddItem()
     {
-        _inven.TryAddItem(_inven.CreateItemInstance(2));
+        _inven.TryAddItem(_inven.CreateItemInstance(3));
         //
     }
 

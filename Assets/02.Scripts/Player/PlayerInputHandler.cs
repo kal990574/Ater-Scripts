@@ -17,6 +17,7 @@ namespace _02.Scripts.Player
         private InputAction _inventoryToggleAction;
         private InputAction _hintToggleAction;
         private InputAction[] _itemSlotActions;
+        private InputAction _scrollAction;
         
         public Vector2 MoveInput => _moveAction.ReadValue<Vector2>();
         public Vector2 LookInput => _lookAction.ReadValue<Vector2>();
@@ -48,6 +49,8 @@ namespace _02.Scripts.Player
             }
         }
 
+        public float ScrollInput => _scrollAction.ReadValue<Vector2>().y;
+
         private void Awake()
         {
             InputActionMap playerMap = _inputActions.FindActionMap("Player");
@@ -65,6 +68,7 @@ namespace _02.Scripts.Player
             {
                 _itemSlotActions[i] = playerMap.FindAction($"ItemSlot{i + 1}");
             }
+            _scrollAction = playerMap.FindAction("Scroll");
         }
 
         private void OnEnable()
