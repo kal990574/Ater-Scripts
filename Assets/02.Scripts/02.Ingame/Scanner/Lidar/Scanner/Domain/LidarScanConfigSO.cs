@@ -17,11 +17,18 @@ public class LidarScanConfigSO : ScriptableObject
     [Header("Effect")]
     [Min(0f)]
     [SerializeField] private float _drawDelay = 0.1f;
-
+    [Min(0f)]
+    [SerializeField] private float _maxLineLength = 0.0f;
+    [SerializeField] private Gradient _nonTargetGradient = default;
+    [SerializeField] private Gradient _onTargetGradient = default;
 
     public RaycastSetting Query => _query;
     public float ConeAngle => _coneAngle;
     public int RingCount => _ringCount;
     public int RaysPerRing => _raysPerRing;
     public float DrawDelay => _drawDelay;
+    public float MaxLineLength => _maxLineLength;
+    
+    public Gradient  NonTargetGradient => _nonTargetGradient;
+    public Gradient OnTargetGradient => _onTargetGradient;
 }

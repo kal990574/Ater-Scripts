@@ -60,7 +60,14 @@ namespace _02.Scripts.AIHint.Component
         private void Update()
         {
             if (_isProcessing) return;
-
+            
+#if UNITY_EDITOR
+            if (Input.GetKeyDown(KeyCode.T))
+            {
+                TestHintWithText().Forget();
+                return;
+            }
+#endif
             if (_isRecording && Time.time - _recordStartTime >= _maxRecordSeconds)
             {
                 StopRecordingAndRecognize().Forget();
@@ -198,11 +205,11 @@ namespace _02.Scripts.AIHint.Component
 
         private ChapterData LoadCurrentChapterData()
         {
-            var json = Resources.Load<TextAsset>("ChapterData/chapter_1");
+            var json = Resources.Load<TextAsset>("ChapterData/chapter_tutorial");
 
             if (json == null)
             {
-                Debug.LogError("[AIHint] ChapterData JSON 로드 실패: Resources/ChapterData/chapter_1");
+                Debug.LogError("[AIHint] ChapterData JSON 로드 실패: Resources/ChapterData/chapter_tutorial");
                 return new ChapterData();
             }
 
