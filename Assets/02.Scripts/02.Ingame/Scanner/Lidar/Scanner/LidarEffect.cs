@@ -63,7 +63,7 @@ public class LidarEffect
     private void DrawTargetLine(ScannableObject target)
     {
         Vector3 targetPoint = GetPointOnTargetSurface(target);
-        SetLineColor(Color.green);
+        SetLineColor(_config.OnTargetGradient);
         SetLine(_muzzle.position, targetPoint);
     }
 
@@ -76,7 +76,7 @@ public class LidarEffect
         }
 
         LidarRayData rayData = rayDatas[Random.Range(0, rayDatas.Count)];
-        SetLineColor(Color.red);
+        SetLineColor(_config.NonTargetGradient);
         SetLine(_muzzle.position, rayData.EndPoint);
     }
 
@@ -139,9 +139,31 @@ public class LidarEffect
             return;
         }
 
+        endPoint = GetClampedEndPoint(startPoint, endPoint);
+
         _lineRenderer.enabled = true;
         _lineRenderer.SetPosition(0, startPoint);
         _lineRenderer.SetPosition(1, endPoint);
+    }
+
+    private Vector3 GetClampedEndPoint(Vector3 startPoint, Vector3 endPoint)
+    {
+        float maxLineLength = _config.MaxLineLength;
+
+        if (maxLineLength <= 0.0f)
+        {
+            return endPoint;
+        }
+
+        Vector3 lineVector = endPoint - startPoint;
+        float lineLength = lineVector.magnitude;
+
+        if (lineLength <= maxLineLength || lineLength <= Mathf.Epsilon)
+        {
+            return endPoint;
+        }
+
+        return startPoint + lineVector / lineLength * maxLineLength;
     }
 
     private void ClearLine()
@@ -163,14 +185,14 @@ public class LidarEffect
         _lineRenderer.SetPosition(1, origin);
     }
 
-    private void SetLineColor(Color color)
+    private void SetLineColor(Gradient color)
     {
         if (_lineRenderer == null)
         {
             return;
         }
 
-        _lineRenderer.startColor = color;
-        _lineRenderer.endColor = color;
+        _lineRenderer.colorGradient = color;
+        _lineRenderer.colorGradient = color;
     }
 }

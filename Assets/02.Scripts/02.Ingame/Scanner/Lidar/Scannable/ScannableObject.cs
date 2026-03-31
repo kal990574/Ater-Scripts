@@ -1,3 +1,4 @@
+
 using System;
 using UnityEngine;
 using UnityEngine.Events;
@@ -18,8 +19,11 @@ public class ScannableObject : GameEventPublisher, IScannable,IStateApplier
     public float CurrentProgress => _progress != null ? _progress.CurrentProgress : 0.0f;
     public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
     public EScanState State => _fsm.CurrentStateType;
+
     
     public event Action<float> OnScanProgressChanged; //ratio전달
+    public event Action OnScanStart;
+    public event Action OnScanEnd;
     public event Action OnScanComplete;
     
     [Header("Scene Event")]
@@ -101,6 +105,11 @@ public class ScannableObject : GameEventPublisher, IScannable,IStateApplier
 
     public void OnScanStarted()
     {
+        if (IsProgressComplete)
+        {
+            return;
+        }
+        
         OnScanStartUnityEvent?.Invoke();
     }
 
@@ -121,7 +130,7 @@ public class ScannableObject : GameEventPublisher, IScannable,IStateApplier
         {
             return;
         }
-
+        
         bool shouldNotifyScanLost = _qteInvoker == null || _qteInvoker.HandleScanStopped();
         if (shouldNotifyScanLost)
         {
@@ -266,4 +275,5 @@ public class ScannableObject : GameEventPublisher, IScannable,IStateApplier
             interactObject.SetActivate(true);
         }
     }
+
 }
