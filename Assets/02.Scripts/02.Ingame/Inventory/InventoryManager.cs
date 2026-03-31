@@ -14,10 +14,11 @@ public class InventoryManager : MonoBehaviour
     
     [Header("Debug/DontChange")]
     [SerializeField] private bool _isInventoryUIOn = false;
-    [SerializeField] private int _selectedIndex = -1;
+    [SerializeField] private int _selectedIndex = -1; //UI전용
     
     //인벤토리 서비스 
     private InventoryService _inventoryService;
+
     //생성된 인스턴스 생성 및 관리
     private RuntimeInstanceService _runtimeInstanceService;
     
@@ -43,7 +44,6 @@ public class InventoryManager : MonoBehaviour
     public event Action OnInventoryItemChanged;
     public event Action<int> OnSelectionChanged;
 
-    
     
     private void Awake()
     {
@@ -240,7 +240,6 @@ public class InventoryManager : MonoBehaviour
             Debug.LogError($"[{nameof(InventoryManager)}] Cannot show hand item because ItemInstance is null.", this);
             return null;
         }
-
         return handViewService.Show(instanceId);
     }
 
