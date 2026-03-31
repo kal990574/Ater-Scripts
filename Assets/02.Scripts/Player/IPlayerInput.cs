@@ -19,5 +19,6 @@ namespace _02.Scripts.Player
         bool InventoryToggleInput { get; }
         bool HintToggleInput { get; }
         int ItemSlotInput { get; }
+        float ScrollInput { get; }
     }
 }

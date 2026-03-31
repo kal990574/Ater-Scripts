@@ -13,17 +13,18 @@ public class UI_SonarSlots : MonoBehaviour
     public int MaxCount => _slots.Count;
     public int CurrentCount => _currentCount;
 
-    //private void Update()
-    //{
-    //    if (Input.GetMouseButtonDown(0))
-    //        UseCount();
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+            UseCount();
 
-    //    if (Input.GetKeyDown(KeyCode.F))
-    //        AddCount();
-    //}
+        if (Input.GetKeyDown(KeyCode.F))
+            AddCount();
+    }
 
     private void Start()
     {
+        SetCount(MaxCount);
         RefreshSlot();
     }
 

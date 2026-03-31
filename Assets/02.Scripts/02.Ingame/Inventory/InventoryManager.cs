@@ -43,6 +43,7 @@ public class InventoryManager : MonoBehaviour
     public event Action<bool> OnInventoryToggled;
     public event Action OnInventoryItemChanged;
     public event Action<int> OnSelectionChanged;
+    public event Action<int> OnHandSlotChanged;
 
     
     private void Awake()
@@ -68,6 +69,8 @@ public class InventoryManager : MonoBehaviour
         _inventoryService.OnInventoryChanged += HandleInventoryChanged;
         _inventoryService.OnSelectionChanged += HandleSelectionChanged;
         _inventoryService.OnItemRemoved += HandleItemRemoved;
+
+        handViewService.OnEquippedChanged += HandleHandEquippedChanged;
     }
     
     #region Managing Inventory
@@ -272,4 +275,10 @@ public class InventoryManager : MonoBehaviour
         return root != null ? root : transform;
     }
     #endregion
+
+    private void HandleHandEquippedChanged(string instanceId)
+    {
+        int index = string.IsNullOrEmpty(instanceId) ? -1 : _inventoryService.IndexOf(instanceId);
+        OnHandSlotChanged?.Invoke(index);
+    }
 }
