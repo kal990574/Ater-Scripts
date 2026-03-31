@@ -46,7 +46,7 @@ public class UI_ShortcutPanel : MonoBehaviour
 
     private void Refresh()
     {
-        for(int i = 0; i < _iconImages.Length;i++)
+        for(int i = 0; i < _iconImages.Length; i++)
         {
             string instanceId = InventoryManager.Instance.GetInventoryItemInstanceIdAt(i);
             RuntimeItemData data = string.IsNullOrEmpty(instanceId) ? null : InventoryManager.Instance.GetItemInstance(instanceId);

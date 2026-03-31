@@ -7,13 +7,13 @@ public class UI_ExplainText : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _explainText;
     [SerializeField] private ExplainDataSO _explainData;
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.A))
-            Show("press_key_exit");
-        if (Input.GetKeyDown(KeyCode.S))
-            Hide();
-    }
+    //private void Update()
+    //{
+    //    if (Input.GetKeyDown(KeyCode.A))
+    //        Show("press_key_exit");
+    //    if (Input.GetKeyDown(KeyCode.S))
+    //        Hide();
+    //}
 
     public void Show(string id)
     {
