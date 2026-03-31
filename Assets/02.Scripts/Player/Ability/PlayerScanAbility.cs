@@ -6,15 +6,17 @@ using UnityEngine;
 //소나와 라이더 스캔 관장
 public class PlayerScanAbility : PlayerAbility
 {
-
     [SerializeField] private LidarScanFeature _lidarScanFeature;
     [SerializeField] private SonarScanFeature _sonarScanFeature;
-    private IPlayerInput _input;
+
+    [SerializeField] private GameObject _scannerModel;
+    [SerializeField] private bool _isActive = false;
+    
     private void Start()
     {
-        _input = _owner.Input;
         _lidarScanFeature.Initialize();
         _sonarScanFeature.Initialize();
+        _isActive = true;
         _owner.OnModeChanged += SetScannerVisible;
     }
 
@@ -22,11 +24,13 @@ public class PlayerScanAbility : PlayerAbility
     {
         if (mode == PlayerInteractMode.Scan)
         {
-            gameObject.SetActive(true);
+            _scannerModel.SetActive(true);
+            _isActive = true;
         }
         else
         {
-            gameObject.SetActive(false);
+            _scannerModel.SetActive(false);
+            _isActive = false;
         }
     }
 
@@ -50,11 +54,19 @@ public class PlayerScanAbility : PlayerAbility
 
     public void LidarScanActiveAndUpdate()
     {
+        if (!_isActive)
+        {
+            return;
+        }
         _lidarScanFeature.UpdateScan(Time.deltaTime);
     }
 
     public void SonarActive()
     {
+        if (!_isActive)
+        {
+            return;
+        }
         _sonarScanFeature.TryScan();
     }
 }

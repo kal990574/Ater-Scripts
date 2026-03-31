@@ -66,66 +66,76 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (_interactMode == PlayerInteractMode.UI)
+        if (TryHandleBlockedModeInput())
         {
-            if (_input.InventoryToggleInput)
-            {
-                GetAbility<PlayerInventoryAbility>().ToggleInventory();
-            }
-
             return;
         }
 
-        if (_interactMode == PlayerInteractMode.Puzzle)
-        {
-            HandlePuzzleModeInput();
-            return;
-        }
+        HandleGameplayInteractionInput();
+        HandleModeSwitchInput();
+        HandleCurrentModeInput();
+    }
 
+    private bool TryHandleBlockedModeInput()
+    {
+        switch (_interactMode)
+        {
+            case PlayerInteractMode.UI:
+                HandleUIModeInput();
+                return true;
+            case PlayerInteractMode.Puzzle:
+                HandlePuzzleModeInput();
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void HandleUIModeInput()
+    {
+        if (_input.InventoryToggleInput)
+        {
+            ToggleInventoryUI();
+        }
+    }
+
+    private void HandleGameplayInteractionInput()
+    {
         if (Target != null && _input.InteractInput)
         {
             GetAbility<PlayerInteractAbility>().Interact(Target);
         }
+    }
 
-        if (_interactMode == PlayerInteractMode.Scan)
-        {
-            ScanModeInput();
-        }
-
+    private void HandleModeSwitchInput()
+    {
         if (_input.ModeToggleInput)
         {
-            GetAbility<PlayerInventoryAbility>().ClearHandItem();
-            SetActionMode(PlayerInteractMode.Scan);
+            SwitchToScanMode();
         }
 
         if (_input.InventoryToggleInput)
         {
-            GetAbility<PlayerInventoryAbility>().ToggleInventory();
+            ToggleInventoryUI();
         }
 
-        if (_input.ItemSlotInput >= 0 && _input.ItemSlotInput <= 5)
+        int itemSlotIndex = _input.ItemSlotInput;
+        if (itemSlotIndex >= 0 && itemSlotIndex <= 5)
         {
-            SetActionMode(PlayerInteractMode.Item);
-            GetAbility<PlayerInventoryAbility>().TryPickUpItem(_input.ItemSlotInput);
+            SwitchToItemMode(itemSlotIndex);
         }
+    }
 
-        if (_interactMode == PlayerInteractMode.Item)
+    private void HandleCurrentModeInput()
+    {
+        switch (_interactMode)
         {
-            PlayerInventoryAbility inventoryAbility = GetAbility<PlayerInventoryAbility>();
-            if (_input.LmbPressInput)
-            {
-                inventoryAbility.BeginReleaseHandItem();
-            }
-
-            if (_input.LmbHoldInput)
-            {
-                inventoryAbility.ChargeReleaseHandItem(Time.deltaTime);
-            }
-
-            if (_input.LmbReleaseInput)
-            {
-                inventoryAbility.ReleaseHandItem();
-            }
+            case PlayerInteractMode.Scan:
+                ScanModeInput();
+                break;
+            case PlayerInteractMode.Item:
+                HandleItemModeInput();
+                break;
         }
 
         float scroll = Input.ScrollInput;
@@ -135,6 +145,51 @@ public class PlayerController : MonoBehaviour
             int direction = scroll > 0f ? 1 : -1;
             GetAbility<PlayerInventoryAbility>().CycleHandItem(direction);
         }
+    }
+
+    private void HandleItemModeInput()
+    {
+        PlayerInventoryAbility inventoryAbility = GetAbility<PlayerInventoryAbility>();
+        if (_input.LmbPressInput)
+        {
+            inventoryAbility.BeginReleaseHandItem();
+        }
+
+        if (_input.LmbHoldInput)
+        {
+            inventoryAbility.ChargeReleaseHandItem(Time.deltaTime);
+        }
+
+        if (_input.LmbReleaseInput)
+        {
+            inventoryAbility.ReleaseHandItem();
+        }
+    }
+
+    private void SwitchToScanMode()
+    {
+        GetAbility<PlayerInventoryAbility>().ClearHandItem();
+        SetActionMode(PlayerInteractMode.Scan);
+    }
+
+    private void ToggleInventoryUI()
+    {
+        bool wasInUIMode = _interactMode == PlayerInteractMode.UI;
+        GetAbility<PlayerInventoryAbility>().ToggleInventory();
+
+        if (wasInUIMode)
+        {
+            ExitUIMode();
+            return;
+        }
+
+        EnterUIMode();
+    }
+
+    private void SwitchToItemMode(int itemSlotIndex)
+    {
+        SetActionMode(PlayerInteractMode.Item);
+        GetAbility<PlayerInventoryAbility>().TryPickUpItem(itemSlotIndex);
     }
 
     private void ScanModeInput()

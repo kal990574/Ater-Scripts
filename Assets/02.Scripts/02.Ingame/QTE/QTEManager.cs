@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
-public class QTEManager : MonoBehaviour
+public class QTEManager : GameEventPublisher
 {
     public static QTEManager Instance { get; private set; }
 
@@ -141,8 +141,31 @@ public class QTEManager : MonoBehaviour
         _currentEvent = null;
         _currentOwner = null;
         _onEnded = null;
-
         callback?.Invoke(result);
+        
+        if (TryGetHub(out GameEventHub hub) == false)
+        {
+            Debug.LogWarning("[PickupEventEmitter] GameEventHub가 존재하지 않습니다.");
+            return;
+        }
+        GameEventContext eventContext = CreateContext();
+        switch (result)
+        {
+            case EQuickTimeEventResult.Fail:
+                QTEFailEvent failEvent = new QTEFailEvent(eventContext, gameObject.name);
+                hub.Publish(in failEvent);
+                break;
+            case EQuickTimeEventResult.Success:
+                QTEGoodEvent goodEvent = new QTEGoodEvent(eventContext, gameObject.name);
+                hub.Publish(in goodEvent);
+                break;
+            case EQuickTimeEventResult.GreatSuccess:
+                QTEGreatEvent greatEvent = new QTEGreatEvent(eventContext, gameObject.name);
+                hub.Publish(in greatEvent);
+                break;
+        }
+
+        
     }
 
     private IQuickTimeEvent CreateEvent(QTEConfigSOBase config)

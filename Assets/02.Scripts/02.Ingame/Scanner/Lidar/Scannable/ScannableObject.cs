@@ -1,17 +1,20 @@
+
 using System;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class ScannableObject : MonoBehaviour, IScannable
+public class ScannableObject : GameEventPublisher, IScannable,IStateApplier
 {
     [Header("Required References")]
     [SerializeField] private ScanProgressSetting _settings;
     [SerializeField] private Rigidbody _targetRigidbody;
     
+    private IRuntimeView _instance;
     private ScanProgress _progress;
     private ScanFSM _fsm;
     private ScannableQTEInvoker _qteInvoker;
     
+    public IRuntimeView RuntimeView => _instance;
     public bool IsProgressComplete => _progress != null && _progress.IsActivated;
     public float CurrentProgress => _progress != null ? _progress.CurrentProgress : 0.0f;
     public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
@@ -19,12 +22,14 @@ public class ScannableObject : MonoBehaviour, IScannable
 
     
     public event Action<float> OnScanProgressChanged; //ratio전달
+    public event Action OnScanStart;
+    public event Action OnScanEnd;
     public event Action OnScanComplete;
     
     [Header("Scene Event")]
-    public UnityEvent ScanStartEvent;
-    public UnityEvent ScanEndEvent;
-    public UnityEvent ScanCompleteEvent;
+    public UnityEvent OnScanStartUnityEvent;
+    public UnityEvent OnScanEndUnityEvent;
+    public UnityEvent OnScanCompleteUnityEvent;
     
     private void Awake()
     {
@@ -58,15 +63,15 @@ public class ScannableObject : MonoBehaviour, IScannable
             enabled = false;
             return;
         }
-
-        if (_targetRigidbody == null)
-        {
-            _targetRigidbody = GetComponent<Rigidbody>();
-        }
-
+        
         if (_targetRigidbody == null)
         {
             _targetRigidbody = GetComponentInParent<Rigidbody>();
+        }
+
+        if (_instance == null)
+        {
+            _instance = GetComponentInParent<IRuntimeView>();
         }
         
         _qteInvoker = GetComponent<ScannableQTEInvoker>();
@@ -100,7 +105,12 @@ public class ScannableObject : MonoBehaviour, IScannable
 
     public void OnScanStarted()
     {
-        ScanStartEvent?.Invoke();
+        if (IsProgressComplete)
+        {
+            return;
+        }
+        
+        OnScanStartUnityEvent?.Invoke();
     }
 
     public void OnScanning(float deltaTime)
@@ -120,21 +130,41 @@ public class ScannableObject : MonoBehaviour, IScannable
         {
             return;
         }
-
+        
         bool shouldNotifyScanLost = _qteInvoker == null || _qteInvoker.HandleScanStopped();
         if (shouldNotifyScanLost)
         {
             _fsm.OnScanStopped();
-            ScanEndEvent?.Invoke();
+            OnScanEndUnityEvent?.Invoke();
         }
     }
    
     public void OnScanCompleted()
     {
         ApplyPhysicsState(true);
+        SetInteractable();
         
         OnScanComplete?.Invoke();
-        ScanCompleteEvent?.Invoke();
+        OnScanCompleteUnityEvent?.Invoke();
+        
+        if (_instance != null)
+        {
+            _instance.RuntimeData.State.SetBool("is_scan", true);
+        }
+        
+        if (TryGetHub(out GameEventHub hub) == false)
+        {
+            Debug.LogWarning("[PickupEventEmitter] GameEventHub가 존재하지 않습니다.");
+            return;
+        }
+        
+        GameEventContext eventContext = CreateContext();
+        ScanCompleteEvent gameCompleteEvent = new ScanCompleteEvent(
+            eventContext, 
+            _instance.InstanceId, 
+            gameObject.name);
+
+        hub.Publish(in gameCompleteEvent);
     }
     
     public void AddProgress(float amount)
@@ -197,6 +227,17 @@ public class ScannableObject : MonoBehaviour, IScannable
         ChangeState(EScanState.OnHold);
     }
     
+    private void ApplyPhysicsState(bool isScanComplete)
+    {
+        if (_targetRigidbody == null)
+        {
+            return;
+        }
+
+        _targetRigidbody.useGravity = isScanComplete;
+        _targetRigidbody.isKinematic = !isScanComplete;
+    }
+    
     [ContextMenu("Force")]
     public void ForceScanComplete()
     {
@@ -216,16 +257,23 @@ public class ScannableObject : MonoBehaviour, IScannable
         OnScanProgressChanged?.Invoke(1);
         OnScanComplete?.Invoke();
     }
-
-    private void ApplyPhysicsState(bool isScanComplete)
-    {
-        if (_targetRigidbody == null)
-        {
-            return;
-        }
-
-        _targetRigidbody.useGravity = isScanComplete;
-        _targetRigidbody.isKinematic = !isScanComplete;
-    }
     
+    public void ApplyState(RuntimeView binder)
+    {
+        if (binder.RuntimeData.State.GetBool("is_scan"))
+        {
+            ForceScanComplete();
+            SetInteractable();
+        }
+    }
+
+    public void SetInteractable()
+    {
+        IInteractObject[] interactObjects = GetComponentsInChildren<IInteractObject>();
+        foreach (IInteractObject interactObject in interactObjects)
+        {
+            interactObject.SetActivate(true);
+        }
+    }
+
 }

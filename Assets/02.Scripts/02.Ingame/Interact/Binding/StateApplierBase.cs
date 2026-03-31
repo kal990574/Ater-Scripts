@@ -3,8 +3,7 @@ using UnityEngine;
 public abstract class StateApplierBase : MonoBehaviour, IStateApplier
 {
     [SerializeField]protected RuntimeView _runtimeView;
-
-    public RuntimeView RuntimeView => _runtimeView;
+    public IRuntimeView RuntimeView => _runtimeView;
     protected bool _isBind = false;
     
     private void Awake()

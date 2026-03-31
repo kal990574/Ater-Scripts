@@ -260,7 +260,6 @@ public class InventoryManager : MonoBehaviour
 
     private void HandleSelectionChanged(int selectedIndex)
     {
-        _selectedIndex = selectedIndex;
         OnSelectionChanged?.Invoke(selectedIndex);
     }
 

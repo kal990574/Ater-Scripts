@@ -7,7 +7,7 @@ public class UI_Inventory : MonoBehaviour
     [SerializeField] private UI_InventoryItemViewer _uiInventoryItemViewer;
     [SerializeField] private ExamineInteraction _examineInteraction;
 
-    private int _selectedIndex = -1;
+    [SerializeField] private int _selectedIndex = -1;
 
     private void Start()
     {
@@ -50,6 +50,7 @@ public class UI_Inventory : MonoBehaviour
         _examineInteraction.OnScrolled -= _uiInventoryItemViewer.Zoom;
         _examineInteraction.OnClicked -= _uiInventoryItemViewer.TryInteract;
 
+        _selectedIndex = -1;
         InventoryManager.Instance.ClearSelection();
     }
 
