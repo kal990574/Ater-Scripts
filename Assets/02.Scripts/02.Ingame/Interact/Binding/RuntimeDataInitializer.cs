@@ -44,7 +44,12 @@ public class RuntimeDataInitializer : MonoBehaviour
             return;
         }
 
-        RuntimeData runtimeData = inventoryManager.GetOrCreateRuntimeData(_initialId, _defaultState);
+        RuntimeData runtimeData = inventoryManager.GetRuntimeData(_initialId);
+        if (runtimeData == null)
+        {
+            runtimeData = inventoryManager.GetOrCreateRuntimeData(_initialId, _defaultState);
+        }
+
         if (runtimeData == null)
         {
             return;

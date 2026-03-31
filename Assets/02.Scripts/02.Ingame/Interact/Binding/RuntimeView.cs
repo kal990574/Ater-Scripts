@@ -4,7 +4,7 @@ using UnityEngine;
 public class RuntimeView : MonoBehaviour, IRuntimeView
 {
     [SerializeField, HideInInspector] private string _instanceId;
-
+    [SerializeField] private bool _enableDebug = false;
     private InventoryManager _inventoryManager;
 
     public string InstanceId => _instanceId;
@@ -60,7 +60,6 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
         {
             return;
         }
-        Debug.Log($"[{gameObject.name}] : ApplierCount = {binders.Length}");
         foreach (IStateApplier binder in binders)
         {
             binder?.ApplyState(this);
@@ -151,6 +150,10 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
 
     private void LogBoundRuntimeData()
     {
+        if (!_enableDebug)
+        {
+            return;
+        }
         RuntimeData runtimeData = ResolveRuntimeData();
         string runtimeType = runtimeData != null ? runtimeData.GetType().Name : "null";
         string itemInfo = runtimeData is RuntimeItemData runtimeItemData

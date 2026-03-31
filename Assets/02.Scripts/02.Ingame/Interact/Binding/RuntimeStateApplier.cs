@@ -28,7 +28,6 @@ public class RuntimeStateApplier : StateApplierBase
     
     public override void ApplyState(RuntimeView binder)
     {
-        Debug.Log("ApplyState");
         _runtimeView = binder;
         _isBind = binder != null;
 
