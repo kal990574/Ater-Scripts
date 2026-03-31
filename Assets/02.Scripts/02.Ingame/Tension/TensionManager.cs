@@ -36,47 +36,47 @@ public class TensionManager : MonoBehaviour
     {
         if (eventData.ItemId == 3)
         {
-            Debug.Log($"{eventData.GameObjectName} 획득");
+            Debug.Log($"{eventData.Context.SourceName} 획득");
         }
     }
 
     private void OnReleaseInteract(ReleaseInteractEvent eventData)
     {
-        Debug.Log($"{eventData.GameObjectName} 던짐");
+        Debug.Log($"{eventData.Context.SourceName} 던짐");
     }
 
     private void OnScanComplete(ScanCompleteEvent eventData)
     {
-        Debug.Log($"{eventData.GameObjectName} 스캔 완료");
+        Debug.Log($"{eventData.Context.SourceName} 스캔 완료");
     }
 
     private void OnUseInteract(UseInteractEvent eventData)
     {
-        Debug.Log($"{eventData.GameObjectName} 사용");
+        Debug.Log($"{eventData.Context.SourceName} 사용");
     }
     
     private void OnPuzzleSuccess(PuzzleSuccessEvent eventData)
     {
-        Debug.Log($"{eventData.GameObjectName} 성공");
+        Debug.Log($"{eventData.Context.SourceName} 성공");
     }
     
     private void OnPuzzleFailed(PuzzleFailEvent eventData)
     {
-        Debug.Log($"{eventData.GameObjectName} 실패");
+        Debug.Log($"{eventData.Context.SourceName} 실패");
     }
     
     private void OnQteFailed(QTEFailEvent eventData)
     {
-        Debug.Log($"{eventData.GameObjectName} QTE 실패");
+        Debug.Log($"{eventData.Context.SourceName} QTE 실패");
     }
 
     private void OnQteGood(QTEGoodEvent eventData)
     {
-        Debug.Log($"{eventData.GameObjectName} QTE 성공");
+        Debug.Log($"{eventData.Context.SourceName} QTE 성공");
     }
 
     private void OnQteGreat(QTEGreatEvent eventData)
     {
-        Debug.Log($"{eventData.GameObjectName} QTE 대성공");
+        Debug.Log($"{eventData.Context.SourceName} QTE 대성공");
     }
 }

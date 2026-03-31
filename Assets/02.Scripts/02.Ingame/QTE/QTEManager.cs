@@ -152,15 +152,15 @@ public class QTEManager : GameEventPublisher
         switch (result)
         {
             case EQuickTimeEventResult.Fail:
-                QTEFailEvent failEvent = new QTEFailEvent(eventContext, gameObject.name);
+                QTEFailEvent failEvent = new QTEFailEvent(eventContext);
                 hub.Publish(in failEvent);
                 break;
             case EQuickTimeEventResult.Success:
-                QTEGoodEvent goodEvent = new QTEGoodEvent(eventContext, gameObject.name);
+                QTEGoodEvent goodEvent = new QTEGoodEvent(eventContext);
                 hub.Publish(in goodEvent);
                 break;
             case EQuickTimeEventResult.GreatSuccess:
-                QTEGreatEvent greatEvent = new QTEGreatEvent(eventContext, gameObject.name);
+                QTEGreatEvent greatEvent = new QTEGreatEvent(eventContext);
                 hub.Publish(in greatEvent);
                 break;
         }

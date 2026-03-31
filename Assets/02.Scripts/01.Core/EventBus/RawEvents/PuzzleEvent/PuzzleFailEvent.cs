@@ -2,12 +2,9 @@
 {
     public GameEventContext Context { get; }
     public int PuzzleId { get; }
-    public string GameObjectName { get; }
-
-    public PuzzleFailEvent(GameEventContext context, int puzzleId , string gameObjectName)
+    public PuzzleFailEvent(GameEventContext context, int puzzleId)
     {
         Context = context;
         PuzzleId = puzzleId;
-        GameObjectName = gameObjectName;
     }
 }

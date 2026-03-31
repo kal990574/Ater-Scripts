@@ -152,8 +152,7 @@ public class ScannableObject : GameEventPublisher, IScannable,IStateApplier
         GameEventContext eventContext = CreateContext();
         ScanCompleteEvent gameCompleteEvent = new ScanCompleteEvent(
             eventContext, 
-            _instance.InstanceId, 
-            gameObject.name);
+            _instance.InstanceId);
 
         hub.Publish(in gameCompleteEvent);
     }

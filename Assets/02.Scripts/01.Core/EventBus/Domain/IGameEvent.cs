@@ -2,5 +2,4 @@
 public interface IGameEvent
 {
     GameEventContext Context { get; }
-    string GameObjectName { get; }
 }

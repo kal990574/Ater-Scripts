@@ -1,11 +1,8 @@
 ﻿public struct QTEGreatEvent: IGameEvent
 {
     public GameEventContext Context { get; }
-    public string GameObjectName { get; }
-    
-    public QTEGreatEvent(GameEventContext context, string gameObjectName)
+    public QTEGreatEvent(GameEventContext context)
     {
         Context = context;
-        GameObjectName = gameObjectName;
     }
 }

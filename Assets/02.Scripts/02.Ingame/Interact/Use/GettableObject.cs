@@ -37,8 +37,7 @@ public class GettableObject : Interactable
         GetInteractEvent gameInteractEvent = new GetInteractEvent(
              eventContext, 
             runtimeItemData.InstanceId, 
-            runtimeItemData.ItemId,
-             gameObject.name);
+            runtimeItemData.ItemId);
 
         hub.Publish(in gameInteractEvent);
         Destroy(gameObject);

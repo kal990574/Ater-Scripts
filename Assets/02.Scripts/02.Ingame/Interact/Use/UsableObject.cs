@@ -48,8 +48,7 @@ public class UsableObject : Interactable
         GameEventContext eventContext = CreateContext();
         UseInteractEvent gameInteractEvent = new UseInteractEvent(
             eventContext, 
-            RuntimeData.InstanceId, 
-            gameObject.name);
+            RuntimeData.InstanceId);
 
         hub.Publish(in gameInteractEvent);
     }

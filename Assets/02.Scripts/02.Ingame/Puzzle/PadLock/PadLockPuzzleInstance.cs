@@ -80,8 +80,7 @@ public class PadLockPuzzleInstance : GameEventPublisher
             GameEventContext eventContext = CreateContext();
             PuzzleSuccessEvent puzzleSuccessEvent = new PuzzleSuccessEvent(
                 eventContext, 
-                0, 
-                gameObject.name);
+                0);
             hub.Publish(in puzzleSuccessEvent);
             return;
         }
@@ -98,8 +97,7 @@ public class PadLockPuzzleInstance : GameEventPublisher
             GameEventContext eventContext = CreateContext();
             PuzzleFailEvent puzzleFailEvent = new PuzzleFailEvent(
                 eventContext, 
-                0, 
-                gameObject.name);
+                0);
             hub.Publish(in puzzleFailEvent);
         }
     }

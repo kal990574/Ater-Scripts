@@ -1,11 +1,9 @@
 ﻿public readonly struct QTEFailEvent: IGameEvent
 {
     public GameEventContext Context { get; }
-    public string GameObjectName { get; }
-    
-    public QTEFailEvent(GameEventContext context, string gameObjectName)
+
+    public QTEFailEvent(GameEventContext context)
     {
         Context = context;
-        GameObjectName = gameObjectName;
     }
 }

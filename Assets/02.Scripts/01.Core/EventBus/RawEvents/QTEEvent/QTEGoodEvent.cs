@@ -2,11 +2,8 @@
 {
     public GameEventContext Context { get; }
     
-    public string GameObjectName { get; }
-    
-    public QTEGoodEvent(GameEventContext context, string gameObjectName)
+    public QTEGoodEvent(GameEventContext context)
     {
         Context = context;
-        GameObjectName = gameObjectName;
     }
 }
