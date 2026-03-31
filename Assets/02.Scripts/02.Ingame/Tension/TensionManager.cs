@@ -1,82 +1,179 @@
 ﻿using UnityEngine;
 
-//텐션 관리
-//텐션을 통해 점프스케어 매니저를 호출해 서브 점프스케어 발생
 public class TensionManager : MonoBehaviour
 {
-    private readonly CompositeSubscription _subscriptions = new CompositeSubscription();
+    [Header("Slow Tension/느리게 증가. 이벤트를 통해서만 감소")]
+    [SerializeField] private float _slowTension;
+    [SerializeField] private float _slowTensionMax = 100.0f;
+    [SerializeField] private float _slowTensionAutoIncreasePerSecond = 1.0f;
 
-    private void Start()
+    [Header("Fast Tension/빠르게 감소. 이벤트를 통해서만 증가")]
+    [SerializeField] private float _fastTension;
+    [SerializeField] private float _fastTensionMax = 50.0f;
+    [SerializeField] private float _fastTensionDecayPerSecond = 8.0f;
+
+    [Header("Debug")]
+    [SerializeField] private bool _enableDebugLog;
+
+    public float SlowTension => _slowTension;
+    public float FastTension => _fastTension;
+    public float FinalTension => _slowTension + _fastTension;
+
+    private void Update()
     {
-        GameEventHub hub = GameEventHub.Instance;
+        float deltaTime = Time.deltaTime;
 
-        if (hub == null)
+        IncreaseSlowTensionOverTime(deltaTime);
+        DecreaseFastTensionOverTime(deltaTime);
+    }
+
+    public void ResetTension()
+    {
+        _slowTension = 0.0f;
+        _fastTension = 0.0f;
+
+        LogState("ResetTension");
+    }
+
+    public void AddSlowTension(float amount)
+    {
+        if (amount <= 0.0f)
         {
-            Debug.LogWarning("[MainJumpscareManager] GameEventHub가 존재하지 않습니다.");
             return;
         }
 
-        _subscriptions.Add(hub.Subscribe<GetInteractEvent>(OnGetInteract));
-        _subscriptions.Add(hub.Subscribe<ReleaseInteractEvent>(OnReleaseInteract));
-        _subscriptions.Add(hub.Subscribe<ScanCompleteEvent>(OnScanComplete));
-        _subscriptions.Add(hub.Subscribe<UseInteractEvent>(OnUseInteract));
-        _subscriptions.Add(hub.Subscribe<PuzzleFailEvent>(OnPuzzleFailed));
-        _subscriptions.Add(hub.Subscribe<PuzzleSuccessEvent>(OnPuzzleSuccess));
-        _subscriptions.Add(hub.Subscribe<QTEFailEvent>(OnQteFailed));
-        _subscriptions.Add(hub.Subscribe<QTEGoodEvent>(OnQteGood));
-        _subscriptions.Add(hub.Subscribe<QTEGreatEvent>(OnQteGreat));
+        _slowTension = ClampSlowTension(_slowTension + amount);
+
+        LogState($"AddSlowTension : +{amount:F2}");
     }
-    
-    private void OnDestroy()
+
+    public void ReduceSlowTension(float amount)
     {
-        _subscriptions.Dispose();
-    }
-    
-    private void OnGetInteract(GetInteractEvent eventData)
-    {
-        if (eventData.ItemId == 3)
+        if (amount <= 0.0f)
         {
-            Debug.Log($"{eventData.Context.SourceName} 획득");
+            return;
         }
+
+        _slowTension = ClampSlowTension(_slowTension - amount);
+
+        LogState($"ReduceSlowTension : -{amount:F2}");
     }
 
-    private void OnReleaseInteract(ReleaseInteractEvent eventData)
+    public void AddFastTension(float amount)
     {
-        Debug.Log($"{eventData.Context.SourceName} 던짐");
+        if (amount <= 0.0f)
+        {
+            return;
+        }
+
+        _fastTension = ClampFastTension(_fastTension + amount);
+
+        LogState($"AddFastTension : +{amount:F2}");
     }
 
-    private void OnScanComplete(ScanCompleteEvent eventData)
+    public void ReduceFastTension(float amount)
     {
-        Debug.Log($"{eventData.Context.SourceName} 스캔 완료");
+        if (amount <= 0.0f)
+        {
+            return;
+        }
+
+        _fastTension = ClampFastTension(_fastTension - amount);
+
+        LogState($"ReduceFastTension : -{amount:F2}");
     }
 
-    private void OnUseInteract(UseInteractEvent eventData)
+    public void ReduceFinalTension(float amount)
     {
-        Debug.Log($"{eventData.Context.SourceName} 사용");
-    }
-    
-    private void OnPuzzleSuccess(PuzzleSuccessEvent eventData)
-    {
-        Debug.Log($"{eventData.Context.SourceName} 성공");
-    }
-    
-    private void OnPuzzleFailed(PuzzleFailEvent eventData)
-    {
-        Debug.Log($"{eventData.Context.SourceName} 실패");
-    }
-    
-    private void OnQteFailed(QTEFailEvent eventData)
-    {
-        Debug.Log($"{eventData.Context.SourceName} QTE 실패");
+        if (amount <= 0.0f)
+        {
+            return;
+        }
+
+        float remainingAmount = amount;
+
+        remainingAmount = ReduceFastTensionFirst(remainingAmount);
+        remainingAmount = ReduceSlowTensionNext(remainingAmount);
+
+        LogState($"ReduceFinalTension : -{amount:F2}");
     }
 
-    private void OnQteGood(QTEGoodEvent eventData)
+    private void IncreaseSlowTensionOverTime(float deltaTime)
     {
-        Debug.Log($"{eventData.Context.SourceName} QTE 성공");
+        if (_slowTensionAutoIncreasePerSecond <= 0.0f)
+        {
+            return;
+        }
+
+        float increaseAmount = _slowTensionAutoIncreasePerSecond * deltaTime;
+        _slowTension = ClampSlowTension(_slowTension + increaseAmount);
     }
 
-    private void OnQteGreat(QTEGreatEvent eventData)
+    private void DecreaseFastTensionOverTime(float deltaTime)
     {
-        Debug.Log($"{eventData.Context.SourceName} QTE 대성공");
+        if (_fastTensionDecayPerSecond <= 0.0f)
+        {
+            return;
+        }
+
+        float decreaseAmount = _fastTensionDecayPerSecond * deltaTime;
+        _fastTension = ClampFastTension(_fastTension - decreaseAmount);
+    }
+
+    private float ReduceFastTensionFirst(float remainingAmount)
+    {
+        if (remainingAmount <= 0.0f)
+        {
+            return 0.0f;
+        }
+
+        if (_fastTension <= 0.0f)
+        {
+            return remainingAmount;
+        }
+
+        float reduceAmount = Mathf.Min(_fastTension, remainingAmount);
+        _fastTension = ClampFastTension(_fastTension - reduceAmount);
+
+        return remainingAmount - reduceAmount;
+    }
+
+    private float ReduceSlowTensionNext(float remainingAmount)
+    {
+        if (remainingAmount <= 0.0f)
+        {
+            return 0.0f;
+        }
+
+        if (_slowTension <= 0.0f)
+        {
+            return remainingAmount;
+        }
+
+        float reduceAmount = Mathf.Min(_slowTension, remainingAmount);
+        _slowTension = ClampSlowTension(_slowTension - reduceAmount);
+
+        return remainingAmount - reduceAmount;
+    }
+
+    private float ClampSlowTension(float value)
+    {
+        return Mathf.Clamp(value, 0.0f, _slowTensionMax);
+    }
+
+    private float ClampFastTension(float value)
+    {
+        return Mathf.Clamp(value, 0.0f, _fastTensionMax);
+    }
+
+    private void LogState(string action)
+    {
+        if (_enableDebugLog == false)
+        {
+            return;
+        }
+
+        Debug.Log(
+            $"[TensionManager] {action} | Slow: {_slowTension:F2}, Fast: {_fastTension:F2}, Final: {FinalTension:F2}");
     }
 }

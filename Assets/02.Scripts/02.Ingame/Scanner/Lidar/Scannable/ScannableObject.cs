@@ -110,6 +110,16 @@ public class ScannableObject : GameEventPublisher, IScannable,IStateApplier
             return;
         }
         
+        if (TryGetHub(out GameEventHub hub))
+        {
+            GameEventContext eventContext = CreateContext();
+            ScannableScanStartEvent gameEvent = new ScannableScanStartEvent(
+                eventContext,
+                _instance.InstanceId);
+
+            hub.Publish(in gameEvent);
+        }
+        
         OnScanStartUnityEvent?.Invoke();
     }
 
@@ -137,6 +147,17 @@ public class ScannableObject : GameEventPublisher, IScannable,IStateApplier
             _fsm.OnScanStopped();
             OnScanEndUnityEvent?.Invoke();
         }
+        
+        if (TryGetHub(out GameEventHub hub))
+        {
+            GameEventContext eventContext = CreateContext();
+            ScannableScanEndEvent gameEvent = new ScannableScanEndEvent(
+                eventContext,
+                _instance.InstanceId,
+                false);
+
+            hub.Publish(in gameEvent);
+        }
     }
    
     public void OnScanCompleted()
@@ -151,19 +172,17 @@ public class ScannableObject : GameEventPublisher, IScannable,IStateApplier
         {
             _instance.RuntimeData.State.SetBool("is_scan", true);
         }
-        
-        if (TryGetHub(out GameEventHub hub) == false)
-        {
-            Debug.LogWarning("[PickupEventEmitter] GameEventHub가 존재하지 않습니다.");
-            return;
-        }
-        
-        GameEventContext eventContext = CreateContext();
-        ScanCompleteEvent gameCompleteEvent = new ScanCompleteEvent(
-            eventContext, 
-            _instance.InstanceId);
 
-        hub.Publish(in gameCompleteEvent);
+        if (TryGetHub(out GameEventHub hub))
+        {
+            GameEventContext eventContext = CreateContext();
+            ScannableScanEndEvent gameEvent = new ScannableScanEndEvent(
+                eventContext,
+                _instance.InstanceId,
+                true);
+
+            hub.Publish(in gameEvent);
+        }
     }
     
     public void AddProgress(float amount)

@@ -80,39 +80,7 @@ public class GameEventHub : MonoBehaviour
             sourceId,
             sourceName);
     }
-
-    public GameEventContext CreateContext(GameObject sourceObject)
-    {
-        _sequence++;
-
-        int sourceId = 0;
-        string sourceName = "Unknown";
-
-        if (sourceObject != null)
-        {
-            sourceId = sourceObject.GetInstanceID();
-            sourceName = sourceObject.name;
-        }
-
-        return new GameEventContext(
-            Time.frameCount,
-            Time.time,
-            _sequence,
-            sourceId,
-            sourceName);
-    }
-
-    public GameEventContext CreateContext(string sourceName)
-    {
-        _sequence++;
-
-        return new GameEventContext(
-            Time.frameCount,
-            Time.time,
-            _sequence,
-            0,
-            sourceName);
-    }
+    
 
     public void ResetSequence()
     {

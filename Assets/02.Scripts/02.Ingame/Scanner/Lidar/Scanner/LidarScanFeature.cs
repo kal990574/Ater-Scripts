@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LidarScanFeature : MonoBehaviour
+public class LidarScanFeature : GameEventPublisher
 {
     [Header("Required References")]
     [SerializeField] private LidarScanConfigSO _config;
@@ -51,29 +51,25 @@ public class LidarScanFeature : MonoBehaviour
         _lidarRay = new(this);
         _lidarEffect = new(this);
     }
+    
+    
+   
 
-    public void StopScan()
+    public void ActiveScan()
     {
-        if (CurrentTarget != null)
+        IsOnScan = true;
+        
+        if (TryGetHub(out GameEventHub hub))
         {
-            OnTargetLost?.Invoke();
-            CurrentTarget.OnScanStopped();
+            GameEventContext eventContext = CreateContext();
+            LidarScanStartedEvent gameEvent = new LidarScanStartedEvent(eventContext);
 
-            CurrentTarget = null;
+            hub.Publish(in gameEvent);
         }
-
-        _lidarRay.ClearScanResults();
-        LidarEffect.ResetLine();
-        IsOnScan = false;
     }
 
     public void UpdateScan(float deltaTime)
     {
-        if (IsOnScan == false)
-        {
-            IsOnScan = true;
-        }
-
         _lidarRay.Scan();
 
         ScannableObject previousTarget = CurrentTarget;
@@ -112,7 +108,30 @@ public class LidarScanFeature : MonoBehaviour
             previous.OnScanStopped();
         }
     }
+    
+    public void StopScan()
+    {
+        if (CurrentTarget != null)
+        {
+            OnTargetLost?.Invoke();
+            CurrentTarget.OnScanStopped();
 
+            CurrentTarget = null;
+        }
+
+        _lidarRay.ClearScanResults();
+        LidarEffect.ResetLine();
+        IsOnScan = false;
+        
+        if (TryGetHub(out GameEventHub hub))
+        {
+            GameEventContext eventContext = CreateContext();
+            LidarScanEndEvent gameEvent = new LidarScanEndEvent(eventContext);
+
+            hub.Publish(in gameEvent);
+        }
+    }
+    
     private ScannableObject ResolveTarget(IReadOnlyDictionary<ScannableObject, TargetHitData> hitMap, Vector3 origin, Vector3 forward)
     {
         ScannableObject bestTarget = null;
