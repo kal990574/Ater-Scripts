@@ -8,6 +8,7 @@ public class UI_ShortcutPanel : MonoBehaviour
 
     private Image[] _iconImages;
     private CanvasGroup[] _canvasGroup;
+    private bool _initialized = false;
 
     private void Awake()
     {
@@ -29,8 +30,18 @@ public class UI_ShortcutPanel : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        if (InventoryManager.Instance == null) return;
+        _initialized = true;
+        InventoryManager.Instance.OnInventoryItemChanged += Refresh;
+        InventoryManager.Instance.OnHandSlotChanged += UpdateHighlight;
+        Refresh();
+    }
+
     private void OnEnable()
     {
+        if (!_initialized) return;
         if (InventoryManager.Instance == null) return;
         InventoryManager.Instance.OnInventoryItemChanged += Refresh;
         InventoryManager.Instance.OnHandSlotChanged += UpdateHighlight;
