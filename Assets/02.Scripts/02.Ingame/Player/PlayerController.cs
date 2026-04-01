@@ -200,9 +200,14 @@ public class PlayerController : MonoBehaviour
             scanAbility.SonarActive();
         }
 
-        if (_input.LmbPressingInput)
+        if (_input.LmbPressInput)
         {
-            scanAbility.LidarScanActiveAndUpdate();
+            scanAbility.LidarScanActive();
+        }
+        
+        if (_input.LmbHoldInput)
+        {
+            scanAbility.LidarScanUpdate();
         }
 
         if (_input.InteractInput)

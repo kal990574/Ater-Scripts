@@ -1,82 +1,198 @@
 ﻿using UnityEngine;
 
-//텐션 관리
-//텐션을 통해 점프스케어 매니저를 호출해 서브 점프스케어 발생
 public class TensionManager : MonoBehaviour
 {
+    [Header("Rule Table")]
+    [SerializeField] private TensionRuleTableSO _ruleTable;
+
+    [Header("Base Tension / 지속적으로 누적되는 긴장")]
+    [SerializeField] private float _baseTension;
+    [SerializeField] private float _baseTensionMax = 100.0f;
+    [SerializeField] private float _baseTensionAutoIncreasePerSecond = 1.0f;
+
+    [Header("Spike Tension / 순간적으로 변동하고 자연 감소하는 긴장")]
+    [SerializeField] private float _spikeTension;
+    [SerializeField] private float _spikeTensionMax = 50.0f;
+    [SerializeField] private float _spikeTensionDecayPerSecond = 8.0f;
+
+    [Header("Debug")]
+    [SerializeField] private bool _enableDebugLog;
+
     private readonly CompositeSubscription _subscriptions = new CompositeSubscription();
 
-    private void Start()
+    public float BaseTension => _baseTension;
+    public float SpikeTension => _spikeTension;
+    public float TotalTension => _baseTension + _spikeTension;
+
+    private void OnEnable()
     {
         GameEventHub hub = GameEventHub.Instance;
-
         if (hub == null)
         {
-            Debug.LogWarning("[MainJumpscareManager] GameEventHub가 존재하지 않습니다.");
+            Debug.LogWarning("[TensionManager] GameEventHub.Instance is null.");
             return;
         }
 
-        _subscriptions.Add(hub.Subscribe<GetInteractEvent>(OnGetInteract));
-        _subscriptions.Add(hub.Subscribe<ReleaseInteractEvent>(OnReleaseInteract));
-        _subscriptions.Add(hub.Subscribe<ScanCompleteEvent>(OnScanComplete));
-        _subscriptions.Add(hub.Subscribe<UseInteractEvent>(OnUseInteract));
-        _subscriptions.Add(hub.Subscribe<PuzzleFailEvent>(OnPuzzleFailed));
-        _subscriptions.Add(hub.Subscribe<PuzzleSuccessEvent>(OnPuzzleSuccess));
-        _subscriptions.Add(hub.Subscribe<QTEFailEvent>(OnQteFailed));
-        _subscriptions.Add(hub.Subscribe<QTEGoodEvent>(OnQteGood));
-        _subscriptions.Add(hub.Subscribe<QTEGreatEvent>(OnQteGreat));
+        _subscriptions.Add(hub.Subscribe<OnTensionChangedEvent>(OnTensionChanged));
     }
-    
-    private void OnDestroy()
+
+    private void OnDisable()
     {
         _subscriptions.Dispose();
     }
-    
-    private void OnGetInteract(GetInteractEvent eventData)
+
+    private void Update()
     {
-        if (eventData.ItemId == 3)
+        float deltaTime = Time.deltaTime;
+
+        IncreaseBaseTensionOverTime(deltaTime);
+        DecreaseSpikeTensionOverTime(deltaTime);
+    }
+
+    public void ResetTension()
+    {
+        _baseTension = 0.0f;
+        _spikeTension = 0.0f;
+
+        LogState("ResetTension");
+    }
+
+    public void SetRuleTable(TensionRuleTableSO ruleTable)
+    {
+        _ruleTable = ruleTable;
+
+        if (_ruleTable == null)
         {
-            Debug.Log($"{eventData.GameObjectName} 획득");
+            Debug.LogWarning("[TensionManager] RuleTable is null after SetRuleTable.");
+            return;
+        }
+
+        LogState("SetRuleTable");
+    }
+
+    private void OnTensionChanged(OnTensionChangedEvent tensionEvent)
+    {
+        if (_ruleTable == null)
+        {
+            Debug.LogWarning("[TensionManager] RuleTable is null.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(tensionEvent.Reason) == true)
+        {
+            Debug.LogWarning("[TensionManager] Tension reason is null or empty.");
+            return;
+        }
+
+        if (_ruleTable.TryGetRule(tensionEvent.Reason, out TensionRule rule) == false)
+        {
+            WarnUnknownReason(tensionEvent.Reason);
+            return;
+        }
+
+        ApplyRule(rule);
+    }
+
+    private void ApplyRule(TensionRule rule)
+    {
+        if (rule == null)
+        {
+            Debug.LogWarning("[TensionManager] Rule is null.");
+            return;
+        }
+
+        switch (rule.Channel)
+        {
+            case ETensionChannel.BaseTension:
+            {
+                ApplyBaseTensionDelta(rule.Delta, rule.Reason);
+                break;
+            }
+            case ETensionChannel.SpikeTension:
+            {
+                ApplySpikeTensionDelta(rule.Delta, rule.Reason);
+                break;
+            }
+            default:
+            {
+                Debug.LogWarning($"[TensionManager] Unsupported Channel : {rule.Channel}");
+                break;
+            }
         }
     }
 
-    private void OnReleaseInteract(ReleaseInteractEvent eventData)
+    private void ApplyBaseTensionDelta(float delta, string reason)
     {
-        Debug.Log($"{eventData.GameObjectName} 던짐");
+        if (Mathf.Approximately(delta, 0.0f) == true)
+        {
+            return;
+        }
+
+        _baseTension = ClampBaseTension(_baseTension + delta);
+
+        LogState($"ApplyBaseTensionDelta | Reason: {reason} | Delta: {delta:+0.00;-0.00}");
     }
 
-    private void OnScanComplete(ScanCompleteEvent eventData)
+    private void ApplySpikeTensionDelta(float delta, string reason)
     {
-        Debug.Log($"{eventData.GameObjectName} 스캔 완료");
+        if (Mathf.Approximately(delta, 0.0f) == true)
+        {
+            return;
+        }
+
+        _spikeTension = ClampSpikeTension(_spikeTension + delta);
+
+        LogState($"ApplySpikeTensionDelta | Reason: {reason} | Delta: {delta:+0.00;-0.00}");
     }
 
-    private void OnUseInteract(UseInteractEvent eventData)
+    private void IncreaseBaseTensionOverTime(float deltaTime)
     {
-        Debug.Log($"{eventData.GameObjectName} 사용");
-    }
-    
-    private void OnPuzzleSuccess(PuzzleSuccessEvent eventData)
-    {
-        Debug.Log($"{eventData.GameObjectName} 성공");
-    }
-    
-    private void OnPuzzleFailed(PuzzleFailEvent eventData)
-    {
-        Debug.Log($"{eventData.GameObjectName} 실패");
-    }
-    
-    private void OnQteFailed(QTEFailEvent eventData)
-    {
-        Debug.Log($"{eventData.GameObjectName} QTE 실패");
+        if (_baseTensionAutoIncreasePerSecond <= 0.0f)
+        {
+            return;
+        }
+
+        float increaseDelta = _baseTensionAutoIncreasePerSecond * deltaTime;
+        _baseTension = ClampBaseTension(_baseTension + increaseDelta);
     }
 
-    private void OnQteGood(QTEGoodEvent eventData)
+    private void DecreaseSpikeTensionOverTime(float deltaTime)
     {
-        Debug.Log($"{eventData.GameObjectName} QTE 성공");
+        if (_spikeTensionDecayPerSecond <= 0.0f)
+        {
+            return;
+        }
+
+        float decreaseDelta = _spikeTensionDecayPerSecond * deltaTime;
+        _spikeTension = ClampSpikeTension(_spikeTension - decreaseDelta);
     }
 
-    private void OnQteGreat(QTEGreatEvent eventData)
+    private float ClampBaseTension(float value)
     {
-        Debug.Log($"{eventData.GameObjectName} QTE 대성공");
+        return Mathf.Clamp(value, 0.0f, _baseTensionMax);
+    }
+
+    private float ClampSpikeTension(float value)
+    {
+        return Mathf.Clamp(value, 0.0f, _spikeTensionMax);
+    }
+
+    private void WarnUnknownReason(string reason)
+    {
+        Debug.LogWarning($"[TensionManager] Unknown Reason : {reason}");
+    }
+
+    private void LogState(string action)
+    {
+        if (_enableDebugLog == false)
+        {
+            return;
+        }
+
+        Debug.Log(
+            $"[TensionManager] {action} | " +
+            $"Base: {_baseTension:F2}, " +
+            $"Spike: {_spikeTension:F2}, " +
+            $"Total: {TotalTension:F2}");
     }
 }

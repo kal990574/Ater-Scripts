@@ -3,6 +3,7 @@ using UnityEngine;
 
 //유니티 생명주기용
 //싱글톤, 
+[DefaultExecutionOrder(-1000)]
 public class GameEventHub : MonoBehaviour
 {
     public static GameEventHub Instance { get; private set; }
@@ -60,60 +61,12 @@ public class GameEventHub : MonoBehaviour
         _eventBus.Publish(in gameEvent);
     }
 
-    public GameEventContext CreateContext(Component source)
+    public int NextSequence()
     {
         _sequence++;
-
-        int sourceId = 0;
-        string sourceName = "Unknown";
-
-        if (source != null)
-        {
-            sourceId = source.GetInstanceID();
-            sourceName = source.name;
-        }
-
-        return new GameEventContext(
-            Time.frameCount,
-            Time.time,
-            _sequence,
-            sourceId,
-            sourceName);
+        return _sequence;
     }
-
-    public GameEventContext CreateContext(GameObject sourceObject)
-    {
-        _sequence++;
-
-        int sourceId = 0;
-        string sourceName = "Unknown";
-
-        if (sourceObject != null)
-        {
-            sourceId = sourceObject.GetInstanceID();
-            sourceName = sourceObject.name;
-        }
-
-        return new GameEventContext(
-            Time.frameCount,
-            Time.time,
-            _sequence,
-            sourceId,
-            sourceName);
-    }
-
-    public GameEventContext CreateContext(string sourceName)
-    {
-        _sequence++;
-
-        return new GameEventContext(
-            Time.frameCount,
-            Time.time,
-            _sequence,
-            0,
-            sourceName);
-    }
-
+    
     public void ResetSequence()
     {
         _sequence = 0;

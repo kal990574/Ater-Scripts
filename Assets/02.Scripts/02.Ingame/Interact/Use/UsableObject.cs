@@ -32,26 +32,6 @@ public class UsableObject : Interactable
         Debug.Log($"{gameObject.name} : used");
         ExecuteActions(resolvedContext);
         OnInteractActivate();
-        
-        if (TryGetHub(out GameEventHub hub) == false)
-        {
-            Debug.LogWarning("[PickupEventEmitter] GameEventHub가 존재하지 않습니다.");
-            return;
-        }
-        
-        if (RuntimeData == null)
-        {
-            Debug.LogWarning($"[{nameof(UsableObject)}] RuntimeData is missing. Event publish skipped.", this);
-            return;
-        }
-
-        GameEventContext eventContext = CreateContext();
-        UseInteractEvent gameInteractEvent = new UseInteractEvent(
-            eventContext, 
-            RuntimeData.InstanceId, 
-            gameObject.name);
-
-        hub.Publish(in gameInteractEvent);
     }
 
     public bool CanUse(UseContext context)
