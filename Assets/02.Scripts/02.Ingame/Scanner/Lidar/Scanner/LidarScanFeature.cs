@@ -13,7 +13,7 @@ public class LidarScanFeature : MonoBehaviour
     [Header("Optional Settings")]
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
     
-    
+    private GameEventPublisher _eventPublisher;
     private LidarEffect _lidarEffect;
     private LidarRaycast _lidarRay;
 
@@ -29,7 +29,7 @@ public class LidarScanFeature : MonoBehaviour
 
     public event Action<ScannableObject> OnTargetFind;
     public event Action OnTargetLost;
-
+    
     public void Initialize()
     {
         if (_config == null)
@@ -43,6 +43,9 @@ public class LidarScanFeature : MonoBehaviour
             Debug.LogError($"[{nameof(LidarEffect)}] LineRenderer reference is missing.");
             return;
         }
+        
+        _eventPublisher = new GameEventPublisher();
+        _eventPublisher.SetSource(this);
 
         _lineRenderer.useWorldSpace = true;
         _lineRenderer.positionCount = 2;
@@ -52,28 +55,16 @@ public class LidarScanFeature : MonoBehaviour
         _lidarEffect = new(this);
     }
 
-    public void StopScan()
+    public void ActiveScan()
     {
-        if (CurrentTarget != null)
-        {
-            OnTargetLost?.Invoke();
-            CurrentTarget.OnScanStopped();
+        IsOnScan = true;
 
-            CurrentTarget = null;
-        }
-
-        _lidarRay.ClearScanResults();
-        LidarEffect.ResetLine();
-        IsOnScan = false;
+        _eventPublisher.TryPublish(
+            context => new LidarScanStartedRawEvent(context));
     }
 
     public void UpdateScan(float deltaTime)
     {
-        if (IsOnScan == false)
-        {
-            IsOnScan = true;
-        }
-
         _lidarRay.Scan();
 
         ScannableObject previousTarget = CurrentTarget;
@@ -84,6 +75,11 @@ public class LidarScanFeature : MonoBehaviour
 
         if (CurrentTarget != null)
         {
+            if (previousTarget == null)
+            {
+                CurrentTarget.OnScanStarted();
+            }
+            
             CurrentTarget.OnScanning(deltaTime);
         }
 
@@ -92,6 +88,14 @@ public class LidarScanFeature : MonoBehaviour
 
     private void HandleTargetChanged(ScannableObject previous, ScannableObject current)
     {
+        if (previous == current)
+        {
+            return;
+        }
+
+        _eventPublisher.TryPublish(
+            context => new LidarScanTargetChangedRawEvent(context, previous, current));
+
         if (previous == null && current != null)
         {
             OnTargetFind?.Invoke(current);
@@ -112,7 +116,25 @@ public class LidarScanFeature : MonoBehaviour
             previous.OnScanStopped();
         }
     }
+    
+    public void StopScan()
+    {
+        if (CurrentTarget != null)
+        {
+            OnTargetLost?.Invoke();
+            CurrentTarget.OnScanStopped();
 
+            CurrentTarget = null;
+        }
+
+        _lidarRay.ClearScanResults();
+        LidarEffect.ResetLine();
+        IsOnScan = false;
+        
+        _eventPublisher.TryPublish(
+            context => new LidarScanStoppedRawEvent(context));
+    }
+    
     private ScannableObject ResolveTarget(IReadOnlyDictionary<ScannableObject, TargetHitData> hitMap, Vector3 origin, Vector3 forward)
     {
         ScannableObject bestTarget = null;

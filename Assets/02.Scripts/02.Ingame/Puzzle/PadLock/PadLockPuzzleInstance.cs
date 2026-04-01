@@ -2,7 +2,7 @@ using UnityEngine;
 
 [DisallowMultipleComponent]
 //추후 공용 추상스크립트 제작
-public class PadLockPuzzleInstance : GameEventPublisher
+public class PadLockPuzzleInstance : MonoBehaviour
 {
     [Header("Rows")]
     [SerializeField] private int _row1 = 1;
@@ -70,37 +70,12 @@ public class PadLockPuzzleInstance : GameEventPublisher
             {
                 Destroy(gameObject);
             }
-
-            if (TryGetHub(out GameEventHub hub) == false)
-            {
-                Debug.LogWarning("[PickupEventEmitter] GameEventHub가 존재하지 않습니다.");
-                return;
-            }
-        
-            GameEventContext eventContext = CreateContext();
-            PuzzleSuccessEvent puzzleSuccessEvent = new PuzzleSuccessEvent(
-                eventContext, 
-                0, 
-                gameObject.name);
-            hub.Publish(in puzzleSuccessEvent);
             return;
         }
 
         if (_invokeFailOnWrongCode)
         {
             _owner.HandlePuzzleFail(this);
-            if (TryGetHub(out GameEventHub hub) == false)
-            {
-                Debug.LogWarning("[PickupEventEmitter] GameEventHub가 존재하지 않습니다.");
-                return;
-            }
-        
-            GameEventContext eventContext = CreateContext();
-            PuzzleFailEvent puzzleFailEvent = new PuzzleFailEvent(
-                eventContext, 
-                0, 
-                gameObject.name);
-            hub.Publish(in puzzleFailEvent);
         }
     }
 
