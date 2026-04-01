@@ -15,15 +15,14 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
 
         [SerializeField] private SceneDataSO _mainMenuSceneData;
         [SerializeField] private LoadingUI _loadingUI;
-        [SerializeField] private CanvasGroup _fadeCanvasGroup;
-        [SerializeField] private float _fadeDuration = 0.5f;
+        [SerializeField] private float _minimumLoadingDuration = 2f;
 
         private SceneDataSO _currentSceneData;
         private bool _isTransitioning;
 
         public void LoadScene(SceneDataSO sceneData)
         {
-            if (!_isTransitioning) return;
+            if (_isTransitioning) return;
             StartCoroutine(TransitionCoroutine(sceneData));
         }
 
@@ -42,46 +41,35 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
         private IEnumerator TransitionCoroutine(SceneDataSO sceneData)
         {
             _isTransitioning = true;
-            OnTransitionStarted?.Invoke();
-
-            yield return FadeCoroutine(0f, 1f);
             _loadingUI.Setup(sceneData);
+            OnTransitionStarted?.Invoke();
 
             var asyncOp = SceneManager.LoadSceneAsync(sceneData.SceneName);
             asyncOp.allowSceneActivation = false;
 
-            while (asyncOp.progress < 0.9f)
+            float elapsed = 0f;
+            bool sceneReady = false;
+
+            while (elapsed < _minimumLoadingDuration)
             {
-                OnLoadProgress?.Invoke(asyncOp.progress);
+                elapsed += Time.unscaledDeltaTime;
+
+                if (!sceneReady && asyncOp.progress >= 0.9f)
+                    sceneReady = true;
+
+                float progress = Mathf.Clamp01(elapsed / _minimumLoadingDuration);
+                OnLoadProgress?.Invoke(progress);
                 yield return null;
             }
-            
+
             OnLoadProgress?.Invoke(1f);
             asyncOp.allowSceneActivation = true;
             yield return asyncOp;
 
             _currentSceneData = sceneData;
-            
-            yield return FadeCoroutine(1f, 0f);
-            
+
             _isTransitioning = false;
             OnTransitionCompleted?.Invoke();
-        }
-
-        private IEnumerator FadeCoroutine(float from, float to)
-        {
-            _fadeCanvasGroup.blocksRaycasts = true;
-            float elapsed = 0f;
-
-            while (elapsed < _fadeDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                _fadeCanvasGroup.alpha = Mathf.Lerp(from, to, elapsed / _fadeDuration);
-                yield return null;
-            }
-
-            _fadeCanvasGroup.alpha = to;
-            _fadeCanvasGroup.blocksRaycasts = to > 0f;
         }
     }
 }

@@ -7,18 +7,15 @@ namespace _02.Scripts._01.Core.SceneTransition.Domain
     {
         [Header("Scene Info")]
         [SerializeField] private string _sceneName;
-
         [SerializeField] private int _chapterId;
-        
+
         [Header("Loading Screen")]
-        [SerializeField] private string _displayName;
-        [SerializeField] private Sprite _loadingImage;
+        [SerializeField] private string _displayText;
         [SerializeField] [TextArea] private string _loadingTip;
-        
+
         public string SceneName => _sceneName;
         public int ChapterId => _chapterId;
-        public string DisplayName => _displayName;
-        public Sprite LoadingImage => _loadingImage;
+        public string DisplayText => _displayText;
         public string LoadingTip => _loadingTip;
     }
 }
