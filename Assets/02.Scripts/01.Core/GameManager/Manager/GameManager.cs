@@ -1,3 +1,5 @@
+using _02.Scripts._01.Core.SceneTransition.Domain;
+using _02.Scripts._01.Core.SceneTransition.Manager;
 using System;
 using System.Collections.Generic;
 using _02.Scripts.Core.Domain;
@@ -8,18 +10,18 @@ namespace _02.Scripts.Core.Manager
 {
     public class GameManager : IGameManager
     {
-        private readonly Dictionary<int, string> _chapterSceneMap;
-        private readonly string _mainMenuSceneName;
+        private readonly List<SceneDataSO> _chapterSceneList;
+        private readonly ISceneTransitionManager _sceneTransition;
 
         public GameState CurrentState { get; private set; } = GameState.Playing;
         public int CurrentChapter { get; private set; } = 0;
         
         public event Action<GameState> OnGameStateChanged;
 
-        public GameManager(Dictionary<int, string> chapterSceneMap, string mainMenuSceneName)
+        public GameManager(List<SceneDataSO> chapterSceneList, ISceneTransitionManager sceneTransition)
         {
-            _chapterSceneMap = chapterSceneMap;
-            _mainMenuSceneName = mainMenuSceneName;
+            _chapterSceneList = chapterSceneList;
+            _sceneTransition = sceneTransition;
         }
 
         public void GameOver()
@@ -51,27 +53,25 @@ namespace _02.Scripts.Core.Manager
         {
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
-            if (_chapterSceneMap.TryGetValue(CurrentChapter, out var sceneName))
-            {
-                SceneManager.LoadScene(sceneName);
-            }
+            _sceneTransition.RestartCurrentScene();
         }
 
         public void LoadChapter(int chapter)
         {
-            if (!_chapterSceneMap.TryGetValue(chapter, out var sceneName)) return;
+            var sceneData = _chapterSceneList.Find(s => s.ChapterId == chapter);
+            if (sceneData == null) return;
             
             CurrentChapter = chapter;
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
-            SceneManager.LoadScene(sceneName);
+            _sceneTransition.LoadScene(sceneData);
         }
 
         public void ReturnToMainMenu()
         {
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
-            SceneManager.LoadScene(_mainMenuSceneName);
+            _sceneTransition.ReturnToMainMenu();
         }
     }
 }

@@ -1,3 +1,4 @@
+using _02.Scripts._01.Core.SceneTransition.Component;
 using _02.Scripts._01.Core.SceneTransition.Domain;
 using System;
 using System.Collections;
@@ -13,6 +14,7 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
         public event Action OnTransitionCompleted;
 
         [SerializeField] private SceneDataSO _mainMenuSceneData;
+        [SerializeField] private LoadingUI _loadingUI;
 
         private SceneDataSO _currentSceneData;
         private bool _isTransitioning;
@@ -39,6 +41,7 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
         {
             _isTransitioning = true;
             OnTransitionStarted?.Invoke();
+            _loadingUI.Setup(sceneData);
             
             // TODO: fade out 효과 등
             yield return new WaitForSecondsRealtime(0.5f);
