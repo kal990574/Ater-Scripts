@@ -16,6 +16,7 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
         [SerializeField] private SceneDataSO _mainMenuSceneData;
         [SerializeField] private LoadingUI _loadingUI;
         [SerializeField] private float _minimumLoadingDuration = 3f;
+        [SerializeField] private float _modalAnimationDelay = 0.5f;
 
         private SceneDataSO _currentSceneData;
         private bool _isTransitioning;
@@ -43,6 +44,8 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
             _isTransitioning = true;
             _loadingUI.Setup(sceneData);
             OnTransitionStarted?.Invoke();
+
+            yield return new WaitForSecondsRealtime(_modalAnimationDelay);
 
             var asyncOp = SceneManager.LoadSceneAsync(sceneData.SceneName);
             asyncOp.allowSceneActivation = false;
