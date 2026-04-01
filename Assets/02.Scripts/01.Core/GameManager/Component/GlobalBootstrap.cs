@@ -1,3 +1,5 @@
+using _02.Scripts._01.Core.SceneTransition.Domain;
+using _02.Scripts._01.Core.SceneTransition.Manager;
 using System.Collections.Generic;
 using UnityEngine;
 using _02.Scripts.Core.Manager;
@@ -10,30 +12,30 @@ namespace _02.Scripts.Core.Component
     [DefaultExecutionOrder(-100)]
     public class GlobalBootstrap : MonoBehaviour
     {
-        private static bool _initialized;
+        [SerializeField] private List<SceneDataSO> _chapterSceneList;
+        [SerializeField] private SceneTransitionManager _sceneTransitionManager;
+        
+        private static GlobalBootstrap _instance;
+
         private void Awake()
         {
-            if (_initialized)
+            if (_instance != null)
             {
                 Destroy(gameObject);
                 return;
             }
-            _initialized = true;
+            _instance = this;
             DontDestroyOnLoad(gameObject);
-            
-            // 실제 글로벌 매니저들 연동할 부분
-            var chapterSceneMap = new Dictionary<int, string>
-            {
-                { 1, "PlayerScene" }
-            };
 
-            var gameManager = new GameManager(chapterSceneMap, "JH_MainScene");
+            Managers.Register<ISceneTransitionManager>(_sceneTransitionManager);
+            var gameManager = new GameManager(_chapterSceneList, _sceneTransitionManager);
             Managers.Register<IGameManager>(gameManager);
         }
 
         private void OnDestroy()
         {
-            _initialized = false;
+            if (_instance != this) return;
+            _instance = null;
             Managers.Clear();
         }
     }
