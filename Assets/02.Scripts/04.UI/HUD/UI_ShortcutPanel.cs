@@ -29,11 +29,6 @@ public class UI_ShortcutPanel : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        Refresh();
-    }
-
     private void OnEnable()
     {
         if (InventoryManager.Instance == null) return;
