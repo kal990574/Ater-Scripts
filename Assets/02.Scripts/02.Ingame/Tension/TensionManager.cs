@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Sirenix.OdinInspector;
+using UnityEngine;
 
 public class TensionManager : MonoBehaviour
 {
@@ -49,6 +50,7 @@ public class TensionManager : MonoBehaviour
         DecreaseSpikeTensionOverTime(deltaTime);
     }
 
+    [Button]
     public void ResetTension()
     {
         _baseTension = 0.0f;
@@ -121,6 +123,32 @@ public class TensionManager : MonoBehaviour
         }
     }
 
+    [Button]
+    public void BaseTensionChange(float delta)
+    {
+        if (Mathf.Approximately(delta, 0.0f) == true)
+        {
+            return;
+        }
+
+        _baseTension = ClampBaseTension(_baseTension + delta);
+
+        LogState($"ApplyBaseTensionDelta | Reason: User Debug | Delta: {delta:+0.00;-0.00}");
+    }
+    
+    [Button]
+    public void SpikeTensionChange(float delta)
+    {
+        if (Mathf.Approximately(delta, 0.0f) == true)
+        {
+            return;
+        }
+
+        _spikeTension = ClampSpikeTension(_baseTension + delta);
+
+        LogState($"ApplyBaseTensionDelta | Reason: User Debug | Delta: {delta:+0.00;-0.00}");
+    }
+    
     private void ApplyBaseTensionDelta(float delta, string reason)
     {
         if (Mathf.Approximately(delta, 0.0f) == true)
