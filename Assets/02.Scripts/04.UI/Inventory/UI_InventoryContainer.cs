@@ -29,7 +29,7 @@ public class UI_InventoryContainer : MonoBehaviour
         {
             GameObject obj = Instantiate(_slotUIPrefab, _slotContainer);
             UI_InventorySlotItem slotItem = obj.GetComponent<UI_InventorySlotItem>();
-            slotItem.Setup(instanceIds[i], i, _canvas);
+            slotItem.Setup(instanceIds[i], _canvas);
             slotItem.OnClicked += HandleSlotClicked;
             slotItem.OnDropped += HandleSlotDropped;
         }
