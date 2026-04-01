@@ -32,6 +32,7 @@ public class UI_ShortcutPanel : MonoBehaviour
     private void OnEnable()
     {
         if (InventoryManager.Instance == null) return;
+
         InventoryManager.Instance.OnInventoryItemChanged += Refresh;
         InventoryManager.Instance.OnHandSlotChanged += UpdateHighlight;
         Refresh();
