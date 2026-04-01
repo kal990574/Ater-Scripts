@@ -60,28 +60,12 @@ public class GameEventHub : MonoBehaviour
         _eventBus.Publish(in gameEvent);
     }
 
-    public GameEventContext CreateContext(Component source)
+    public int NextSequence()
     {
         _sequence++;
-
-        int sourceId = 0;
-        string sourceName = "Unknown";
-
-        if (source != null)
-        {
-            sourceId = source.GetInstanceID();
-            sourceName = source.name;
-        }
-
-        return new GameEventContext(
-            Time.frameCount,
-            Time.time,
-            _sequence,
-            sourceId,
-            sourceName);
+        return _sequence;
     }
     
-
     public void ResetSequence()
     {
         _sequence = 0;

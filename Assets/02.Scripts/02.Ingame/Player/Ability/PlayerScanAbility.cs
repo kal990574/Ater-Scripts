@@ -10,13 +10,13 @@ public class PlayerScanAbility : PlayerAbility
     [SerializeField] private SonarScanFeature _sonarScanFeature;
 
     [SerializeField] private GameObject _scannerModel;
-    [SerializeField] private bool _isActive = false;
+    [SerializeField] private bool _isScannerActive = false;
     
     private void Start()
     {
         _lidarScanFeature.Initialize();
         _sonarScanFeature.Initialize();
-        _isActive = true;
+        _isScannerActive = true;
         _owner.OnModeChanged += SetScannerVisible;
     }
 
@@ -25,12 +25,12 @@ public class PlayerScanAbility : PlayerAbility
         if (mode == PlayerInteractMode.Scan)
         {
             _scannerModel.SetActive(true);
-            _isActive = true;
+            _isScannerActive = true;
         }
         else
         {
             _scannerModel.SetActive(false);
-            _isActive = false;
+            _isScannerActive = false;
         }
     }
 
@@ -52,18 +52,27 @@ public class PlayerScanAbility : PlayerAbility
         _lidarScanFeature.StopScan();
     }
 
-    public void LidarScanActiveAndUpdate()
+    public void LidarScanUpdate()
     {
-        if (!_isActive)
+        if (!_isScannerActive)
         {
             return;
         }
         _lidarScanFeature.UpdateScan(Time.deltaTime);
     }
 
+    public void LidarScanActive()
+    {
+        if (!_isScannerActive)
+        {
+            return;
+        }
+        _lidarScanFeature.ActiveScan();
+    }
+
     public void SonarActive()
     {
-        if (!_isActive)
+        if (!_isScannerActive)
         {
             return;
         }

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LidarScanFeature : GameEventPublisher
+public class LidarScanFeature : MonoBehaviour
 {
     [Header("Required References")]
     [SerializeField] private LidarScanConfigSO _config;
@@ -13,7 +13,7 @@ public class LidarScanFeature : GameEventPublisher
     [Header("Optional Settings")]
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
     
-    
+    private GameEventPublisher _eventPublisher;
     private LidarEffect _lidarEffect;
     private LidarRaycast _lidarRay;
 
@@ -29,7 +29,7 @@ public class LidarScanFeature : GameEventPublisher
 
     public event Action<ScannableObject> OnTargetFind;
     public event Action OnTargetLost;
-
+    
     public void Initialize()
     {
         if (_config == null)
@@ -43,6 +43,9 @@ public class LidarScanFeature : GameEventPublisher
             Debug.LogError($"[{nameof(LidarEffect)}] LineRenderer reference is missing.");
             return;
         }
+        
+        _eventPublisher = new GameEventPublisher();
+        _eventPublisher.SetSource(this);
 
         _lineRenderer.useWorldSpace = true;
         _lineRenderer.positionCount = 2;
@@ -51,21 +54,13 @@ public class LidarScanFeature : GameEventPublisher
         _lidarRay = new(this);
         _lidarEffect = new(this);
     }
-    
-    
-   
 
     public void ActiveScan()
     {
         IsOnScan = true;
-        
-        if (TryGetHub(out GameEventHub hub))
-        {
-            GameEventContext eventContext = CreateContext();
-            LidarScanStartedEvent gameEvent = new LidarScanStartedEvent(eventContext);
 
-            hub.Publish(in gameEvent);
-        }
+        _eventPublisher.TryPublish(
+            context => new LidarScanStartedRawEvent(context));
     }
 
     public void UpdateScan(float deltaTime)
@@ -88,6 +83,14 @@ public class LidarScanFeature : GameEventPublisher
 
     private void HandleTargetChanged(ScannableObject previous, ScannableObject current)
     {
+        if (previous == current)
+        {
+            return;
+        }
+
+        _eventPublisher.TryPublish(
+            context => new LidarScanTargetChangedRawEvent(context, previous, current));
+
         if (previous == null && current != null)
         {
             OnTargetFind?.Invoke(current);
@@ -123,13 +126,8 @@ public class LidarScanFeature : GameEventPublisher
         LidarEffect.ResetLine();
         IsOnScan = false;
         
-        if (TryGetHub(out GameEventHub hub))
-        {
-            GameEventContext eventContext = CreateContext();
-            LidarScanEndEvent gameEvent = new LidarScanEndEvent(eventContext);
-
-            hub.Publish(in gameEvent);
-        }
+        _eventPublisher.TryPublish(
+            context => new LidarScanStoppedRawEvent(context));
     }
     
     private ScannableObject ResolveTarget(IReadOnlyDictionary<ScannableObject, TargetHitData> hitMap, Vector3 origin, Vector3 forward)

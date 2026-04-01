@@ -1,23 +1,40 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
-//게임 이벤트를 발생할수 있는 스크립트는 해당 클래스를 상속받는다.
-public abstract class GameEventPublisher : MonoBehaviour
+// 게임 이벤트를 발행하는 스크립트가 보유하여 사용하는 헬퍼 클래스
+public class GameEventPublisher
 {
-    protected bool TryGetHub(out GameEventHub hub)
+    private UnityEngine.Object sourceObject;
+
+    public void SetSource(UnityEngine.Object source)
     {
-        hub = GameEventHub.Instance;
-        return hub != null;
+        sourceObject = source;
     }
 
-    protected GameEventContext CreateContext()
+    public bool TryPublish<T>(Func<GameEventContext, T> factory) where T : struct, IGameEvent
     {
-        GameEventHub hub = GameEventHub.Instance;
-
-        if (hub == null)
+        if (factory == null)
         {
-            return default;
+            return false;
         }
 
-        return hub.CreateContext(this);
+        GameEventHub hub = GameEventHub.Instance;
+        if (hub == null)
+        {
+            return false;
+        }
+
+        string sourceName = sourceObject != null ? sourceObject.name : "Unknown";
+        int sourceId = sourceObject != null ? sourceObject.GetInstanceID() : 0;
+
+        GameEventContext context = new GameEventContext(
+            Time.frameCount,
+            Time.time,
+            hub.NextSequence(),
+            sourceId,
+            sourceName);
+
+        hub.Publish(factory(context));
+        return true;
     }
 }
