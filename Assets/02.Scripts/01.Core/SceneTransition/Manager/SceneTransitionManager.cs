@@ -15,7 +15,7 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
 
         [SerializeField] private SceneDataSO _mainMenuSceneData;
         [SerializeField] private LoadingUI _loadingUI;
-        [SerializeField] private float _minimumLoadingDuration = 2f;
+        [SerializeField] private float _minimumLoadingDuration = 3f;
 
         private SceneDataSO _currentSceneData;
         private bool _isTransitioning;
