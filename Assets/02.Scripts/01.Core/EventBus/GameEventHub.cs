@@ -3,6 +3,7 @@ using UnityEngine;
 
 //유니티 생명주기용
 //싱글톤, 
+[DefaultExecutionOrder(-1000)]
 public class GameEventHub : MonoBehaviour
 {
     public static GameEventHub Instance { get; private set; }

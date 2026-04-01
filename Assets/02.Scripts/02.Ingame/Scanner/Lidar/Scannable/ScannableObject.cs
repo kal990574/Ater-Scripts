@@ -9,12 +9,14 @@ public class ScannableObject : MonoBehaviour, IScannable,IStateApplier
     [SerializeField] private ScanProgressSetting _settings;
     [SerializeField] private Rigidbody _targetRigidbody;
     
-    private IRuntimeView _instance;
+    
+    private GameEventPublisher _eventPublisher;
+    private IRuntimeView _runtimeView;
     private ScanProgress _progress;
     private ScanFSM _fsm;
     private ScannableQTEInvoker _qteInvoker;
     
-    public IRuntimeView RuntimeView => _instance;
+    public IRuntimeView RuntimeView => _runtimeView;
     public bool IsProgressComplete => _progress != null && _progress.IsActivated;
     public float CurrentProgress => _progress != null ? _progress.CurrentProgress : 0.0f;
     public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
@@ -69,9 +71,9 @@ public class ScannableObject : MonoBehaviour, IScannable,IStateApplier
             _targetRigidbody = GetComponentInParent<Rigidbody>();
         }
 
-        if (_instance == null)
+        if (_runtimeView == null)
         {
-            _instance = GetComponentInParent<IRuntimeView>();
+            _runtimeView = GetComponentInParent<IRuntimeView>();
         }
         
         _qteInvoker = GetComponent<ScannableQTEInvoker>();
@@ -79,6 +81,9 @@ public class ScannableObject : MonoBehaviour, IScannable,IStateApplier
         {
             _qteInvoker = GetComponentInChildren<ScannableQTEInvoker>();
         }
+
+        _eventPublisher = new GameEventPublisher();
+        _eventPublisher.SetSource(this);
         
         if (_progress != null)
         {
@@ -148,10 +153,13 @@ public class ScannableObject : MonoBehaviour, IScannable,IStateApplier
         OnScanComplete?.Invoke();
         OnScanCompleteUnityEvent?.Invoke();
         
-        if (_instance != null)
+        if (_runtimeView != null)
         {
-            _instance.RuntimeData.State.SetBool("is_scan", true);
+            _runtimeView.RuntimeData.State.SetBool("is_scan", true);
         }
+        
+        _eventPublisher.TryPublish(
+            context => new LidarScanTargetCompletedRawEvent(context, this));
     }
     
     public void AddProgress(float amount)
@@ -262,5 +270,4 @@ public class ScannableObject : MonoBehaviour, IScannable,IStateApplier
             interactObject.SetActivate(true);
         }
     }
-
 }

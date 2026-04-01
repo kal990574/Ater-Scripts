@@ -39,7 +39,7 @@ public class OnScanNoTargetInterpreter : SubTensionInterpreterBase
             elapsedTime -= tickInterval;
 
             publisher.TryPublish(
-                context => new OnTensionIncreaseEvent(
+                context => new OnTensionChangedEvent(
                     context,
                     TensionReasons.LidarScanningWithNoTarget));
         }

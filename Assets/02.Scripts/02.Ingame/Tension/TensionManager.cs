@@ -2,168 +2,184 @@
 
 public class TensionManager : MonoBehaviour
 {
-    [Header("Slow Tension/느리게 증가. 이벤트를 통해서만 감소")]
-    [SerializeField] private float _slowTension;
-    [SerializeField] private float _slowTensionMax = 100.0f;
-    [SerializeField] private float _slowTensionAutoIncreasePerSecond = 1.0f;
+    [Header("Rule Table")]
+    [SerializeField] private TensionRuleTableSO _ruleTable;
 
-    [Header("Fast Tension/빠르게 감소. 이벤트를 통해서만 증가")]
-    [SerializeField] private float _fastTension;
-    [SerializeField] private float _fastTensionMax = 50.0f;
-    [SerializeField] private float _fastTensionDecayPerSecond = 8.0f;
+    [Header("Base Tension / 지속적으로 누적되는 긴장")]
+    [SerializeField] private float _baseTension;
+    [SerializeField] private float _baseTensionMax = 100.0f;
+    [SerializeField] private float _baseTensionAutoIncreasePerSecond = 1.0f;
+
+    [Header("Spike Tension / 순간적으로 변동하고 자연 감소하는 긴장")]
+    [SerializeField] private float _spikeTension;
+    [SerializeField] private float _spikeTensionMax = 50.0f;
+    [SerializeField] private float _spikeTensionDecayPerSecond = 8.0f;
 
     [Header("Debug")]
     [SerializeField] private bool _enableDebugLog;
 
-    public float SlowTension => _slowTension;
-    public float FastTension => _fastTension;
-    public float FinalTension => _slowTension + _fastTension;
+    private readonly CompositeSubscription _subscriptions = new CompositeSubscription();
+
+    public float BaseTension => _baseTension;
+    public float SpikeTension => _spikeTension;
+    public float TotalTension => _baseTension + _spikeTension;
+
+    private void OnEnable()
+    {
+        GameEventHub hub = GameEventHub.Instance;
+        if (hub == null)
+        {
+            Debug.LogWarning("[TensionManager] GameEventHub.Instance is null.");
+            return;
+        }
+
+        _subscriptions.Add(hub.Subscribe<OnTensionChangedEvent>(OnTensionChanged));
+    }
+
+    private void OnDisable()
+    {
+        _subscriptions.Dispose();
+    }
 
     private void Update()
     {
         float deltaTime = Time.deltaTime;
 
-        IncreaseSlowTensionOverTime(deltaTime);
-        DecreaseFastTensionOverTime(deltaTime);
+        IncreaseBaseTensionOverTime(deltaTime);
+        DecreaseSpikeTensionOverTime(deltaTime);
     }
 
     public void ResetTension()
     {
-        _slowTension = 0.0f;
-        _fastTension = 0.0f;
+        _baseTension = 0.0f;
+        _spikeTension = 0.0f;
 
         LogState("ResetTension");
     }
 
-    public void AddSlowTension(float amount)
+    public void SetRuleTable(TensionRuleTableSO ruleTable)
     {
-        if (amount <= 0.0f)
+        _ruleTable = ruleTable;
+
+        if (_ruleTable == null)
+        {
+            Debug.LogWarning("[TensionManager] RuleTable is null after SetRuleTable.");
+            return;
+        }
+
+        LogState("SetRuleTable");
+    }
+
+    private void OnTensionChanged(OnTensionChangedEvent tensionEvent)
+    {
+        if (_ruleTable == null)
+        {
+            Debug.LogWarning("[TensionManager] RuleTable is null.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(tensionEvent.Reason) == true)
+        {
+            Debug.LogWarning("[TensionManager] Tension reason is null or empty.");
+            return;
+        }
+
+        if (_ruleTable.TryGetRule(tensionEvent.Reason, out TensionRule rule) == false)
+        {
+            WarnUnknownReason(tensionEvent.Reason);
+            return;
+        }
+
+        ApplyRule(rule);
+    }
+
+    private void ApplyRule(TensionRule rule)
+    {
+        if (rule == null)
+        {
+            Debug.LogWarning("[TensionManager] Rule is null.");
+            return;
+        }
+
+        switch (rule.Channel)
+        {
+            case ETensionChannel.BaseTension:
+            {
+                ApplyBaseTensionDelta(rule.Delta, rule.Reason);
+                break;
+            }
+            case ETensionChannel.SpikeTension:
+            {
+                ApplySpikeTensionDelta(rule.Delta, rule.Reason);
+                break;
+            }
+            default:
+            {
+                Debug.LogWarning($"[TensionManager] Unsupported Channel : {rule.Channel}");
+                break;
+            }
+        }
+    }
+
+    private void ApplyBaseTensionDelta(float delta, string reason)
+    {
+        if (Mathf.Approximately(delta, 0.0f) == true)
         {
             return;
         }
 
-        _slowTension = ClampSlowTension(_slowTension + amount);
+        _baseTension = ClampBaseTension(_baseTension + delta);
 
-        LogState($"AddSlowTension : +{amount:F2}");
+        LogState($"ApplyBaseTensionDelta | Reason: {reason} | Delta: {delta:+0.00;-0.00}");
     }
 
-    public void ReduceSlowTension(float amount)
+    private void ApplySpikeTensionDelta(float delta, string reason)
     {
-        if (amount <= 0.0f)
+        if (Mathf.Approximately(delta, 0.0f) == true)
         {
             return;
         }
 
-        _slowTension = ClampSlowTension(_slowTension - amount);
+        _spikeTension = ClampSpikeTension(_spikeTension + delta);
 
-        LogState($"ReduceSlowTension : -{amount:F2}");
+        LogState($"ApplySpikeTensionDelta | Reason: {reason} | Delta: {delta:+0.00;-0.00}");
     }
 
-    public void AddFastTension(float amount)
+    private void IncreaseBaseTensionOverTime(float deltaTime)
     {
-        if (amount <= 0.0f)
+        if (_baseTensionAutoIncreasePerSecond <= 0.0f)
         {
             return;
         }
 
-        _fastTension = ClampFastTension(_fastTension + amount);
-
-        LogState($"AddFastTension : +{amount:F2}");
+        float increaseDelta = _baseTensionAutoIncreasePerSecond * deltaTime;
+        _baseTension = ClampBaseTension(_baseTension + increaseDelta);
     }
 
-    public void ReduceFastTension(float amount)
+    private void DecreaseSpikeTensionOverTime(float deltaTime)
     {
-        if (amount <= 0.0f)
+        if (_spikeTensionDecayPerSecond <= 0.0f)
         {
             return;
         }
 
-        _fastTension = ClampFastTension(_fastTension - amount);
-
-        LogState($"ReduceFastTension : -{amount:F2}");
+        float decreaseDelta = _spikeTensionDecayPerSecond * deltaTime;
+        _spikeTension = ClampSpikeTension(_spikeTension - decreaseDelta);
     }
 
-    public void ReduceFinalTension(float amount)
+    private float ClampBaseTension(float value)
     {
-        if (amount <= 0.0f)
-        {
-            return;
-        }
-
-        float remainingAmount = amount;
-
-        remainingAmount = ReduceFastTensionFirst(remainingAmount);
-        remainingAmount = ReduceSlowTensionNext(remainingAmount);
-
-        LogState($"ReduceFinalTension : -{amount:F2}");
+        return Mathf.Clamp(value, 0.0f, _baseTensionMax);
     }
 
-    private void IncreaseSlowTensionOverTime(float deltaTime)
+    private float ClampSpikeTension(float value)
     {
-        if (_slowTensionAutoIncreasePerSecond <= 0.0f)
-        {
-            return;
-        }
-
-        float increaseAmount = _slowTensionAutoIncreasePerSecond * deltaTime;
-        _slowTension = ClampSlowTension(_slowTension + increaseAmount);
+        return Mathf.Clamp(value, 0.0f, _spikeTensionMax);
     }
 
-    private void DecreaseFastTensionOverTime(float deltaTime)
+    private void WarnUnknownReason(string reason)
     {
-        if (_fastTensionDecayPerSecond <= 0.0f)
-        {
-            return;
-        }
-
-        float decreaseAmount = _fastTensionDecayPerSecond * deltaTime;
-        _fastTension = ClampFastTension(_fastTension - decreaseAmount);
-    }
-
-    private float ReduceFastTensionFirst(float remainingAmount)
-    {
-        if (remainingAmount <= 0.0f)
-        {
-            return 0.0f;
-        }
-
-        if (_fastTension <= 0.0f)
-        {
-            return remainingAmount;
-        }
-
-        float reduceAmount = Mathf.Min(_fastTension, remainingAmount);
-        _fastTension = ClampFastTension(_fastTension - reduceAmount);
-
-        return remainingAmount - reduceAmount;
-    }
-
-    private float ReduceSlowTensionNext(float remainingAmount)
-    {
-        if (remainingAmount <= 0.0f)
-        {
-            return 0.0f;
-        }
-
-        if (_slowTension <= 0.0f)
-        {
-            return remainingAmount;
-        }
-
-        float reduceAmount = Mathf.Min(_slowTension, remainingAmount);
-        _slowTension = ClampSlowTension(_slowTension - reduceAmount);
-
-        return remainingAmount - reduceAmount;
-    }
-
-    private float ClampSlowTension(float value)
-    {
-        return Mathf.Clamp(value, 0.0f, _slowTensionMax);
-    }
-
-    private float ClampFastTension(float value)
-    {
-        return Mathf.Clamp(value, 0.0f, _fastTensionMax);
+        Debug.LogWarning($"[TensionManager] Unknown Reason : {reason}");
     }
 
     private void LogState(string action)
@@ -174,6 +190,9 @@ public class TensionManager : MonoBehaviour
         }
 
         Debug.Log(
-            $"[TensionManager] {action} | Slow: {_slowTension:F2}, Fast: {_fastTension:F2}, Final: {FinalTension:F2}");
+            $"[TensionManager] {action} | " +
+            $"Base: {_baseTension:F2}, " +
+            $"Spike: {_spikeTension:F2}, " +
+            $"Total: {TotalTension:F2}");
     }
 }

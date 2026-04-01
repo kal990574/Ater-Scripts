@@ -4,11 +4,11 @@
 public class TensionEventInterpreter : MonoBehaviour
 {
     private readonly List<SubTensionInterpreterBase> interpreters = new();
-
+    
     private void Awake()
     {
         interpreters.Add(new OnScanNoTargetInterpreter(this, 1f));
-        //interpreters.Add(new OnScanCompletedInterpreter(this));
+        interpreters.Add(new OnScanCompletedInterpreter(this));
     }
 
     private void OnEnable()

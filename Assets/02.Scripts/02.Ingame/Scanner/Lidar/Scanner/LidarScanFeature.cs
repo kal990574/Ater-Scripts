@@ -75,6 +75,11 @@ public class LidarScanFeature : MonoBehaviour
 
         if (CurrentTarget != null)
         {
+            if (previousTarget == null)
+            {
+                CurrentTarget.OnScanStarted();
+            }
+            
             CurrentTarget.OnScanning(deltaTime);
         }
 
