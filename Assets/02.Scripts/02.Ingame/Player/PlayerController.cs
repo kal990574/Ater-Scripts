@@ -3,35 +3,27 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum PlayerInteractMode
-{
-    Item,
-    Scan,
-    UI,
-    Puzzle,
-}
-
 public class PlayerController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private PlayerConfigSO _playerConfig;
     [SerializeField] private bool _canMove = true;
     [SerializeField] private bool _canRotate = true;
-    [SerializeField] private PlayerInteractMode _interactMode = PlayerInteractMode.Scan;
+    [SerializeField] private EPlayerInteractMode _interactMode = EPlayerInteractMode.Scan;
 
     private readonly Dictionary<Type, PlayerAbility> _abilities = new();
     private IPlayerInput _input;
-    private PlayerInteractMode _lastGameplayMode = PlayerInteractMode.Scan;
+    private EPlayerInteractMode _lastGameplayMode = EPlayerInteractMode.Scan;
     private PadLockController _activePadLockController;
 
     public PlayerConfigSO Config => _playerConfig;
     public IPlayerInput Input => _input;
     public bool CanMove => _canMove;
     public bool CanRotate => _canRotate;
-    public PlayerInteractMode InteractMode => _interactMode;
+    public EPlayerInteractMode InteractMode => _interactMode;
     public IDetectable Target => GetAbility<PlayerDetectAbility>().CurrentTarget;
 
-    public event Action<PlayerInteractMode> OnModeChanged;
+    public event Action<EPlayerInteractMode> OnModeChanged;
 
     private void Awake()
     {
@@ -80,10 +72,10 @@ public class PlayerController : MonoBehaviour
     {
         switch (_interactMode)
         {
-            case PlayerInteractMode.UI:
+            case EPlayerInteractMode.UI:
                 HandleUIModeInput();
                 return true;
-            case PlayerInteractMode.Puzzle:
+            case EPlayerInteractMode.Puzzle:
                 HandlePuzzleModeInput();
                 return true;
             default:
@@ -130,10 +122,10 @@ public class PlayerController : MonoBehaviour
     {
         switch (_interactMode)
         {
-            case PlayerInteractMode.Scan:
+            case EPlayerInteractMode.Scan:
                 ScanModeInput();
                 break;
-            case PlayerInteractMode.Item:
+            case EPlayerInteractMode.Item:
                 HandleItemModeInput();
                 break;
         }
@@ -141,7 +133,7 @@ public class PlayerController : MonoBehaviour
         float scroll = Input.ScrollInput;
         if(!Mathf.Approximately(scroll, 0f))
         {
-            SetActionMode(PlayerInteractMode.Item);
+            SetActionMode(EPlayerInteractMode.Item);
             int direction = scroll > 0f ? 1 : -1;
             GetAbility<PlayerInventoryAbility>().CycleHandItem(direction);
         }
@@ -169,12 +161,12 @@ public class PlayerController : MonoBehaviour
     private void SwitchToScanMode()
     {
         GetAbility<PlayerInventoryAbility>().ClearHandItem();
-        SetActionMode(PlayerInteractMode.Scan);
+        SetActionMode(EPlayerInteractMode.Scan);
     }
 
     private void ToggleInventoryUI()
     {
-        bool wasInUIMode = _interactMode == PlayerInteractMode.UI;
+        bool wasInUIMode = _interactMode == EPlayerInteractMode.UI;
         GetAbility<PlayerInventoryAbility>().ToggleInventory();
 
         if (wasInUIMode)
@@ -188,7 +180,7 @@ public class PlayerController : MonoBehaviour
 
     private void SwitchToItemMode(int itemSlotIndex)
     {
-        SetActionMode(PlayerInteractMode.Item);
+        SetActionMode(EPlayerInteractMode.Item);
         GetAbility<PlayerInventoryAbility>().TryPickUpItem(itemSlotIndex);
     }
 
@@ -240,7 +232,7 @@ public class PlayerController : MonoBehaviour
         return null;
     }
 
-    public void SetActionMode(PlayerInteractMode mode)
+    public void SetActionMode(EPlayerInteractMode mode)
     {
         if (_interactMode == mode)
         {
@@ -259,7 +251,7 @@ public class PlayerController : MonoBehaviour
 
     public void EnterUIMode()
     {
-        SetActionMode(PlayerInteractMode.UI);
+        SetActionMode(EPlayerInteractMode.UI);
     }
 
     public void ExitUIMode()
@@ -269,7 +261,7 @@ public class PlayerController : MonoBehaviour
 
     public void EnterPuzzleMode()
     {
-        SetActionMode(PlayerInteractMode.Puzzle);
+        SetActionMode(EPlayerInteractMode.Puzzle);
     }
 
     public void ExitPuzzleMode()
@@ -302,7 +294,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        if (_interactMode == PlayerInteractMode.UI)
+        if (_interactMode == EPlayerInteractMode.UI)
         {
             ExitUIMode();
         }
@@ -321,9 +313,9 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void ApplyModeState(PlayerInteractMode mode)
+    private void ApplyModeState(EPlayerInteractMode mode)
     {
-        bool blocksPlayerControl = mode == PlayerInteractMode.UI || mode == PlayerInteractMode.Puzzle;
+        bool blocksPlayerControl = mode == EPlayerInteractMode.UI || mode == EPlayerInteractMode.Puzzle;
         _canMove = !blocksPlayerControl;
         _canRotate = !blocksPlayerControl;
 
@@ -331,8 +323,8 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = blocksPlayerControl;
     }
 
-    private static bool IsGameplayMode(PlayerInteractMode mode)
+    private static bool IsGameplayMode(EPlayerInteractMode mode)
     {
-        return mode == PlayerInteractMode.Item || mode == PlayerInteractMode.Scan;
+        return mode == EPlayerInteractMode.Item || mode == EPlayerInteractMode.Scan;
     }
 }

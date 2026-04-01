@@ -20,9 +20,9 @@ public class PlayerScanAbility : PlayerAbility
         _owner.OnModeChanged += SetScannerVisible;
     }
 
-    private void SetScannerVisible(PlayerInteractMode mode)
+    private void SetScannerVisible(EPlayerInteractMode mode)
     {
-        if (mode == PlayerInteractMode.Scan)
+        if (mode == EPlayerInteractMode.Scan)
         {
             _scannerModel.SetActive(true);
             _isScannerActive = true;
