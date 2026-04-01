@@ -7,7 +7,6 @@ using UnityEngine.UI;
 public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
 {
     [SerializeField] private Image _itemIcon;
-    [SerializeField] private TextMeshProUGUI _indexText;
     [SerializeField] private Image _selected;
 
     private string _instanceId;
@@ -21,17 +20,15 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
     public event Action<UI_InventorySlotItem> OnClicked;
     public event Action<UI_InventorySlotItem, UI_InventorySlotItem> OnDropped;
 
-    public void Setup(string instanceId, int index, Canvas canvas)
+    public void Setup(string instanceId, Canvas canvas)
     {
         _instanceId = instanceId;
-        _index = index;
         _canvas = canvas;
         Refresh();
     }
 
     private void Refresh()
     {
-        _indexText.text = _index.ToString();
         RuntimeItemData runtimeItemData = ResolveItemInstance();
         if (runtimeItemData == null)
         {
