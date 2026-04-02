@@ -7,17 +7,13 @@ namespace _02.Scripts._03.Outgame.SaveSystem.Domain
     [Serializable]
     public class SaveData
     {
-        [SerializeField] private int _chapterId;
-        // save 시간
-        [SerializeField] private string _savedAt;
-        
-        
-        public int ChapterId => _chapterId;
-        public string SavedAt {get => _savedAt; set => _savedAt = value; }
+        [SerializeField] private List<int> _clearedChapters;
 
-        public SaveData(int chapterId)
+        public List<int> ClearedChapters => _clearedChapters;
+
+        public SaveData()
         {
-            _chapterId = chapterId;
+            _clearedChapters = new List<int>();
         }
     }
 }

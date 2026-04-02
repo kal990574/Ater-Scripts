@@ -1,21 +1,71 @@
-using UnityEngine;
+using System.Collections.Generic;                      
+using UnityEngine;                                     
+using Cysharp.Threading.Tasks;                         
 using _02.Scripts.Core;
-using _02.Scripts.Core.Domain;
+using _02.Scripts.Core.Domain;                         
+using _02.Scripts._03.Outgame.SaveSystem.Manager;
+using System.Linq;
 
 namespace _02.Scripts.UI.Component
 {
     public class MainMenuController : MonoBehaviour
     {
+        [SerializeField] private List<GameObject> _chapterCards;
+        [SerializeField] private GameObject _newGameCard;
+        [SerializeField] private GameObject _continueCard;
         private IGameManager _gameManager;
+        private SaveManager _saveManager;
+        private int _selectedChapter;
 
-        private void Start()
+        private async void Start()
         {
             _gameManager = Managers.Get<IGameManager>();
+            _saveManager = Managers.Get<SaveManager>();
+            await RefreshChapterUI();
         }
 
-        public void PlayGame()
+        public void SelectChapter(int chapter)
         {
-            _gameManager.LoadChapter(1);
+            _selectedChapter = chapter;
+        }
+
+        public async void SelectContinue()
+        {
+            var data = await _saveManager.LoadGame();
+            _selectedChapter = data.ClearedChapters.Count > 0
+                ? data.ClearedChapters.Max() + 1
+                : 1;
+        }             
+
+        public void ConfirmLoadChapter()
+        {
+            _gameManager.LoadChapter(_selectedChapter);
+        }
+
+        private async UniTask RefreshChapterUI()
+        {
+            var hasSave = await _saveManager.HasSave();
+            if (!hasSave)
+            {
+                _newGameCard.SetActive(true);
+                _continueCard.SetActive(false);
+                for (int i = 0; i < _chapterCards.Count; i++)
+                    _chapterCards[i].SetActive(false);
+                return;
+            }
+            
+            _newGameCard.SetActive(false);
+
+            var data = await _saveManager.LoadGame();
+
+            bool allCleared = data.ClearedChapters.Count >= _chapterCards.Count;
+            _continueCard.SetActive(!allCleared);
+
+            for (int i = 0; i < _chapterCards.Count; i++)
+            {
+                bool unlocked = data.ClearedChapters.Contains(i + 1);
+                _chapterCards[i].SetActive(unlocked);
+            }
         }
 
         public void QuitGame()

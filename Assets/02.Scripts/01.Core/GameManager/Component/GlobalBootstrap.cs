@@ -43,7 +43,7 @@ namespace _02.Scripts.Core.Component
             Managers.Register<SaveManager>(saveManager);
             
             // CheckPoint Manager
-            var checkPointManager = new CheckPointManager(saveManager, _sceneTransitionManager);
+            var checkPointManager = new CheckPointManager(saveManager, gameManager);
             Managers.Register<CheckPointManager>(checkPointManager);
         }
 

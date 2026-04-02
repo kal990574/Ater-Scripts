@@ -1,4 +1,3 @@
-using System;                                             
 using _02.Scripts._03.Outgame.SaveSystem.Domain;
 using _02.Scripts._03.Outgame.SaveSystem.Repository;
 using Cysharp.Threading.Tasks;
@@ -16,7 +15,6 @@ namespace _02.Scripts._03.Outgame.SaveSystem.Manager
 
         public async UniTask SaveGame(SaveData data)
         {
-            data.SavedAt = DateTime.UtcNow.ToString("o");
             await _repository.Save(data);
         }
         
