@@ -1,5 +1,8 @@
+using _02.Scripts._01.Core.CheckPoint.Manager;
 using _02.Scripts._01.Core.SceneTransition.Domain;
 using _02.Scripts._01.Core.SceneTransition.Manager;
+using _02.Scripts._03.Outgame.SaveSystem.Manager;
+using _02.Scripts._03.Outgame.SaveSystem.Repository;
 using System.Collections.Generic;
 using UnityEngine;
 using _02.Scripts.Core.Manager;
@@ -27,9 +30,21 @@ namespace _02.Scripts.Core.Component
             _instance = this;
             DontDestroyOnLoad(gameObject);
 
+            // Scene Transition Manager
             Managers.Register<ISceneTransitionManager>(_sceneTransitionManager);
+            
+            // Game Manager
             var gameManager = new GameManager(_chapterSceneList, _sceneTransitionManager);
             Managers.Register<IGameManager>(gameManager);
+            
+            // Save Manager
+            var saveRepository = new LocalSaveRepository();
+            var saveManager = new SaveManager(saveRepository);
+            Managers.Register<SaveManager>(saveManager);
+            
+            // CheckPoint Manager
+            var checkPointManager = new CheckPointManager(saveManager, gameManager);
+            Managers.Register<CheckPointManager>(checkPointManager);
         }
 
         private void OnDestroy()
