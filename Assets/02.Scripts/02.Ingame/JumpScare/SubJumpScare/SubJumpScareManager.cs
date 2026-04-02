@@ -30,7 +30,9 @@ public class SubJumpScareManager : MonoBehaviour
     private float _periodicTimer;
     private float _mainGraceRemainingTime;
     private bool _isMainJumpScareRunning;
-
+    
+    private GameEventPublisher _eventPublisher;
+    
     private SubJumpScareCooldownState _cooldownState;
     private SubJumpScareHistory _history;
     private SubJumpScareCommonValidator _commonValidator;
@@ -52,6 +54,9 @@ public class SubJumpScareManager : MonoBehaviour
             _weightedPicker,
             _cooldownState,
             _history);
+
+        _eventPublisher = new GameEventPublisher();
+        _eventPublisher.SetSource(this);
     }
 
     private void Update()
@@ -108,6 +113,9 @@ public class SubJumpScareManager : MonoBehaviour
         SubJumpScareContext context = CreateContext();
         SubJumpScareSelectionResult result = _selectionCoordinator.SelectPeriodic(database, context);
         LogResult(context, result);
+        
+        _eventPublisher.TryPublish(
+            context => new SubJumpScareTriggeredRawEvent(context, result));
     }
 
     [ContextMenu("Debug/Try Select Sonar")]
@@ -122,6 +130,9 @@ public class SubJumpScareManager : MonoBehaviour
         }
 
         LogResult(context, result);
+        
+        _eventPublisher.TryPublish(
+            context => new SubJumpScareTriggeredRawEvent(context, result));
     }
 
     private SubJumpScareContext CreateContext()
@@ -167,11 +178,6 @@ public class SubJumpScareManager : MonoBehaviour
 
     private void LogResult(SubJumpScareContext context, SubJumpScareSelectionResult result)
     {
-        if (result == null)
-        {
-            return;
-        }
-
         if (result.IsSuccess == true)
         {
             if (enableSelectionLog == false)
@@ -180,7 +186,7 @@ public class SubJumpScareManager : MonoBehaviour
             }
 
             Debug.Log(
-                $"[SubJumpScare] Selection Success | Trigger={result.TriggerType} | Type={result.SelectedType} | Intensity={result.SelectedIntensity} | Tension={context.TotalTension} | Mode={context.CurrentPlayerInteractMode} | Id={result.SelectedId} | Name={result.SelectedDisplayName}");
+                $"[SubJumpScare] Selection Success | Trigger={result.TriggerType} | Type={result.Data.Type} | Intensity={result.Data.Intensity} | Tension={context.TotalTension} | Mode={context.CurrentPlayerInteractMode} | Id={result.Data.Id} | Name={result.Data.DisplayName}");
             return;
         }
 

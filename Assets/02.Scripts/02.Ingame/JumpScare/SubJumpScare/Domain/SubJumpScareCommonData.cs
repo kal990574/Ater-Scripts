@@ -63,6 +63,11 @@ public class SubJumpScareCommonData
     [PropertyTooltip("직전에 발동한 점프스케어와 동일한 데이터 항목이라면 이번 후보를 제외할지 여부입니다.")]
     public bool BlockSameItemAsPrevious = false;
 
+    [FoldoutGroup("Tension Feedback", expanded: true)]
+    [MinValue(0f)]
+    [PropertyTooltip("이 점프스케어가 실제 발생했을 때 TotalTension에서 감소시킬 양입니다.")]
+    public float TensionDecreaseOnTriggered = 0f;
+
     public bool IsValid()
     {
         return string.IsNullOrWhiteSpace(Id) == false

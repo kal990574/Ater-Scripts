@@ -3,9 +3,6 @@ using UnityEngine;
 
 public class TensionManager : MonoBehaviour, ITensionProvider,ITensionModifier
 {
-    [Header("Rule Table")]
-    [SerializeField] private TensionRuleTableSO _ruleTable;
-
     [Header("Base Tension / 지속적으로 누적되는 긴장")]
     [SerializeField] private float _baseTension;
     [SerializeField] private float _baseTensionMax = 100.0f;
@@ -58,68 +55,22 @@ public class TensionManager : MonoBehaviour, ITensionProvider,ITensionModifier
 
         LogState("ResetTension");
     }
-
-    public void SetRuleTable(TensionRuleTableSO ruleTable)
-    {
-        _ruleTable = ruleTable;
-
-        if (_ruleTable == null)
-        {
-            Debug.LogWarning("[TensionManager] RuleTable is null after SetRuleTable.");
-            return;
-        }
-
-        LogState("SetRuleTable");
-    }
-
+    
     private void OnTensionChanged(OnTensionChangedEvent tensionEvent)
     {
-        if (_ruleTable == null)
-        {
-            Debug.LogWarning("[TensionManager] RuleTable is null.");
-            return;
-        }
-
         if (string.IsNullOrEmpty(tensionEvent.Reason) == true)
         {
             Debug.LogWarning("[TensionManager] Tension reason is null or empty.");
             return;
         }
-
-        if (_ruleTable.TryGetRule(tensionEvent.Reason, out TensionRule rule) == false)
+        
+        if (tensionEvent.Channel == ETensionChannel.BaseTension)
         {
-            WarnUnknownReason(tensionEvent.Reason);
-            return;
+            ApplyBaseTensionDelta(tensionEvent.Amount, tensionEvent.Reason);
         }
-
-        ApplyRule(rule);
-    }
-
-    private void ApplyRule(TensionRule rule)
-    {
-        if (rule == null)
+        else
         {
-            Debug.LogWarning("[TensionManager] Rule is null.");
-            return;
-        }
-
-        switch (rule.Channel)
-        {
-            case ETensionChannel.BaseTension:
-            {
-                ApplyBaseTensionDelta(rule.Delta, rule.Reason);
-                break;
-            }
-            case ETensionChannel.SpikeTension:
-            {
-                ApplySpikeTensionDelta(rule.Delta, rule.Reason);
-                break;
-            }
-            default:
-            {
-                Debug.LogWarning($"[TensionManager] Unsupported Channel : {rule.Channel}");
-                break;
-            }
+            ApplySpikeTensionDelta(tensionEvent.Amount, tensionEvent.Reason);
         }
     }
 
@@ -156,11 +107,27 @@ public class TensionManager : MonoBehaviour, ITensionProvider,ITensionModifier
             return;
         }
 
-        _baseTension = ClampBaseTension(_baseTension + delta);
+        float previousBase = _baseTension;
+        float newBase = _baseTension + delta;
+
+        // 1. Base가 0 아래로 내려가는 경우
+        if (newBase < 0.0f)
+        {
+            float overflow = newBase; // 음수값 그대로
+
+            _baseTension = 0.0f;
+
+            // 남은 값을 Spike에 적용
+            ApplySpikeTensionDelta(overflow, $"{reason} (Overflow from Base)");
+        }
+        else
+        {
+            _baseTension = ClampBaseTension(newBase);
+        }
 
         LogState($"ApplyBaseTensionDelta | Reason: {reason} | Delta: {delta:+0.00;-0.00}");
     }
-
+    
     private void ApplySpikeTensionDelta(float delta, string reason)
     {
         if (Mathf.Approximately(delta, 0.0f) == true)

@@ -16,14 +16,14 @@ public class SubJumpScareHistory
 
     public void Record(SubJumpScareSelectionResult result)
     {
-        if (result == null || result.IsSuccess == false)
+        if (result.IsSuccess == false)
         {
             return;
         }
 
-        LastSelectedId = result.SelectedId;
-        LastSelectedType = result.SelectedType;
-        LastSelectedIntensity = result.SelectedIntensity;
+        LastSelectedId = result.Data.Id;
+        LastSelectedType = result.Data.Type;
+        LastSelectedIntensity = result.Data.Intensity;
     }
 
     public bool IsSameItem(string itemId)

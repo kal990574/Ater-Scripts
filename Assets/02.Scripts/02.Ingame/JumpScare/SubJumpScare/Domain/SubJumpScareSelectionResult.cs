@@ -1,45 +1,43 @@
-﻿using UnityEngine;
+﻿using System;
 
-public class SubJumpScareSelectionResult
+public readonly struct SubJumpScareSelectionResult
 {
-    public bool IsSuccess;
-    public string FailReason;
-    public ESubJumpScareTriggerType TriggerType;
-    public ESubJumpScareType SelectedType;
-    public ESubJumpScareIntensity SelectedIntensity;
-    public string SelectedId;
-    public string SelectedDisplayName;
-    public Object SelectedAsset;
+    public bool IsSuccess { get; }
+    public string FailReason { get; }
+    public ESubJumpScareTriggerType TriggerType { get; }
+    public SubJumpScareCommonData Data { get; }
 
-    public static SubJumpScareSelectionResult CreateFail(ESubJumpScareTriggerType triggerType, string reason)
+    private SubJumpScareSelectionResult(
+        bool isSuccess,
+        ESubJumpScareTriggerType triggerType,
+        string failReason,
+        SubJumpScareCommonData data)
     {
-        return new SubJumpScareSelectionResult
-        {
-            IsSuccess = false,
-            TriggerType = triggerType,
-            SelectedType = ESubJumpScareType.None,
-            SelectedIntensity = ESubJumpScareIntensity.None,
-            FailReason = reason
-        };
+        IsSuccess = isSuccess;
+        TriggerType = triggerType;
+        FailReason = failReason;
+        Data = data;
+    }
+
+    public static SubJumpScareSelectionResult CreateFail(
+        ESubJumpScareTriggerType triggerType,
+        string reason)
+    {
+        return new SubJumpScareSelectionResult(
+            false,
+            triggerType,
+            reason,
+            null);
     }
 
     public static SubJumpScareSelectionResult CreateSuccess(
         ESubJumpScareTriggerType triggerType,
-        ESubJumpScareType selectedType,
-        ESubJumpScareIntensity selectedIntensity,
-        string selectedId,
-        string selectedDisplayName,
-        Object selectedAsset)
+        SubJumpScareCommonData data)
     {
-        return new SubJumpScareSelectionResult
-        {
-            IsSuccess = true,
-            TriggerType = triggerType,
-            SelectedType = selectedType,
-            SelectedIntensity = selectedIntensity,
-            SelectedId = selectedId,
-            SelectedDisplayName = selectedDisplayName,
-            SelectedAsset = selectedAsset
-        };
+        return new SubJumpScareSelectionResult(
+            true,
+            triggerType,
+            null,
+            data);
     }
 }

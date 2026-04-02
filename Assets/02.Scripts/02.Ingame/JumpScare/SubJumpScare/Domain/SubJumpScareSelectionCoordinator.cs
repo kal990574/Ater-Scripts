@@ -129,11 +129,7 @@ public class SubJumpScareSelectionCoordinator
 
         return SubJumpScareSelectionResult.CreateSuccess(
             ESubJumpScareTriggerType.Periodic,
-            ESubJumpScareType.PostProcess,
-            selected.Common.Intensity,
-            selected.Common.Id,
-            selected.Common.DisplayName,
-            selected);
+            selected.Common);
     }
 
     private SubJumpScareSelectionResult TrySelectSound(
@@ -169,11 +165,7 @@ public class SubJumpScareSelectionCoordinator
 
         return SubJumpScareSelectionResult.CreateSuccess(
             ESubJumpScareTriggerType.Periodic,
-            ESubJumpScareType.Sound,
-            selected.Common.Intensity,
-            selected.Common.Id,
-            selected.Common.DisplayName,
-            selected);
+            selected.Common);
     }
 
     private SubJumpScareSelectionResult TrySelectFakeEnemy(
@@ -209,11 +201,7 @@ public class SubJumpScareSelectionCoordinator
 
         return SubJumpScareSelectionResult.CreateSuccess(
             ESubJumpScareTriggerType.Sonar,
-            ESubJumpScareType.FakeEnemy,
-            selected.Common.Intensity,
-            selected.Common.Id,
-            selected.Common.DisplayName,
-            selected);
+            selected.Common);
     }
 
     private void Commit(SubJumpScareSelectionResult result)

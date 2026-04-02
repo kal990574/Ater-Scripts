@@ -13,6 +13,6 @@
     {
         publisher.TryPublish(
             context => new OnTensionChangedEvent( 
-                context, TensionReasons.LidarScanCompleted));
+                context, TensionReasons.LidarScanCompleted, ETensionChannel.BaseTension, 0));
     }
 }

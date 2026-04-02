@@ -4,6 +4,9 @@ using UnityEngine;
 /// <summary>
 /// 서브 점프스케어의 쿨타임 관리
 /// </summary>
+using System.Collections.Generic;
+using UnityEngine;
+
 public class SubJumpScareCooldownState
 {
     private float _globalCooldownUntilTime;
@@ -53,60 +56,23 @@ public class SubJumpScareCooldownState
 
     public void Commit(SubJumpScareSelectionResult result)
     {
-        if (result == null || result.IsSuccess == false)
+        if (result.IsSuccess == false)
+        {
+            return;
+        }
+
+        if (result.Data == null)
         {
             return;
         }
 
         float currentTime = Time.time;
-        float typeCooldown = 0f;
-        float itemCooldown = 0f;
-        float globalCooldownContribution = 0f;
+        float typeCooldown = result.Data.TypeCooldown;
+        float itemCooldown = result.Data.ItemCooldown;
+        float globalCooldownContribution = result.Data.GlobalCooldownContribution;
 
-        switch (result.SelectedType)
-        {
-            case ESubJumpScareType.Sound:
-            {
-                SoundSubJumpScareDefinitionSO definition = result.SelectedAsset as SoundSubJumpScareDefinitionSO;
-                if (definition != null)
-                {
-                    typeCooldown = definition.Common.TypeCooldown;
-                    itemCooldown = definition.Common.ItemCooldown;
-                    globalCooldownContribution = definition.Common.GlobalCooldownContribution;
-                }
-
-                break;
-            }
-
-            case ESubJumpScareType.PostProcess:
-            {
-                PostProcessSubJumpScareDefinitionSO definition = result.SelectedAsset as PostProcessSubJumpScareDefinitionSO;
-                if (definition != null)
-                {
-                    typeCooldown = definition.Common.TypeCooldown;
-                    itemCooldown = definition.Common.ItemCooldown;
-                    globalCooldownContribution = definition.Common.GlobalCooldownContribution;
-                }
-
-                break;
-            }
-
-            case ESubJumpScareType.FakeEnemy:
-            {
-                FakeEnemySubJumpScareDefinitionSO definition = result.SelectedAsset as FakeEnemySubJumpScareDefinitionSO;
-                if (definition != null)
-                {
-                    typeCooldown = definition.Common.TypeCooldown;
-                    itemCooldown = definition.Common.ItemCooldown;
-                    globalCooldownContribution = definition.Common.GlobalCooldownContribution;
-                }
-
-                break;
-            }
-        }
-
-        _typeCooldownUntilMap[result.SelectedType] = currentTime + typeCooldown;
-        _itemCooldownUntilMap[result.SelectedId] = currentTime + itemCooldown;
+        _typeCooldownUntilMap[result.Data.Type] = currentTime + typeCooldown;
+        _itemCooldownUntilMap[result.Data.Id] = currentTime + itemCooldown;
         _globalCooldownUntilTime = currentTime + globalCooldownContribution;
     }
 
