@@ -1,6 +1,6 @@
-using System;                                             
 using _02.Scripts._03.Outgame.SaveSystem.Domain;
 using _02.Scripts._03.Outgame.SaveSystem.Repository;
+using Cysharp.Threading.Tasks;
 
 namespace _02.Scripts._03.Outgame.SaveSystem.Manager
 {
@@ -13,25 +13,24 @@ namespace _02.Scripts._03.Outgame.SaveSystem.Manager
             _repository = repository;
         }
 
-        public void SaveGame(SaveData data, Action onSuccess, Action<string> onFailure = null)
+        public async UniTask SaveGame(SaveData data)
         {
-            data.SavedAt = DateTime.UtcNow.ToString("o");
-            _repository.Save(data, onSuccess, onFailure);
+            await _repository.Save(data);
         }
         
-        public void LoadGame(Action<SaveData> onSuccess, Action<string> onFailure = null)
+        public async UniTask<SaveData> LoadGame()
         {
-            _repository.Load(onSuccess, onFailure);
+            return await _repository.Load();
         }
 
-        public void DeleteSave(Action onSuccess = null, Action<string> onFailure = null)
-        {                                                 
-            _repository.Delete(onSuccess, onFailure);
+        public async UniTask DeleteSave()
+        {
+            await _repository.Delete();
         }
 
-        public bool HasSave()
+        public async UniTask<bool> HasSave()
         {
-            return _repository.HasSave();
+            return await _repository.HasSave();
         }
     }
 }

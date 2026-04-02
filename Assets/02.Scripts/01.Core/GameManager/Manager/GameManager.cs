@@ -4,24 +4,24 @@ using System;
 using System.Collections.Generic;
 using _02.Scripts.Core.Domain;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace _02.Scripts.Core.Manager
 {
     public class GameManager : IGameManager
     {
         private readonly List<SceneDataSO> _chapterSceneList;
-        private readonly ISceneTransitionManager _sceneTransition;
+        private readonly ISceneTransitionManager _sceneTransitionManager;
 
         public GameState CurrentState { get; private set; } = GameState.Playing;
         public int CurrentChapter { get; private set; } = 0;
         
         public event Action<GameState> OnGameStateChanged;
+        public event Action<int> OnChapterCleared;
 
-        public GameManager(List<SceneDataSO> chapterSceneList, ISceneTransitionManager sceneTransition)
+        public GameManager(List<SceneDataSO> chapterSceneList, ISceneTransitionManager sceneTransitionManager)
         {
             _chapterSceneList = chapterSceneList;
-            _sceneTransition = sceneTransition;
+            _sceneTransitionManager = sceneTransitionManager;
         }
 
         public void GameOver()
@@ -53,25 +53,31 @@ namespace _02.Scripts.Core.Manager
         {
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
-            _sceneTransition.RestartCurrentScene();
+            _sceneTransitionManager.RestartCurrentScene();
         }
 
         public void LoadChapter(int chapter)
         {
             var sceneData = _chapterSceneList.Find(s => s.ChapterId == chapter);
             if (sceneData == null) return;
-            
+
             CurrentChapter = chapter;
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
-            _sceneTransition.LoadScene(sceneData);
+            _sceneTransitionManager.LoadScene(sceneData);
+        }
+
+        public void CompleteChapter()
+        {
+            OnChapterCleared?.Invoke(CurrentChapter);
+            LoadChapter(CurrentChapter + 1);
         }
 
         public void ReturnToMainMenu()
         {
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
-            _sceneTransition.ReturnToMainMenu();
+            _sceneTransitionManager.ReturnToMainMenu();
         }
     }
 }
