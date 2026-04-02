@@ -44,28 +44,41 @@ namespace _02.Scripts.UI.Component
 
         private async UniTask RefreshChapterUI()
         {
-            var hasSave = await _saveManager.HasSave();
-            if (!hasSave)
+            try
             {
-                _newGameCard.SetActive(true);
-                _continueCard.SetActive(false);
+                var hasSave = await _saveManager.HasSave();
+                if (!hasSave)
+                {
+                    ShowNewGameOnly();
+                    return;
+                }
+
+                _newGameCard.SetActive(false);
+
+                var data = await _saveManager.LoadGame();
+
+                bool allCleared = data.ClearedChapters.Count >= _chapterCards.Count;
+                _continueCard.SetActive(!allCleared);
+
                 for (int i = 0; i < _chapterCards.Count; i++)
-                    _chapterCards[i].SetActive(false);
-                return;
+                {
+                    bool unlocked = data.ClearedChapters.Contains(i + 1);
+                    _chapterCards[i].SetActive(unlocked);
+                }
             }
-            
-            _newGameCard.SetActive(false);
-
-            var data = await _saveManager.LoadGame();
-
-            bool allCleared = data.ClearedChapters.Count >= _chapterCards.Count;
-            _continueCard.SetActive(!allCleared);
-
-            for (int i = 0; i < _chapterCards.Count; i++)
+            catch (System.Exception e)
             {
-                bool unlocked = data.ClearedChapters.Contains(i + 1);
-                _chapterCards[i].SetActive(unlocked);
+                Debug.LogError($"세이브 로드 실패: {e.Message}");
+                ShowNewGameOnly();
             }
+        }
+
+        private void ShowNewGameOnly()
+        {
+            _newGameCard.SetActive(true);
+            _continueCard.SetActive(false);
+            for (int i = 0; i < _chapterCards.Count; i++)
+                _chapterCards[i].SetActive(false);
         }
 
         public void QuitGame()

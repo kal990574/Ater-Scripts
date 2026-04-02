@@ -15,28 +15,28 @@ namespace _02.Scripts._03.Outgame.SaveSystem.Repository
             _savePath = Path.Combine(Application.persistentDataPath, "save.json");
         }
 
-        public UniTask Save(SaveData saveData)
+        public async UniTask Save(SaveData saveData)
         {
             var json = JsonUtility.ToJson(saveData);
-            File.WriteAllText(_savePath, json);
-            return UniTask.CompletedTask;
+            await UniTask.RunOnThreadPool(() => File.WriteAllText(_savePath, json));
         }
 
-        public UniTask<SaveData> Load()
+        public async UniTask<SaveData> Load()
         {
-            if(!File.Exists(_savePath)) 
+            if (!File.Exists(_savePath))
                 throw new FileNotFoundException("저장 데이터 없음");
-            
-            var json = File.ReadAllText(_savePath);
-            var data = JsonUtility.FromJson<SaveData>(json);
-            return UniTask.FromResult(data);
+
+            var json = await UniTask.RunOnThreadPool(() => File.ReadAllText(_savePath));
+            return JsonUtility.FromJson<SaveData>(json);
         }
 
-        public UniTask Delete()
+        public async UniTask Delete()
         {
-            if(File.Exists(_savePath)) 
-                File.Delete(_savePath);
-            return UniTask.CompletedTask;
+            await UniTask.RunOnThreadPool(() =>
+            {
+                if (File.Exists(_savePath))
+                    File.Delete(_savePath);
+            });
         }
 
         public UniTask<bool> HasSave()
