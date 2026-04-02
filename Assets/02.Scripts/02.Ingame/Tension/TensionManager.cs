@@ -1,7 +1,7 @@
 ﻿using Sirenix.OdinInspector;
 using UnityEngine;
 
-public class TensionManager : MonoBehaviour
+public class TensionManager : MonoBehaviour, ITensionProvider,ITensionModifier
 {
     [Header("Rule Table")]
     [SerializeField] private TensionRuleTableSO _ruleTable;
@@ -222,5 +222,22 @@ public class TensionManager : MonoBehaviour
             $"Base: {_baseTension:F2}, " +
             $"Spike: {_spikeTension:F2}, " +
             $"Total: {TotalTension:F2}");
+    }
+
+    public float GetCurrentTension()
+    {
+        return TotalTension;
+    }
+
+    public void AddTension(float amount, string reason)
+    {
+        _baseTension += amount;
+        WarnUnknownReason(reason);
+    }
+
+    public void DecreaseTension(float amount, string reason)
+    {
+        _baseTension -= amount;
+        WarnUnknownReason(reason);
     }
 }

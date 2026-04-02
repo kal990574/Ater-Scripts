@@ -42,7 +42,6 @@ namespace _02.Scripts.Sonar
         {
             if (_cooldownTimer > 0f)
             {
-                Debug.Log($"충전중 {CooldownProgress}");
                 _cooldownTimer -= Time.deltaTime;
             }
         }

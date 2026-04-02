@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 {
     [Header("References")]
     [SerializeField] private PlayerConfigSO _playerConfig;
@@ -326,5 +326,10 @@ public class PlayerController : MonoBehaviour
     private static bool IsGameplayMode(EPlayerInteractMode mode)
     {
         return mode == EPlayerInteractMode.Item || mode == EPlayerInteractMode.Scan;
+    }
+
+    public EPlayerInteractMode GetCurrentMode()
+    {
+        return _interactMode;
     }
 }
