@@ -157,7 +157,7 @@ public class TimingQTERunner : IQuickTimeEvent
             return;
         }
 
-        soundManager.PlaySFX2D(_config.NotificationClip);
+        //soundManager.PlaySFX2D(_config.NotificationClip);
     }
 
     private void PlayResultFeedback(EQuickTimeEventResult result)
@@ -181,7 +181,7 @@ public class TimingQTERunner : IQuickTimeEvent
             return;
         }
 
-        soundManager.PlaySFX2D(clip);
+        //soundManager.PlaySFX2D(clip);
     }
 
     private EQuickTimeEventResult JudgeCurrentNeedleProgress()

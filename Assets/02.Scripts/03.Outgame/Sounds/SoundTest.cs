@@ -1,21 +1,13 @@
 using UnityEngine;
 
+
 public class SoundTest : MonoBehaviour
 {
-    [SerializeField] private AudioClip testClip;
-    private ISoundService _sound;
+    [SerializeField] private SoundManager _soundManager;
 
     private void Start()
     {
-        _sound = FindObjectOfType<SoundManager>();
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-            _sound.PlaySFX(testClip, transform.position);
-
-        if (Input.GetKeyDown(KeyCode.F))
-            _sound.PlaySFX2D(testClip);
+        _soundManager.PlayBGM(SoundKey.BGM_Tutorial);
+        Debug.Log("[SoundTest] BGM_Chapter1 재생 시작");
     }
 }
