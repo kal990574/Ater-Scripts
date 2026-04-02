@@ -19,6 +19,5 @@ namespace _02.Scripts._03.Outgame.SaveSystem.Domain
         {
             _chapterId = chapterId;
         }
-        // ToDo: 쪽지 오브젝트도 저장할 예정
     }
 }

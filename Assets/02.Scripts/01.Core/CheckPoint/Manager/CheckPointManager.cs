@@ -3,6 +3,8 @@ using _02.Scripts._03.Outgame.SaveSystem.Domain;
 using _02.Scripts._03.Outgame.SaveSystem.Manager;
 using _02.Scripts.Core;
 using _02.Scripts.Core.Domain;
+using System;
+using UnityEngine;
 
 namespace _02.Scripts._01.Core.CheckPoint.Manager
 {
@@ -19,13 +21,18 @@ namespace _02.Scripts._01.Core.CheckPoint.Manager
             _sceneTransitionManager.OnTransitionCompleted += OnSceneLoaded;
         }
 
-        private void OnSceneLoaded()
+        private async void OnSceneLoaded()
         {
-            var data = CollectSaveData();
-            _saveManager.SaveGame(data,
-                onSuccess: () => UnityEngine.Debug.Log("체크포인트 저장 완료"),
-                onFailure: (error) => UnityEngine.Debug.LogError($"체크포인트 저장 실패: {error}")
-            );
+            try
+            {
+                var data = CollectSaveData();
+                await _saveManager.SaveGame(data);
+                Debug.Log("체크포인트 저장 완료");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"체크포인트 저장 실패 : {e.Message}");
+            }
         }
 
         private SaveData CollectSaveData()
