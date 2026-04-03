@@ -48,7 +48,6 @@ public class SubJumpScareSelectionCoordinator
 
         if (postResult.IsSuccess == true)
         {
-            Commit(postResult);
             return postResult;
         }
 
@@ -56,7 +55,6 @@ public class SubJumpScareSelectionCoordinator
 
         if (soundResult.IsSuccess == true)
         {
-            Commit(soundResult);
             return soundResult;
         }
 
@@ -101,6 +99,21 @@ public class SubJumpScareSelectionCoordinator
         return fakeEnemyResult;
     }
 
+    public void ConfirmPeriodicTriggered(SubJumpScareSelectionResult result)
+    {
+        if (result.IsSuccess == false)
+        {
+            return;
+        }
+
+        if (result.Data == null)
+        {
+            return;
+        }
+
+        Commit(result);
+    }
+
     public void ConfirmSonarTriggered(SubJumpScareSelectionResult result)
     {
         if (result.IsSuccess == false)
@@ -108,12 +121,17 @@ public class SubJumpScareSelectionCoordinator
             return;
         }
 
-        Commit(result);
+        if (result.Data == null)
+        {
+            return;
+        }
 
-        if (result.Data != null && result.Data.Type == ESubJumpScareType.FakeEnemy)
+        if (result.Data.Type == ESubJumpScareType.FakeEnemy)
         {
             _fakeEnemyGuaranteePending = false;
         }
+
+        Commit(result);
     }
 
     public void KeepFakeEnemyGuaranteePending()

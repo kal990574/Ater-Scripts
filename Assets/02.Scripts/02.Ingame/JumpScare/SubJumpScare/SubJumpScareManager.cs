@@ -1,14 +1,24 @@
-﻿using System;
+﻿using Sirenix.OdinInspector;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SubJumpScareManager : MonoBehaviour
 {
+    private static SubJumpScareManager _instance;
+    public static SubJumpScareManager Instance => _instance;
+    
     [Header("References")]
     [SerializeField] private PlayerController playerController;
     [SerializeField] private TensionManager tensionManager;
     [SerializeField] private Transform playerRootTransform;
     [SerializeField] private Transform playerCameraTransform;
+
+    
+    [Title("Sub JumpScare")]
+    [Header("Executors")]
     [SerializeField] private FakeEnemyJumpScareExecutor fakeEnemyJumpScareExecutor;
+    [SerializeField] private PostProcessSubJumpScareExecutor _postProcessExecutor;
 
     [Header("Data")]
     [SerializeField] private SubJumpScareDatabaseSO database;
@@ -30,11 +40,7 @@ public class SubJumpScareManager : MonoBehaviour
     [SerializeField] private bool enableLog = true;
     [SerializeField] private bool enableSelectionLog = true;
     [SerializeField] private bool enableGuaranteeLog = true;
-
-    private float _periodicTimer;
-    private float _mainGraceRemainingTime;
-    private bool _isMainJumpScareRunning;
-
+    
     private GameEventPublisher _eventPublisher;
 
     private SubJumpScareCooldownState _cooldownState;
@@ -43,9 +49,40 @@ public class SubJumpScareManager : MonoBehaviour
     private SubJumpScareCandidateCollector _candidateCollector;
     private SubJumpScareWeightedPicker _weightedPicker;
     private SubJumpScareSelectionCoordinator _selectionCoordinator;
+    
+    [Title("Main JumpScare")]
+    
+    [Header("Debug")]
+    [SerializeField] private bool _enableDebugLog = true;
+    [SerializeField] private bool _includeInactiveOnRegister = true;
+
+    
+    private readonly Dictionary<string, MainJumpScareBase> _mainJumpScareById = new Dictionary<string, MainJumpScareBase>();
+    private readonly HashSet<string> _playingMainJumpScareIds = new HashSet<string>();
+    
+    private float _periodicTimer;
+    private float _mainGraceRemainingTime;
+    private bool _isMainJumpScareRunning;
+
 
     private void Awake()
     {
+        if (_instance == null)
+        {
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+        
+        Init();
+    }
+
+    private void Init()
+    {
+        //서브 점프스케어 세팅
         _cooldownState = new SubJumpScareCooldownState();
         _history = new SubJumpScareHistory();
         _commonValidator = new SubJumpScareCommonValidator();
@@ -58,10 +95,15 @@ public class SubJumpScareManager : MonoBehaviour
             _weightedPicker,
             _cooldownState,
             _history);
+        
+        //메인점프스케어 세팅
+        RegisterSceneMainJumpScares();
 
+        //이벤트 버스
         _eventPublisher = new GameEventPublisher();
         _eventPublisher.SetSource(this);
 
+        //구독 연결
         GameEventHub.Instance.Subscribe<SonarScanStartedRawEvent>(OnSonarActive);
     }
 
@@ -73,6 +115,7 @@ public class SubJumpScareManager : MonoBehaviour
     private void Update()
     {
         UpdateMainGraceTime();
+        UpdateRuntimeStates();
 
         if (usePeriodicTick == false)
         {
@@ -88,24 +131,226 @@ public class SubJumpScareManager : MonoBehaviour
         }
     }
 
-    public void SetMainJumpScareRunning(bool isRunning)
+    public void RegisterSceneMainJumpScares()
     {
-        _isMainJumpScareRunning = isRunning;
+        _mainJumpScareById.Clear();
+        _playingMainJumpScareIds.Clear();
 
-        if (isRunning == false)
+#if UNITY_2023_1_OR_NEWER
+        FindObjectsInactive findObjectsInactive = _includeInactiveOnRegister == true
+            ? FindObjectsInactive.Include
+            : FindObjectsInactive.Exclude;
+
+        MainJumpScareBase[] mainJumpScares = FindObjectsByType<MainJumpScareBase>(findObjectsInactive, FindObjectsSortMode.None);
+#else
+        MainJumpScareBase[] mainJumpScares = FindObjectsOfType<MainJumpScareBase>(_includeInactiveOnRegister);
+#endif
+
+        for (int index = 0; index < mainJumpScares.Length; index++)
         {
-            _mainGraceRemainingTime = mainEndGraceDuration;
+            MainJumpScareBase mainJumpScare = mainJumpScares[index];
+
+            if (mainJumpScare == null)
+            {
+                continue;
+            }
+
+            RegisterMainJumpScare(mainJumpScare);
         }
+
+        if (_enableDebugLog == true)
+        {
+            Debug.Log($"JumpScareManager 메인 점프스케어 등록 완료. Count : {_mainJumpScareById.Count}", this);
+        }
+    }
+
+    public void ExecuteMainJumpScare(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id) == true)
+        {
+            Debug.LogError("실행 요청된 메인 점프스케어 ID가 비어 있습니다.", this);
+            return;
+        }
+
+        if (_mainJumpScareById.TryGetValue(id, out MainJumpScareBase mainJumpScare) == false)
+        {
+            Debug.LogError($"메인 점프스케어 ID [{id}] 를 찾을 수 없습니다.", this);
+            return;
+        }
+
+        if (mainJumpScare.CanActive == false)
+        {
+            if (_enableDebugLog == true)
+            {
+                Debug.LogWarning($"메인 점프스케어 [{id}] 는 CanActive 가 false 이므로 실행되지 않습니다.", this);
+            }
+
+            return;
+        }
+
+        if (mainJumpScare.State == EMainJumpScareState.Playing)
+        {
+            if (_enableDebugLog == true)
+            {
+                Debug.LogWarning($"메인 점프스케어 [{id}] 는 이미 실행 중입니다.", this);
+            }
+
+            return;
+        }
+
+        if (mainJumpScare.State == EMainJumpScareState.Finished)
+        {
+            if (_enableDebugLog == true)
+            {
+                Debug.LogWarning($"메인 점프스케어 [{id}] 는 이미 종료된 상태입니다.", this);
+            }
+
+            return;
+        }
+
+        bool wasEmptyBeforeExecute = _playingMainJumpScareIds.Count == 0;
+
+        _playingMainJumpScareIds.Add(id);
+
+        if (wasEmptyBeforeExecute == true)
+        {
+            PauseSubJumpScare();
+        }
+
+        if (_enableDebugLog == true)
+        {
+            Debug.Log($"메인 점프스케어 실행 요청 : [{id}]", this);
+        }
+
+        mainJumpScare.Execute();
+    }
+
+    public void SetMainJumpScareCanActive(string id, bool canActive)
+    {
+        if (string.IsNullOrWhiteSpace(id) == true)
+        {
+            Debug.LogError("CanActive 변경 요청된 메인 점프스케어 ID가 비어 있습니다.", this);
+            return;
+        }
+
+        if (_mainJumpScareById.TryGetValue(id, out MainJumpScareBase mainJumpScare) == false)
+        {
+            Debug.LogError($"CanActive 변경 대상 메인 점프스케어 ID [{id}] 를 찾을 수 없습니다.", this);
+            return;
+        }
+
+        mainJumpScare.SetCanActive(canActive);
+
+        if (_enableDebugLog == true)
+        {
+            Debug.Log($"메인 점프스케어 [{id}] CanActive 변경 : {canActive}", this);
+        }
+    }
+
+    public void NotifyMainJumpScareFinished(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id) == true)
+        {
+            Debug.LogError("종료 통지된 메인 점프스케어 ID가 비어 있습니다.", this);
+            return;
+        }
+
+        if (_mainJumpScareById.ContainsKey(id) == false)
+        {
+            Debug.LogError($"종료 통지된 메인 점프스케어 ID [{id}] 는 등록되어 있지 않습니다.", this);
+            return;
+        }
+
+        if (_playingMainJumpScareIds.Contains(id) == false)
+        {
+            Debug.LogWarning($"메인 점프스케어 [{id}] 종료 통지를 받았지만 실행 중 목록에 없습니다.", this);
+        }
+        else
+        {
+            _playingMainJumpScareIds.Remove(id);
+        }
+
+        if (_enableDebugLog == true)
+        {
+            Debug.Log($"메인 점프스케어 종료 통지 : [{id}], Remaining Playing Count : {_playingMainJumpScareIds.Count}", this);
+        }
+
+        if (_playingMainJumpScareIds.Count == 0)
+        {
+            ResumeSubJumpScare();
+        }
+    }
+
+    private void RegisterMainJumpScare(MainJumpScareBase mainJumpScare)
+    {
+        if (mainJumpScare == null)
+        {
+            return;
+        }
+
+        string id = mainJumpScare.Id;
+
+        if (string.IsNullOrWhiteSpace(id) == true)
+        {
+            Debug.LogError($"메인 점프스케어 [{mainJumpScare.name}] 의 ID가 비어 있어 등록할 수 없습니다.", mainJumpScare);
+            return;
+        }
+
+        if (_mainJumpScareById.ContainsKey(id) == true)
+        {
+            Debug.LogError($"중복된 메인 점프스케어 ID [{id}] 가 발견되었습니다. [{mainJumpScare.name}] 는 등록되지 않습니다.", mainJumpScare);
+            return;
+        }
+
+        _mainJumpScareById.Add(id, mainJumpScare);
+
+        if (_enableDebugLog == true)
+        {
+            Debug.Log($"메인 점프스케어 등록 : [{id}] -> {mainJumpScare.name}", mainJumpScare);
+        }
+    }
+
+    private void PauseSubJumpScare()
+    {
+        if (_enableDebugLog == true)
+        {
+            Debug.Log("서브 점프스케어 중단", this);
+        }
+
+        /*
+        예시
+        if (_subJumpScareManager != null)
+        {
+            _subJumpScareManager.Pause();
+        }
+        */
+    }
+
+    private void ResumeSubJumpScare()
+    {
+        if (_enableDebugLog == true)
+        {
+            Debug.Log("서브 점프스케어 재개", this);
+        }
+
+        /*
+        예시
+        if (_subJumpScareManager != null)
+        {
+            _subJumpScareManager.Resume();
+        }
+        */
     }
 
     [ContextMenu("Debug/Try Select Periodic")]
     public void TrySelectPeriodic()
     {
         SubJumpScareContext context = CreateContext();
-        SubJumpScareSelectionResult result = _selectionCoordinator.SelectPeriodic(database, context);
+        SubJumpScareSelectionResult selectedResult = _selectionCoordinator.SelectPeriodic(database, context);
+        SubJumpScareSelectionResult finalResult = ResolvePeriodicSelectionResult(selectedResult);
 
-        LogResult(context, result);
-        PublishRawResult(result);
+        LogResult(context, finalResult);
+        PublishRawResult(finalResult);
     }
 
     [ContextMenu("Debug/Try Select Sonar")]
@@ -124,6 +369,61 @@ public class SubJumpScareManager : MonoBehaviour
 
         LogResult(context, finalResult);
         PublishRawResult(finalResult);
+    }
+
+    private SubJumpScareSelectionResult ResolvePeriodicSelectionResult(SubJumpScareSelectionResult selectedResult)
+    {
+        if (selectedResult.IsSuccess == false)
+        {
+            return selectedResult;
+        }
+
+        if (selectedResult.Data == null)
+        {
+            return selectedResult;
+        }
+
+        if (selectedResult.Data.Type == ESubJumpScareType.PostProcess)
+        {
+            PostProcessSubJumpScareDefinitionSO definition;
+
+            if (database == null || database.TryGetPostProcessDefinition(selectedResult.Data.Id, out definition) == false)
+            {
+                return SubJumpScareSelectionResult.CreateFail(
+                    ESubJumpScareTriggerType.Periodic,
+                    "선택된 포스트 프로세스 정의를 찾지 못했습니다.");
+            }
+
+            if (_postProcessExecutor == null)
+            {
+                return SubJumpScareSelectionResult.CreateFail(
+                    ESubJumpScareTriggerType.Periodic,
+                    "포스트 프로세스 실행기가 연결되지 않았습니다.");
+            }
+
+            bool isExecuted = _postProcessExecutor.TryExecute(definition);
+
+            if (isExecuted == false)
+            {
+                return SubJumpScareSelectionResult.CreateFail(
+                    ESubJumpScareTriggerType.Periodic,
+                    "포스트 프로세스 실행에 실패했습니다.");
+            }
+
+            _selectionCoordinator.ConfirmPeriodicTriggered(selectedResult);
+            return selectedResult;
+        }
+
+        if (selectedResult.Data.Type == ESubJumpScareType.Sound)
+        {
+            return SubJumpScareSelectionResult.CreateFail(
+                ESubJumpScareTriggerType.Periodic,
+                "사운드 점프스케어 실행기는 아직 연결되지 않았습니다.");
+        }
+
+        return SubJumpScareSelectionResult.CreateFail(
+            ESubJumpScareTriggerType.Periodic,
+            "주기 검사에서 지원하지 않는 타입이 선택되었습니다.");
     }
 
     private SubJumpScareSelectionResult ResolveSonarSelectionResult(SubJumpScareSelectionResult selectedResult)
@@ -231,6 +531,18 @@ public class SubJumpScareManager : MonoBehaviour
             0);
     }
 
+    private void UpdateRuntimeStates()
+    {
+        if (_postProcessExecutor != null)
+        {
+            isPostProcessActive = _postProcessExecutor.IsPlaying;
+        }
+        else
+        {
+            isPostProcessActive = false;
+        }
+    }
+
     private void PublishRawResult(SubJumpScareSelectionResult result)
     {
         _eventPublisher.TryPublish(
@@ -301,4 +613,3 @@ public class SubJumpScareManager : MonoBehaviour
             $"[SubJumpScare] Selection Fail | Trigger={result.TriggerType} | Tension={context.TotalTension} | Mode={context.CurrentPlayerInteractMode} | Reason={result.FailReason}");
     }
 }
-
