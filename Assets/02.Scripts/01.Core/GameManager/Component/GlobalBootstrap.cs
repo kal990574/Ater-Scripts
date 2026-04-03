@@ -7,9 +7,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using _02.Scripts.Core.Manager;
 using _02.Scripts.Core.Domain;
-using _02.Scripts.UI.Domain;
-using _02.Scripts.UI.Manager;
-
 namespace _02.Scripts.Core.Component
 {
     [DefaultExecutionOrder(-100)]

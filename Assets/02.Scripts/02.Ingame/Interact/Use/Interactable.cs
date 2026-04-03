@@ -8,7 +8,7 @@ public abstract class Interactable : DetectableObject, IInteractObject, INeedRun
 {
     [SerializeField] protected bool _isInteractActive;
     private IRuntimeView _instance;
-    
+
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
     public override bool CanDetect => _isDetectable && _isInteractActive;
@@ -25,7 +25,7 @@ public abstract class Interactable : DetectableObject, IInteractObject, INeedRun
             _instance = instance;
         }
     }
-    
+
 
     public abstract void Interact(UseContext context);
 

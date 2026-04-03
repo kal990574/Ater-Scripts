@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using _02.Scripts.Core;
 using _02.Scripts.Core.Domain;                         
 using _02.Scripts._03.Outgame.SaveSystem.Manager;
+using System;
 using System.Linq;
 
 namespace _02.Scripts.UI.Component
@@ -31,10 +32,18 @@ namespace _02.Scripts.UI.Component
 
         public async void SelectContinue()
         {
-            var data = await _saveManager.LoadGame();
-            _selectedChapter = data.ClearedChapters.Count > 0
-                ? data.ClearedChapters.Max() + 1
-                : 1;
+            try
+            {
+                var data = await _saveManager.LoadGame();
+                _selectedChapter = data.ClearedChapters.Count > 0
+                    ? data.ClearedChapters.Max() + 1
+                    : 1;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"세이브 로드 실패 : {e.Message}");
+                _selectedChapter = 1;
+            }
         }             
 
         public void ConfirmLoadChapter()

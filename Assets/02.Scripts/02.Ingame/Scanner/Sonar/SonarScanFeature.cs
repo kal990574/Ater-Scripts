@@ -11,7 +11,7 @@ namespace _02.Scripts.Sonar
         [SerializeField] private Transform _cameraTarget;
         [SerializeField] private SonarScanEffect _effect;
         
-       
+        private GameEventPublisher _eventPublisher;
         private float _cooldownTimer;
         
         public bool IsReady => _cooldownTimer <= 0f;
@@ -30,6 +30,10 @@ namespace _02.Scripts.Sonar
                 _effect = effect;
                 _effect.Init(_config);
             }
+            
+            _eventPublisher = new GameEventPublisher();
+            _eventPublisher.SetSource(this);
+            
             _cooldownTimer = 0;
         }
         
@@ -38,7 +42,6 @@ namespace _02.Scripts.Sonar
         {
             if (_cooldownTimer > 0f)
             {
-                Debug.Log($"충전중 {CooldownProgress}");
                 _cooldownTimer -= Time.deltaTime;
             }
         }
@@ -51,6 +54,9 @@ namespace _02.Scripts.Sonar
             _cooldownTimer = _config.Cooldown;
             _effect.Play(transform.position, _cameraTarget.forward);
             _cameraFeedback.Play();
+            
+            _eventPublisher.TryPublish(
+                context => new SonarScanStartedRawEvent(context));
         }
     }
 }
