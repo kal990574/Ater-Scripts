@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+//서브점프 스케어의 관리자. 외부 서비스는 해당 매니저를 참고한다.
 public class SubJumpScareManager : MonoBehaviour
 {
     [Header("References")]
