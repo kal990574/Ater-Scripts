@@ -11,13 +11,21 @@ public enum EPostProcessEffectType
 
 [CreateAssetMenu(fileName = "PostProcessSubJumpScareDefinition", menuName = "Ater/JumpScare/Sub/PostProcess Definition")]
 [InfoBox("포스트 프로세스 기반 서브 점프스케어 정의입니다. 화면 암전, 노이즈, 흑백화 등의 시각 효과를 제어합니다.")]
-public class PostProcessSubJumpScareDefinitionSO : ScriptableObject
+public class PostProcessSubJumpScareDefinitionSO : SubJumpScareDefinitionSOBase
 {
     [Title("Common")]
     [InlineProperty]
     [HideLabel]
     [PropertySpace(8f)]
-    public SubJumpScareCommonData Common = new SubJumpScareCommonData();
+    public SubJumpScareCommonData common = new SubJumpScareCommonData();
+
+    public override SubJumpScareCommonData Common
+    {
+        get
+        {
+            return common;
+        }
+    }
 
     [Title("Post Process")]
     [BoxGroup("Settings")]
@@ -26,7 +34,7 @@ public class PostProcessSubJumpScareDefinitionSO : ScriptableObject
 
     [BoxGroup("Settings")]
     [MinValue(0f)]
-    [PropertyTooltip("효과의 강도입니다. 값이 클수록 더 강한 연출을 의도합니다.")]
+    [PropertyTooltip("암전/노이즈에서 사용할 효과 강도입니다. 흑백은 사용하지 않습니다.")]
     public float EffectStrength = 0.5f;
 
     [BoxGroup("Timing")]
@@ -34,19 +42,20 @@ public class PostProcessSubJumpScareDefinitionSO : ScriptableObject
     [PropertyTooltip("효과가 유지되는 총 시간입니다.")]
     public float Duration = 2f;
 
-    [BoxGroup("Timing")]
-    [MinValue(0f)]
-    [PropertyTooltip("효과가 서서히 적용되는 시간입니다.")]
-    public float FadeInTime = 0.15f;
-
-    [BoxGroup("Timing")]
-    [MinValue(0f)]
-    [PropertyTooltip("효과가 서서히 사라지는 시간입니다.")]
-    public float FadeOutTime = 0.25f;
+    private bool UseEffectStrength()
+    {
+        return EffectType == EPostProcessEffectType.Darkness ||
+               EffectType == EPostProcessEffectType.Noise;
+    }
 
     private void OnValidate()
     {
-        Common.Type = ESubJumpScareType.PostProcess;
-        Common.BlockSameItemAsPrevious = true;
+        common = EnsureCommon(common);
+
+        common.Type = ESubJumpScareType.PostProcess;
+        common.BlockSameItemAsPrevious = true;
+
+        Duration = Mathf.Max(0.0f, Duration);
+        EffectStrength = Mathf.Max(0.0f, EffectStrength);
     }
 }

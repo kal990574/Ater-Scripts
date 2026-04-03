@@ -52,6 +52,11 @@ public class SubJumpScareCandidateCollector
                 continue;
             }
 
+            if (definition.common.BlockSameTypeAsPrevious == true && history.IsSameType(definition.Common.Type) == true)
+            {
+                continue;
+            }
+                
             result.Add(definition);
         }
 
@@ -150,7 +155,7 @@ public class SubJumpScareCandidateCollector
                 continue;
             }
 
-            if (definition.PosePrefabs == null || definition.PosePrefabs.Count == 0)
+            if (definition.PosePrefabs == null || definition.PosePrefabs.Length == 0)
             {
                 continue;
             }

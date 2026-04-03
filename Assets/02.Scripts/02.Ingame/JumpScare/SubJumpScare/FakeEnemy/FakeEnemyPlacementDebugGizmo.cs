@@ -4,13 +4,10 @@
 public class FakeEnemyPlacementDebugGizmo : MonoBehaviour
 {
     [Header("Reference")]
-    [SerializeField] private FakeEnemyPlacementResolver _resolver;
+    [SerializeField] private FakeEnemyJumpScareExecutor _executor;
     [SerializeField] private Transform _cameraTransform;
     [SerializeField] private Transform _playerTransform;
-
-    [Header("Test Distance")]
-    [SerializeField] private float _minDistance = 5.0f;
-    [SerializeField] private float _maxDistance = 7.0f;
+    [SerializeField] private FakeEnemySubJumpScareDefinitionSO _definition;
 
     [Header("Debug Selection")]
     [SerializeField] private bool _useDeterministicSelection = true;
@@ -48,6 +45,9 @@ public class FakeEnemyPlacementDebugGizmo : MonoBehaviour
     [Header("Candidate Colors - Default")]
     [SerializeField] private Color _defaultColor = Color.white;
 
+    [Header("Debug")]
+    [SerializeField] private bool _enableDebugLog = false;
+
     private void OnDrawGizmos()
     {
         if (_drawWhenNotSelected == false)
@@ -70,22 +70,33 @@ public class FakeEnemyPlacementDebugGizmo : MonoBehaviour
             return;
         }
 
-        FakeEnemyPlacementRequest request = CreateRequest();
+        FakeEnemyJumpScareExecuteRequest request = CreateRequest();
         FakeEnemyPlacementResult result;
 
-        _resolver.TryResolve(request, out result);
+        bool isResolved = _executor.TryResolvePlacementForDebug(request, out result);
 
-        DrawCandidates(_resolver.DebugSnapshot);
+        FakeEnemyPlacementDebugSnapshot snapshot = _executor.DebugSnapshot;
 
-        if (result.Success == true)
+        if (snapshot != null)
+        {
+            DrawCandidates(snapshot);
+        }
+
+        if (isResolved == true && result.Success == true)
         {
             DrawSelectedResult(result);
+        }
+        else if (_enableDebugLog == true)
+        {
+            Debug.Log(string.Format(
+                "[FakeEnemyPlacementDebugGizmo] 배치 실패: {0}",
+                result.FailReason));
         }
     }
 
     private bool HasRequiredReference()
     {
-        if (_resolver == null)
+        if (_executor == null)
         {
             return false;
         }
@@ -100,17 +111,24 @@ public class FakeEnemyPlacementDebugGizmo : MonoBehaviour
             return false;
         }
 
+        if (_definition == null)
+        {
+            return false;
+        }
+
         return true;
     }
 
-    private FakeEnemyPlacementRequest CreateRequest()
+    private FakeEnemyJumpScareExecuteRequest CreateRequest()
     {
-        return new FakeEnemyPlacementRequest(
+        return new FakeEnemyJumpScareExecuteRequest(
             _cameraTransform.position,
             _cameraTransform.forward,
-            _playerTransform.position,
-            _minDistance,
-            _maxDistance,
+            _playerTransform,
+            _definition.MinSpawnDistance,
+            _definition.MaxSpawnDistance,
+            _definition.AllowedForwardAngle,
+            _definition.PosePrefabs,
             _useDeterministicSelection,
             _deterministicSeed);
     }
@@ -157,8 +175,8 @@ public class FakeEnemyPlacementDebugGizmo : MonoBehaviour
         {
             DrawCapsuleHint(
                 result.Position,
-                _resolver.BodyRadius,
-                _resolver.BodyHeight);
+                _executor.BodyRadius,
+                _executor.BodyHeight);
         }
 
         if (_drawFacingDirection == true)
@@ -170,7 +188,7 @@ public class FakeEnemyPlacementDebugGizmo : MonoBehaviour
     private void DrawFacingDirection(FakeEnemyPlacementResult result)
     {
         Vector3 forward = result.Rotation * Vector3.forward;
-        Vector3 start = result.Position + (Vector3.up * _resolver.ChestHeight);
+        Vector3 start = result.Position + (Vector3.up * _executor.ChestHeight);
         Vector3 end = start + (forward * 0.75f);
 
         Gizmos.DrawLine(start, end);
