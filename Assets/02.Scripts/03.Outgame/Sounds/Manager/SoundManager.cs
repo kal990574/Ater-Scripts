@@ -3,6 +3,9 @@ using UnityEngine.Audio;
 
 public class SoundManager : MonoBehaviour, ISoundService
 {
+    private static SoundManager _instance;
+    public static SoundManager Instance => _instance;
+
     [Header("Controller")]
     [SerializeField] private BGMController _bgmController;
     [SerializeField] private SFXController _sfxController;
@@ -10,6 +13,24 @@ public class SoundManager : MonoBehaviour, ISoundService
 
     [Header("Data")]
     [SerializeField] private SoundDataTableSO _soundDataTableSO;
+
+    private void Awake()
+    {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        _instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        if(_instance == this)
+        {
+            _instance = null;
+        }
+    }
 
     public void PlayBGM(string key, float fadeTime = 1f)
     {
