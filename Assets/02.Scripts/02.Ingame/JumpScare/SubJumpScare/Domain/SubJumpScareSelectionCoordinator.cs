@@ -1,9 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 점프스케어의 이벤트 선택 로직의 흐름 총괄
-/// </summary>
 public class SubJumpScareSelectionCoordinator
 {
     private readonly SubJumpScareCommonValidator _commonValidator;
@@ -14,7 +11,13 @@ public class SubJumpScareSelectionCoordinator
 
     private bool _fakeEnemyGuaranteePending;
 
-    public bool FakeEnemyGuaranteePending => _fakeEnemyGuaranteePending;
+    public bool FakeEnemyGuaranteePending
+    {
+        get
+        {
+            return _fakeEnemyGuaranteePending;
+        }
+    }
 
     public SubJumpScareSelectionCoordinator(
         SubJumpScareCommonValidator commonValidator,
@@ -35,22 +38,23 @@ public class SubJumpScareSelectionCoordinator
         SubJumpScareContext context)
     {
         string commonBlockReason;
+
         if (_commonValidator.TryGetBlockReason(database, context, _cooldownState, out commonBlockReason) == true)
         {
             return SubJumpScareSelectionResult.CreateFail(ESubJumpScareTriggerType.Periodic, commonBlockReason);
         }
 
         SubJumpScareSelectionResult postResult = TrySelectPostProcess(database, context);
+
         if (postResult.IsSuccess == true)
         {
-            Commit(postResult);
             return postResult;
         }
 
         SubJumpScareSelectionResult soundResult = TrySelectSound(database, context);
+
         if (soundResult.IsSuccess == true)
         {
-            Commit(soundResult);
             return soundResult;
         }
 
@@ -64,6 +68,7 @@ public class SubJumpScareSelectionCoordinator
         SubJumpScareContext context)
     {
         string commonBlockReason;
+
         if (_commonValidator.TryGetBlockReason(database, context, _cooldownState, out commonBlockReason) == true)
         {
             return SubJumpScareSelectionResult.CreateFail(ESubJumpScareTriggerType.Sonar, commonBlockReason);
@@ -87,13 +92,51 @@ public class SubJumpScareSelectionCoordinator
 
         if (fakeEnemyResult.IsSuccess == true)
         {
-            Commit(fakeEnemyResult);
-            _fakeEnemyGuaranteePending = false;
             return fakeEnemyResult;
         }
 
         _fakeEnemyGuaranteePending = true;
         return fakeEnemyResult;
+    }
+
+    public void ConfirmPeriodicTriggered(SubJumpScareSelectionResult result)
+    {
+        if (result.IsSuccess == false)
+        {
+            return;
+        }
+
+        if (result.Data == null)
+        {
+            return;
+        }
+
+        Commit(result);
+    }
+
+    public void ConfirmSonarTriggered(SubJumpScareSelectionResult result)
+    {
+        if (result.IsSuccess == false)
+        {
+            return;
+        }
+
+        if (result.Data == null)
+        {
+            return;
+        }
+
+        if (result.Data.Type == ESubJumpScareType.FakeEnemy)
+        {
+            _fakeEnemyGuaranteePending = false;
+        }
+
+        Commit(result);
+    }
+
+    public void KeepFakeEnemyGuaranteePending()
+    {
+        _fakeEnemyGuaranteePending = true;
     }
 
     private SubJumpScareSelectionResult TrySelectPostProcess(

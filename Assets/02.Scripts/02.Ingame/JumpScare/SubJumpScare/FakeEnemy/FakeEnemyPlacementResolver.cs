@@ -2,34 +2,25 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FakeEnemyPlacementResolver : MonoBehaviour
+public sealed class FakeEnemyPlacementResolver
 {
-    [Header("Sampling")]
-    [SerializeField] private float _fanAngle = 60.0f;
-    [SerializeField] private int _distanceSteps = 4;
-    [SerializeField] private int _angleSteps = 7;
+    private readonly int _distanceSteps;
+    private readonly int _angleSteps;
 
-    [Header("World Filter")]
-    [SerializeField] private LayerMask _environmentLayerMask;
-    [SerializeField] private string _groundTag = "Ground";
-    [SerializeField] private string _obstacleTag = "Obstacle";
+    private readonly LayerMask _environmentLayerMask;
+    private readonly string _groundTag;
+    private readonly string _obstacleTag;
 
-    [Header("Ground Check")]
-    [SerializeField] private float _groundProbeStartHeight = 1.5f;
-    [SerializeField] private float _groundProbeDistance = 4.0f;
+    private readonly float _groundProbeStartHeight;
+    private readonly float _groundProbeDistance;
 
-    [Header("Overlap Check")]
-    [SerializeField] private float _bodyRadius = 0.35f;
-    [SerializeField] private float _bodyHeight = 1.8f;
-    [SerializeField] private int _overlapBufferSize = 16;
+    private readonly float _bodyRadius;
+    private readonly float _bodyHeight;
+    private readonly float _chestHeight;
 
-    [Header("Visibility Check")]
-    [SerializeField] private float _chestHeight = 1.1f;
+    private readonly bool _enableDebugLog;
 
-    [Header("Debug")]
-    [SerializeField] private bool _enableDebugLog = false;
-
-    private readonly FakeEnemyPlacementDebugSnapshot _debugSnapshot = new FakeEnemyPlacementDebugSnapshot();
+    private readonly FakeEnemyPlacementDebugSnapshot _debugSnapshot;
     private Collider[] _overlapResults;
 
     public FakeEnemyPlacementDebugSnapshot DebugSnapshot
@@ -64,35 +55,43 @@ public class FakeEnemyPlacementResolver : MonoBehaviour
         }
     }
 
-    private void Awake()
+    public FakeEnemyPlacementResolver(
+        int distanceSteps,
+        int angleSteps,
+        LayerMask environmentLayerMask,
+        string groundTag,
+        string obstacleTag,
+        float groundProbeStartHeight,
+        float groundProbeDistance,
+        float bodyRadius,
+        float bodyHeight,
+        float chestHeight,
+        int overlapBufferSize,
+        bool enableDebugLog)
     {
-        EnsureOverlapBuffer();
-    }
+        _distanceSteps = Mathf.Max(1, distanceSteps);
+        _angleSteps = Mathf.Max(1, angleSteps);
 
-    private void OnValidate()
-    {
-        if (_distanceSteps < 1)
-        {
-            _distanceSteps = 1;
-        }
+        _environmentLayerMask = environmentLayerMask;
+        _groundTag = groundTag;
+        _obstacleTag = obstacleTag;
 
-        if (_angleSteps < 1)
-        {
-            _angleSteps = 1;
-        }
+        _groundProbeStartHeight = groundProbeStartHeight;
+        _groundProbeDistance = groundProbeDistance;
 
-        if (_overlapBufferSize < 1)
-        {
-            _overlapBufferSize = 1;
-        }
+        _bodyRadius = bodyRadius;
+        _bodyHeight = bodyHeight;
+        _chestHeight = chestHeight;
 
-        EnsureOverlapBuffer();
+        _enableDebugLog = enableDebugLog;
+
+        _debugSnapshot = new FakeEnemyPlacementDebugSnapshot();
+        _overlapResults = new Collider[Mathf.Max(1, overlapBufferSize)];
     }
 
     public bool TryResolve(FakeEnemyPlacementRequest request, out FakeEnemyPlacementResult result)
     {
         _debugSnapshot.Clear();
-        EnsureOverlapBuffer();
 
         Vector3 flatForward = GetFlatForward(request.CameraForward);
 
@@ -116,6 +115,7 @@ public class FakeEnemyPlacementResolver : MonoBehaviour
                     request.CameraPosition,
                     flatForward,
                     distance,
+                    request.AllowedForwardAngle,
                     angleIndex);
 
                 EvaluateCandidate(
@@ -143,7 +143,7 @@ public class FakeEnemyPlacementResolver : MonoBehaviour
         MarkSelectedCandidate(candidates, selectedCandidateIndex);
 
         FakeEnemyPlacementCandidateDebugInfo selectedCandidate = candidates[selectedCandidateIndex];
-        Quaternion rotation = CreateFacingRotation(selectedCandidate.GroundedPoint, request.PlayerPosition);
+        Quaternion rotation = CreateFacingRotation(selectedCandidate.GroundedPoint, request.PlayerTransform.position);
 
         result = FakeEnemyPlacementResult.CreateSuccess(
             selectedCandidate.GroundedPoint,
@@ -151,23 +151,7 @@ public class FakeEnemyPlacementResolver : MonoBehaviour
             selectedCandidateIndex);
 
         _debugSnapshot.SetResult(result);
-
-        if (_enableDebugLog == true)
-        {
-            Debug.Log(string.Format(
-                "[FakeEnemyPlacementResolver] 선택된 후보 인덱스: {0}",
-                selectedCandidateIndex));
-        }
-
         return true;
-    }
-
-    private void EnsureOverlapBuffer()
-    {
-        if (_overlapResults == null || _overlapResults.Length != _overlapBufferSize)
-        {
-            _overlapResults = new Collider[_overlapBufferSize];
-        }
     }
 
     private Vector3 GetFlatForward(Vector3 cameraForward)
@@ -198,14 +182,15 @@ public class FakeEnemyPlacementResolver : MonoBehaviour
         Vector3 cameraPosition,
         Vector3 flatForward,
         float distance,
+        float allowedForwardAngle,
         int angleIndex)
     {
-        float angleOffset = GetAngleOffset(angleIndex);
+        float angleOffset = GetAngleOffset(allowedForwardAngle, angleIndex);
         Vector3 rotatedDirection = Quaternion.AngleAxis(angleOffset, Vector3.up) * flatForward;
         return cameraPosition + (rotatedDirection * distance);
     }
 
-    private float GetAngleOffset(int angleIndex)
+    private float GetAngleOffset(float allowedForwardAngle, int angleIndex)
     {
         if (_angleSteps == 1)
         {
@@ -213,7 +198,7 @@ public class FakeEnemyPlacementResolver : MonoBehaviour
         }
 
         float normalizedStep = (float)angleIndex / (_angleSteps - 1);
-        return Mathf.Lerp(-_fanAngle * 0.5f, _fanAngle * 0.5f, normalizedStep);
+        return Mathf.Lerp(-allowedForwardAngle, allowedForwardAngle, normalizedStep);
     }
 
     private void EvaluateCandidate(
@@ -319,7 +304,7 @@ public class FakeEnemyPlacementResolver : MonoBehaviour
 
     private bool IsWithinDistanceRange(FakeEnemyPlacementRequest request, Vector3 groundedPoint)
     {
-        Vector3 offset = groundedPoint - request.PlayerPosition;
+        Vector3 offset = groundedPoint - request.PlayerTransform.position;
         offset.y = 0.0f;
 
         float flatDistance = offset.magnitude;

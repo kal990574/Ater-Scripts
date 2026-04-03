@@ -30,6 +30,11 @@ public class SubJumpScareHistory
     {
         return string.Equals(LastSelectedId, itemId, StringComparison.Ordinal);
     }
+    
+    public bool IsSameType(ESubJumpScareType type)
+    {
+        return LastSelectedType == type;
+    }
 
     public bool IsSameIntensity(ESubJumpScareIntensity intensity)
     {

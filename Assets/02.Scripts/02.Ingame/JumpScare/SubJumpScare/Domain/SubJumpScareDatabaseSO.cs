@@ -13,30 +13,122 @@ public class SubJumpScareDatabaseSO : ScriptableObject
     [Header("Fake Enemy Definitions")]
     public List<FakeEnemySubJumpScareDefinitionSO> FakeEnemyDefinitions = new List<FakeEnemySubJumpScareDefinitionSO>();
 
-    public bool TryGetFakeEnemyDefinition(string id, out FakeEnemySubJumpScareDefinitionSO definition)
+    // =========================
+    // Runtime Cache
+    // =========================
+
+    private Dictionary<string, FakeEnemySubJumpScareDefinitionSO> _fakeEnemyDict;
+    private Dictionary<string, PostProcessSubJumpScareDefinitionSO> _postProcessDict;
+
+    private bool _isCacheBuilt;
+
+    // =========================
+    // Cache Build
+    // =========================
+
+    private void EnsureCache()
     {
-        for (int index = 0; index < FakeEnemyDefinitions.Count; index++)
+        if (_isCacheBuilt == true)
         {
-            FakeEnemySubJumpScareDefinitionSO current = FakeEnemyDefinitions[index];
+            return;
+        }
 
-            if (current == null)
+        BuildCache();
+    }
+
+    private void BuildCache()
+    {
+        _fakeEnemyDict = new Dictionary<string, FakeEnemySubJumpScareDefinitionSO>();
+        _postProcessDict = new Dictionary<string, PostProcessSubJumpScareDefinitionSO>();
+
+        // Fake Enemy
+        for (int i = 0; i < FakeEnemyDefinitions.Count; i++)
+        {
+            FakeEnemySubJumpScareDefinitionSO current = FakeEnemyDefinitions[i];
+
+            if (IsValid(current) == false)
             {
                 continue;
             }
 
-            if (current.Common == null)
-            {
-                continue;
-            }
+            string id = current.Common.Id;
 
-            if (string.Equals(current.Common.Id, id, System.StringComparison.Ordinal) == true)
+            if (_fakeEnemyDict.ContainsKey(id) == false)
             {
-                definition = current;
-                return true;
+                _fakeEnemyDict.Add(id, current);
+            }
+            else
+            {
+                Debug.LogWarning($"[SubJumpScareDatabase] 중복 FakeEnemy ID 발견: {id}", this);
             }
         }
 
-        definition = null;
-        return false;
+        // Post Process
+        for (int i = 0; i < PostProcessDefinitions.Count; i++)
+        {
+            PostProcessSubJumpScareDefinitionSO current = PostProcessDefinitions[i];
+
+            if (IsValid(current) == false)
+            {
+                continue;
+            }
+
+            string id = current.Common.Id;
+
+            if (_postProcessDict.ContainsKey(id) == false)
+            {
+                _postProcessDict.Add(id, current);
+            }
+            else
+            {
+                Debug.LogWarning($"[SubJumpScareDatabase] 중복 PostProcess ID 발견: {id}", this);
+            }
+        }
+
+        _isCacheBuilt = true;
+    }
+
+    private bool IsValid(SubJumpScareDefinitionSOBase definition)
+    {
+        if (definition == null)
+        {
+            return false;
+        }
+
+        return definition.IsValid();
+    }
+
+    // =========================
+    // Public API
+    // =========================
+
+    public bool TryGetFakeEnemyDefinition(string id, out FakeEnemySubJumpScareDefinitionSO definition)
+    {
+        EnsureCache();
+
+        return _fakeEnemyDict.TryGetValue(id, out definition);
+    }
+
+    public bool TryGetPostProcessDefinition(string id, out PostProcessSubJumpScareDefinitionSO definition)
+    {
+        EnsureCache();
+
+        return _postProcessDict.TryGetValue(id, out definition);
+    }
+
+    // =========================
+    // Editor 대응
+    // =========================
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        _isCacheBuilt = false;
+    }
+#endif
+
+    private void OnEnable()
+    {
+        _isCacheBuilt = false;
     }
 }

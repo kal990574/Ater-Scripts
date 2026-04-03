@@ -1,7 +1,7 @@
 ﻿using Sirenix.OdinInspector;
 using UnityEngine;
 
-public class TensionManager : MonoBehaviour, ITensionProvider,ITensionModifier
+public class TensionManager : MonoBehaviour
 {
     [Header("Base Tension / 지속적으로 누적되는 긴장")]
     [SerializeField] private float _baseTension;
@@ -171,12 +171,7 @@ public class TensionManager : MonoBehaviour, ITensionProvider,ITensionModifier
     {
         return Mathf.Clamp(value, 0.0f, _spikeTensionMax);
     }
-
-    private void WarnUnknownReason(string reason)
-    {
-        Debug.LogWarning($"[TensionManager] Unknown Reason : {reason}");
-    }
-
+    
     private void LogState(string action)
     {
         if (_enableDebugLog == false)
@@ -189,22 +184,5 @@ public class TensionManager : MonoBehaviour, ITensionProvider,ITensionModifier
             $"Base: {_baseTension:F2}, " +
             $"Spike: {_spikeTension:F2}, " +
             $"Total: {TotalTension:F2}");
-    }
-
-    public float GetCurrentTension()
-    {
-        return TotalTension;
-    }
-
-    public void AddTension(float amount, string reason)
-    {
-        _baseTension += amount;
-        WarnUnknownReason(reason);
-    }
-
-    public void DecreaseTension(float amount, string reason)
-    {
-        _baseTension -= amount;
-        WarnUnknownReason(reason);
     }
 }
