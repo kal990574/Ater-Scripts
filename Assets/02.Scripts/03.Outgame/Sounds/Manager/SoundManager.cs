@@ -26,7 +26,7 @@ public class SoundManager : MonoBehaviour, ISoundService
 
     private void OnDestroy()
     {
-        if(_instance == this)
+        if (_instance == this)
         {
             _instance = null;
         }

@@ -1,12 +1,10 @@
-using UnityEngine;
-
-public class SoundKey
+public static class SoundKey
 {
     //BGM
-    public const string BGM_Tutorial = "BGM_Tutorial";
+    public const string BGM_TUTORIAL = "BGM_Tutorial";
 
     //SFX
-    public const string Board_Open = "Board_Open";
+    public const string BOARD_OPEN = "Board_Open";
 
     //stinger
 
