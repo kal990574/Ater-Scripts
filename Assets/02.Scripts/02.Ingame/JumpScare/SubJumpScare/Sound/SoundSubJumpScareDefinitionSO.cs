@@ -15,7 +15,7 @@ public class SoundSubJumpScareDefinitionSO : ScriptableObject
     [BoxGroup("Settings")]
     [PropertyTooltip("재생할 점프스케어 사운드 클립입니다.")]
     [PreviewField(70, ObjectFieldAlignment.Left)]
-    public AudioClip Clip;
+    public AudioClip[] Clip;
 
     [BoxGroup("Settings")]
     [PropertyTooltip("플레이어 기준 어느 방향에서 사운드가 들릴지 결정합니다. Random이면 임의 방향을 사용합니다.")]

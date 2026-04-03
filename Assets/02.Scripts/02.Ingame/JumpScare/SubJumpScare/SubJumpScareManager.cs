@@ -1,11 +1,14 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
-//서브점프 스케어의 관리자. 외부 서비스는 해당 매니저를 참고한다.
 public class SubJumpScareManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private PlayerController playerController;
     [SerializeField] private TensionManager tensionManager;
+    [SerializeField] private Transform playerRootTransform;
+    [SerializeField] private Transform playerCameraTransform;
+    [SerializeField] private FakeEnemyJumpScareExecutor fakeEnemyJumpScareExecutor;
 
     [Header("Data")]
     [SerializeField] private SubJumpScareDatabaseSO database;
@@ -31,9 +34,9 @@ public class SubJumpScareManager : MonoBehaviour
     private float _periodicTimer;
     private float _mainGraceRemainingTime;
     private bool _isMainJumpScareRunning;
-    
+
     private GameEventPublisher _eventPublisher;
-    
+
     private SubJumpScareCooldownState _cooldownState;
     private SubJumpScareHistory _history;
     private SubJumpScareCommonValidator _commonValidator;
@@ -58,6 +61,13 @@ public class SubJumpScareManager : MonoBehaviour
 
         _eventPublisher = new GameEventPublisher();
         _eventPublisher.SetSource(this);
+
+        GameEventHub.Instance.Subscribe<SonarScanStartedRawEvent>(OnSonarActive);
+    }
+
+    private void OnSonarActive(SonarScanStartedRawEvent data)
+    {
+        TrySelectSonar();
     }
 
     private void Update()
@@ -88,52 +98,143 @@ public class SubJumpScareManager : MonoBehaviour
         }
     }
 
-    public void SetPostProcessActive(bool isActive)
-    {
-        isPostProcessActive = isActive;
-    }
-
-    public void SetImportantVoicePlaying(bool isPlaying)
-    {
-        isImportantVoicePlaying = isPlaying;
-    }
-
-    public void SetSonarAvailable(bool isAvailable)
-    {
-        isSonarAvailable = isAvailable;
-    }
-
-    public void SetCanPlaceFakeEnemyThisAttempt(bool canPlace)
-    {
-        canPlaceFakeEnemyThisAttempt = canPlace;
-    }
-
     [ContextMenu("Debug/Try Select Periodic")]
     public void TrySelectPeriodic()
     {
         SubJumpScareContext context = CreateContext();
         SubJumpScareSelectionResult result = _selectionCoordinator.SelectPeriodic(database, context);
+
         LogResult(context, result);
-        
-        _eventPublisher.TryPublish(
-            context => new SubJumpScareTriggeredRawEvent(context, result));
+        PublishRawResult(result);
     }
 
     [ContextMenu("Debug/Try Select Sonar")]
     public void TrySelectSonar()
     {
         SubJumpScareContext context = CreateContext();
-        SubJumpScareSelectionResult result = _selectionCoordinator.SelectSonar(database, context);
+        SubJumpScareSelectionResult selectedResult = _selectionCoordinator.SelectSonar(database, context);
+        SubJumpScareSelectionResult finalResult = ResolveSonarSelectionResult(selectedResult);
 
-        if (_selectionCoordinator.FakeEnemyGuaranteePending == true && enableGuaranteeLog == true && result.IsSuccess == false)
+        if (_selectionCoordinator.FakeEnemyGuaranteePending == true
+            && enableGuaranteeLog == true
+            && finalResult.IsSuccess == false)
         {
             Debug.Log("[SubJumpScare] 가짜적 배치 실패. 다음 소나 시도에서도 계속 재검사합니다.");
         }
 
-        LogResult(context, result);
-        
+        LogResult(context, finalResult);
+        PublishRawResult(finalResult);
+    }
+
+    private SubJumpScareSelectionResult ResolveSonarSelectionResult(SubJumpScareSelectionResult selectedResult)
+    {
+        if (selectedResult.IsSuccess == false)
+        {
+            return selectedResult;
+        }
+
+        if (selectedResult.Data == null)
+        {
+            return selectedResult;
+        }
+
+        if (selectedResult.Data.Type != ESubJumpScareType.FakeEnemy)
+        {
+            _selectionCoordinator.ConfirmSonarTriggered(selectedResult);
+            return selectedResult;
+        }
+
+        FakeEnemySubJumpScareDefinitionSO fakeEnemyDefinition;
+
+        if (database == null || database.TryGetFakeEnemyDefinition(selectedResult.Data.Id, out fakeEnemyDefinition) == false)
+        {
+            _selectionCoordinator.KeepFakeEnemyGuaranteePending();
+
+            return SubJumpScareSelectionResult.CreateFail(
+                ESubJumpScareTriggerType.Sonar,
+                "선택된 가짜적 정의를 찾지 못했습니다.");
+        }
+
+        if (CanExecuteFakeEnemy(fakeEnemyDefinition) == false)
+        {
+            _selectionCoordinator.KeepFakeEnemyGuaranteePending();
+
+            return SubJumpScareSelectionResult.CreateFail(
+                ESubJumpScareTriggerType.Sonar,
+                "가짜적 실행 참조가 올바르게 설정되지 않았습니다.");
+        }
+
+        FakeEnemyJumpScareExecuteRequest executeRequest = CreateFakeEnemyExecuteRequest(fakeEnemyDefinition);
+
+        if (executeRequest.IsValid() == false)
+        {
+            _selectionCoordinator.KeepFakeEnemyGuaranteePending();
+
+            return SubJumpScareSelectionResult.CreateFail(
+                ESubJumpScareTriggerType.Sonar,
+                "가짜적 실행 요청 데이터가 유효하지 않습니다.");
+        }
+
+        FakeEnemyInstance spawnedInstance;
+        bool isSpawned = fakeEnemyJumpScareExecutor.TryExecute(executeRequest, out spawnedInstance);
+
+        if (isSpawned == false)
+        {
+            _selectionCoordinator.KeepFakeEnemyGuaranteePending();
+
+            return SubJumpScareSelectionResult.CreateFail(
+                ESubJumpScareTriggerType.Sonar,
+                "가짜적 위치 선정 또는 생성에 실패했습니다.");
+        }
+
+        _selectionCoordinator.ConfirmSonarTriggered(selectedResult);
+        return selectedResult;
+    }
+
+    private bool CanExecuteFakeEnemy(FakeEnemySubJumpScareDefinitionSO fakeEnemyDefinition)
+    {
+        if (fakeEnemyDefinition == null)
+        {
+            return false;
+        }
+
+        if (fakeEnemyJumpScareExecutor == null)
+        {
+            return false;
+        }
+
+        if (playerRootTransform == null)
+        {
+            return false;
+        }
+
+        if (playerCameraTransform == null)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private FakeEnemyJumpScareExecuteRequest CreateFakeEnemyExecuteRequest(
+        FakeEnemySubJumpScareDefinitionSO fakeEnemyDefinition)
+    {
+        return new FakeEnemyJumpScareExecuteRequest(
+            playerCameraTransform.position,
+            playerCameraTransform.forward,
+            playerRootTransform,
+            fakeEnemyDefinition.MinSpawnDistance,
+            fakeEnemyDefinition.MaxSpawnDistance,
+            fakeEnemyDefinition.AllowedForwardAngle,
+            fakeEnemyDefinition.PosePrefabs,
+            false,
+            0);
+    }
+
+    private void PublishRawResult(SubJumpScareSelectionResult result)
+    {
         _eventPublisher.TryPublish(
-            context => new SubJumpScareTriggeredRawEvent(context, result));
+            eventContext => new SubJumpScareTriggeredRawEvent(eventContext, result));
     }
 
     private SubJumpScareContext CreateContext()
@@ -200,3 +301,4 @@ public class SubJumpScareManager : MonoBehaviour
             $"[SubJumpScare] Selection Fail | Trigger={result.TriggerType} | Tension={context.TotalTension} | Mode={context.CurrentPlayerInteractMode} | Reason={result.FailReason}");
     }
 }
+

@@ -1,13 +1,19 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
-public class FakeEnemySpawnService : MonoBehaviour
+public sealed class FakeEnemySpawnService
 {
-    [Header("Spawn")]
-    [SerializeField] private GameObject _fakeEnemyPrefab;
-    [SerializeField] private Transform _spawnParent;
-    [SerializeField] private bool _enableDebugLog = false;
+    private readonly Transform _spawnParent;
+    private readonly bool _enableDebugLog;
+
+    public FakeEnemySpawnService(Transform spawnParent, bool enableDebugLog)
+    {
+        _spawnParent = spawnParent;
+        _enableDebugLog = enableDebugLog;
+    }
 
     public bool TrySpawn(
+        FakeEnemyJumpScareExecuteRequest request,
         Vector3 position,
         Quaternion rotation,
         float lifetime,
@@ -15,40 +21,82 @@ public class FakeEnemySpawnService : MonoBehaviour
     {
         instance = null;
 
-        if (_fakeEnemyPrefab == null)
+        GameObject selectedPrefab = SelectPrefab(request);
+
+        if (selectedPrefab == null)
         {
             if (_enableDebugLog == true)
             {
-                Debug.LogWarning("[FakeEnemySpawnService] 가짜적 프리팹이 설정되지 않았습니다.");
+                Debug.LogWarning("[FakeEnemySpawnService] 생성 가능한 프리팹이 없습니다.");
             }
 
             return false;
         }
 
-        GameObject spawnedObject = Instantiate(_fakeEnemyPrefab, position, rotation, _spawnParent);
+        GameObject spawnedObject = Object.Instantiate(selectedPrefab, position, rotation, _spawnParent);
+        instance = spawnedObject.GetComponent<FakeEnemyInstance>();
 
-        instance = GetOrAddInstanceComponent(spawnedObject);
-        instance.Initialize(lifetime);
+        if (instance == null)
+        {
+            if (_enableDebugLog == true)
+            {
+                Debug.LogWarning("[FakeEnemySpawnService] FakeEnemyInstance 컴포넌트가 프리팹에 없습니다.");
+            }
+
+            Object.Destroy(spawnedObject);
+            return false;
+        }
+
+        instance.Initialize(lifetime, request.PlayerTransform);
 
         if (_enableDebugLog == true)
         {
             Debug.Log(string.Format(
-                "[FakeEnemySpawnService] 가짜적 생성 완료. Position: {0}",
-                position));
+                "[FakeEnemySpawnService] 생성 성공 | Prefab={0}",
+                selectedPrefab.name));
         }
 
         return true;
     }
 
-    private FakeEnemyInstance GetOrAddInstanceComponent(GameObject spawnedObject)
+    private GameObject SelectPrefab(FakeEnemyJumpScareExecuteRequest request)
     {
-        FakeEnemyInstance instance = spawnedObject.GetComponent<FakeEnemyInstance>();
-
-        if (instance != null)
+        if (request.PosePrefabs == null || request.PosePrefabs.Count == 0)
         {
-            return instance;
+            return null;
         }
 
-        return spawnedObject.AddComponent<FakeEnemyInstance>();
+        List<GameObject> validPrefabs = new List<GameObject>();
+
+        for (int index = 0; index < request.PosePrefabs.Count; index++)
+        {
+            GameObject prefab = request.PosePrefabs[index];
+
+            if (prefab == null)
+            {
+                continue;
+            }
+
+            validPrefabs.Add(prefab);
+        }
+
+        if (validPrefabs.Count == 0)
+        {
+            return null;
+        }
+
+        int selectedIndex = GetRandomIndex(request, validPrefabs.Count);
+        return validPrefabs[selectedIndex];
+    }
+
+    private int GetRandomIndex(FakeEnemyJumpScareExecuteRequest request, int count)
+    {
+        if (request.UseDeterministicSelection == true)
+        {
+            System.Random random = new System.Random(request.DeterministicSeed);
+            return random.Next(0, count);
+        }
+
+        return UnityEngine.Random.Range(0, count);
     }
 }

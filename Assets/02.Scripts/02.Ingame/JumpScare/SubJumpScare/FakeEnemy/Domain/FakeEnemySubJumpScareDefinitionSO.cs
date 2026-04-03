@@ -29,10 +29,6 @@ public class FakeEnemySubJumpScareDefinitionSO : ScriptableObject
     public float AllowedForwardAngle = 45f;
 
     [BoxGroup("Presentation")]
-    [PropertyTooltip("가짜 적 등장 시 애니메이션을 사용할지 여부입니다.")]
-    public bool UseAnimation = false;
-
-    [BoxGroup("Presentation")]
     [ListDrawerSettings(Expanded = true, DraggableItems = true, ShowIndexLabels = true, NumberOfItemsPerPage = 8)]
     [PropertyTooltip("가짜 적 연출에 사용할 포즈 프리팹 목록입니다. 상황에 따라 이 중 하나를 선택해 사용할 수 있습니다.")]
     public List<GameObject> PosePrefabs = new List<GameObject>();
