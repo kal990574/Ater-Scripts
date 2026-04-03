@@ -70,9 +70,10 @@ public abstract class SubJumpScareDefinitionSOBase : ScriptableObject
 
         return true;
     }
-
+    
     protected SubJumpScareCommonData EnsureCommon(SubJumpScareCommonData common)
     {
+        
         if (common == null)
         {
             common = new SubJumpScareCommonData();
