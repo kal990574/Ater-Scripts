@@ -45,7 +45,6 @@ public class InventoryManager : MonoBehaviour
     public event Action<int> OnSelectionChanged;
     public event Action<int> OnHandSlotChanged;
 
-    
     private void Awake()
     {
         if (_instance == null)
