@@ -3,29 +3,61 @@ using UnityEngine.Audio;
 
 public class SoundManager : MonoBehaviour, ISoundService
 {
+    private static SoundManager _instance;
+    public static SoundManager Instance => _instance;
+
     [Header("Controller")]
     [SerializeField] private BGMController _bgmController;
     [SerializeField] private SFXController _sfxController;
     [SerializeField] private MixerController _mixerController;
 
-    public void PlayBGM(AudioClip clip, float fadeTime = 1f)
+    [Header("Data")]
+    [SerializeField] private SoundDataTableSO _soundDataTableSO;
+
+    private void Awake()
     {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        _instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        if (_instance == this)
+        {
+            _instance = null;
+        }
+    }
+
+    public void PlayBGM(string key, float fadeTime = 1f)
+    {
+        AudioClip clip = GetClip(key);
+        if (clip == null) return;
         _bgmController.Play(clip, fadeTime);
     }
     public void StopBGM(float fadeTime = 1f)
     {
         _bgmController.Stop(fadeTime);
     }
-    public void PlaySFX(AudioClip clip, Vector3 position, float volume = 1f)
+    public void PlaySFX(string key, Vector3 position, float volume = 1f)
     {
+        AudioClip clip = GetClip(key);
+        if (clip == null) return;
         _sfxController.PlaySFX(clip, position, volume);
     }
-    public void PlaySFX2D(AudioClip clip, float volume = 1f)
+    public void PlaySFX2D(string key, float volume = 1f)
     {
+        AudioClip clip = GetClip(key);
+        if (clip == null) return;
         _sfxController.PlaySFX2D(clip, volume);
     }
-    public void PlayStinger(AudioClip clip, float volume = 1f)
+    public void PlayStinger(string key, float volume = 1f)
     {
+        AudioClip clip = GetClip(key);
+        if (clip == null) return;
         _sfxController.PlayStinger(clip, volume);
     }
 
@@ -58,6 +90,10 @@ public class SoundManager : MonoBehaviour, ISoundService
         _bgmController.Resume();
         _sfxController.ResumeSFX();
         _sfxController.ResumeStinger();
+    }
+    private AudioClip GetClip(string key)
+    {
+        return _soundDataTableSO.GetClip(key);
     }
 
 }

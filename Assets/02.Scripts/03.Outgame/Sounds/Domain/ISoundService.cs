@@ -4,14 +4,14 @@ using UnityEngine.Audio;
 public interface ISoundService
 {
 
-    void PlayBGM(AudioClip clip, float fadeTime = 1f);
+    void PlayBGM(string key, float fadeTime = 1f);
     void StopBGM(float fadeTime = 1f);
 
-    void PlaySFX(AudioClip clip, Vector3 position, float volume = 1f);
+    void PlaySFX(string key, Vector3 position, float volume = 1f);
 
-    void PlaySFX2D(AudioClip clip, float volume = 1f);
+    void PlaySFX2D(string key, float volume = 1f);
 
-    void PlayStinger(AudioClip clip, float volume = 1f);
+    void PlayStinger(string key, float volume = 1f);
 
     void SetMasterVolume(float volume);
     void SetBGMVolume(float volume);
