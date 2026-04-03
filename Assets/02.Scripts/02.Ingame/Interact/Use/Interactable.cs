@@ -8,12 +8,10 @@ public abstract class Interactable : DetectableObject, IInteractObject, INeedRun
 {
     [SerializeField] protected bool _isInteractActive;
     private IRuntimeView _instance;
-    
+
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
     public override bool CanDetect => _isDetectable && _isInteractActive;
-    
-    private GameEventPublisher _publisher;
 
     public event Action OnInteract;
 
@@ -26,11 +24,8 @@ public abstract class Interactable : DetectableObject, IInteractObject, INeedRun
         {
             _instance = instance;
         }
-
-        _publisher = new GameEventPublisher();
-        _publisher.SetSource(this);
     }
-    
+
 
     public abstract void Interact(UseContext context);
 
@@ -62,6 +57,5 @@ public abstract class Interactable : DetectableObject, IInteractObject, INeedRun
     {
         OnInteract?.Invoke();
         InteractEvent?.Invoke();
-        _publisher.TryPublish(ctx => new InteractedRawEvent(ctx));
     }
 }

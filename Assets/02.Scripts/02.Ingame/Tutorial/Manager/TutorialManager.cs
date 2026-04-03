@@ -1,6 +1,8 @@
 using _02.Scripts._02.Ingame.Tutorial.Config;
 using _02.Scripts._02.Ingame.Tutorial.Domain;
+using _02.Scripts.Player;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,11 +10,17 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
 {
     public class TutorialManager : MonoBehaviour
     {
+        [Header("Config")]
         [SerializeField] private TutorialConfigSO _config;
 
+        [Header("References")]
+        [SerializeField] private PlayerController _playerController;
+        [SerializeField] private ExamineInteraction _examineInteraction;
+
+        private IPlayerInput _playerInput;
+        private CompositeSubscription _subscriptions;
         private HashSet<TutorialStepId> _completedSteps = new();
         private TutorialStepId _currentStep = TutorialStepId.None;
-        private CompositeSubscription _subscriptions;
 
         // UI 통신용 이벤트
         public event Action<TutorialStepEntry> OnGuideShow;
@@ -20,59 +28,140 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
         public event Action<TutorialStepEntry> OnOverlayShow;
         public event Action OnOverlayHide;
 
-        private void OnEnable()
-        {
-            GameEventHub hub = GameEventHub.Instance;
-            if (hub == null) return;
-
-            _subscriptions = new CompositeSubscription();
-            _subscriptions.Add(hub.Subscribe<PlayerMovedRawEvent>(_ => TryDismiss(TutorialStepId.Movement)));
-            _subscriptions.Add(hub.Subscribe<SonarScanStartedRawEvent>(_ => TryDismiss(TutorialStepId.Sonar)));
-            _subscriptions.Add(hub.Subscribe<LidarScanStartedRawEvent>(_ => TryDismiss(TutorialStepId.Lidar)));
-            _subscriptions.Add(hub.Subscribe<InteractedRawEvent>(_ => TryDismiss(TutorialStepId.Interact)));
-            _subscriptions.Add(hub.Subscribe<ItemEquippedRawEvent>(_ => TryDismiss(TutorialStepId.Equip)));
-            _subscriptions.Add(hub.Subscribe<InventoryToggledRawEvent>(e =>
-            {
-                if (e.IsOpen) TryDismiss(TutorialStepId.Inventory);
-            }));
-            _subscriptions.Add(hub.Subscribe<ItemDraggedRawEvent>(_ => TryDismiss(TutorialStepId.Inspect)));
-            _subscriptions.Add(hub.Subscribe<ItemScrolledRawEvent>(_ => TryDismiss(TutorialStepId.Manipulate)));
-
-            // 이벤트 트리거 발동용
-            _subscriptions.Add(hub.Subscribe<LidarScanStartedRawEvent>(_ => TryShow(TutorialStepId.Lidar)));
-            _subscriptions.Add(hub.Subscribe<InteractedRawEvent>(_ => TryShow(TutorialStepId.Interact)));
-            _subscriptions.Add(hub.Subscribe<ItemAddedRawEvent>(_ => TryShowOnItemAdded()));
-        }
-
-        private void OnDisable()
-        {
-            _subscriptions?.Dispose();
-        }
-
         private void Start()
         {
-            // 게임 시작 시 Movement 가이드 표시
+            _playerInput = _playerController.Input;
+
+            // 기존 EventBus 이벤트
+            GameEventHub hub = GameEventHub.Instance;
+            if (hub != null)
+            {
+                _subscriptions = new CompositeSubscription();
+                _subscriptions.Add(hub.Subscribe<SonarScanStartedRawEvent>(_ => TryDismiss(TutorialStepId.Sonar)));
+                _subscriptions.Add(hub.Subscribe<TutorialStepCompletedRawEvent>(e => TryDismiss(e.StepId)));
+            }
+
+            // 기존 Action 구독
+            if (InventoryManager.Instance != null)
+            {
+                InventoryManager.Instance.OnInventoryToggled += OnInventoryToggled;
+                InventoryManager.Instance.OnHandSlotChanged += OnHandSlotChanged;
+                InventoryManager.Instance.OnSelectionChanged += OnSelectionChanged;
+                InventoryManager.Instance.OnInventoryItemChanged += OnInventoryItemChanged;
+            }
+
+            if (_playerController != null)
+            {
+                _playerController.OnModeChanged += OnModeChanged;
+            }
+
+            if (_examineInteraction != null)
+            {
+                _examineInteraction.OnDragChanged += OnDragChanged;
+                _examineInteraction.OnScrolled += OnScrolled;
+            }
+
+            // 최초 가이드 표시
+            StartCoroutine(ShowFirstGuide());
+        }
+        
+        // UI 구독 대기
+        private IEnumerator ShowFirstGuide()
+        {
+            yield return null;
             TryShow(TutorialStepId.Movement);
         }
 
-        // 가이드 표시 시도
+        private void OnDestroy()
+        {
+            _subscriptions?.Dispose();
+
+            if (InventoryManager.Instance != null)
+            {
+                InventoryManager.Instance.OnInventoryToggled -= OnInventoryToggled;
+                InventoryManager.Instance.OnHandSlotChanged -= OnHandSlotChanged;
+                InventoryManager.Instance.OnSelectionChanged -= OnSelectionChanged;
+                InventoryManager.Instance.OnInventoryItemChanged -= OnInventoryItemChanged;
+            }
+
+            if (_playerController != null)
+            {
+                _playerController.OnModeChanged -= OnModeChanged;
+            }
+
+            if (_examineInteraction != null)
+            {
+                _examineInteraction.OnDragChanged -= OnDragChanged;
+                _examineInteraction.OnScrolled -= OnScrolled;
+            }
+        }
+
+        private void Update()
+        {
+            if (_currentStep == TutorialStepId.Movement && _playerInput.MoveInput != Vector2.zero)
+            {
+                TryDismiss(TutorialStepId.Movement);
+            }
+        }
+
+        // --- Action 핸들러 ---
+        private void OnInventoryToggled(bool isOpen)
+        {
+            if (isOpen) TryDismiss(TutorialStepId.OpenInventory);
+        }
+
+        private void OnHandSlotChanged(int index)
+        {
+            if (index >= 0) TryDismiss(TutorialStepId.EquipKey);
+        }
+
+        private void OnSelectionChanged(int index)
+        {
+            if (index >= 0) TryDismiss(TutorialStepId.InspectNote);
+        }
+
+        private void OnInventoryItemChanged()
+        {
+            if (_currentStep == TutorialStepId.FindKey)
+                TryDismiss(TutorialStepId.FindKey);
+            else if (_currentStep == TutorialStepId.FindNote)
+                TryDismiss(TutorialStepId.FindNote);
+        }
+
+        private void OnModeChanged(EPlayerInteractMode mode)
+        {
+            if (mode == EPlayerInteractMode.Scan) TryDismiss(TutorialStepId.ScannerToggle);
+        }
+
+        private void OnDragChanged(bool isDragging)
+        {
+            if (isDragging) TryDismiss(TutorialStepId.RotateItem);
+        }
+
+        private void OnScrolled(float delta)
+        {
+            TryDismiss(TutorialStepId.ZoomItem);
+        }
+
+        // --- 핵심 로직 ---
         public void TryShow(TutorialStepId stepId)
         {
-            if (_completedSteps.Contains(stepId)) return;
-            if (_currentStep == stepId) return;
+            Debug.Log($"[Tutorial] TryShow({stepId}) called");
 
-            // ChainFrom이 설정된 스텝은 이전 스텝 완료 필요
+            if (_completedSteps.Contains(stepId)) { Debug.Log($"[Tutorial] {stepId} already completed"); return; }
+            if (_currentStep == stepId) { Debug.Log($"[Tutorial] {stepId} already current"); return; }
+
             TutorialStepEntry entry = _config.GetStep(stepId);
-            if (entry == null) return;
-            if (entry.ChainFrom != TutorialStepId.None && !_completedSteps.Contains(entry.ChainFrom)) return;
+            if (entry == null) { Debug.Log($"[Tutorial] {stepId} not found in config"); return; }
+            if (entry.ChainFrom != TutorialStepId.None && !_completedSteps.Contains(entry.ChainFrom)) { Debug.Log($"[Tutorial] {stepId} chain prerequisite {entry.ChainFrom} not met"); return; }
 
-            // 현재 가이드 즉시 소멸
             if (_currentStep != TutorialStepId.None)
             {
                 HideCurrent();
             }
 
             _currentStep = stepId;
+            Debug.Log($"[Tutorial] Showing {stepId}: {entry.GuideText}");
 
             if (entry.IsOverlay)
                 OnOverlayShow?.Invoke(entry);
@@ -80,8 +169,7 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
                 OnGuideShow?.Invoke(entry);
         }
 
-        // 소멸 조건 충족 시 호출
-        private void TryDismiss(TutorialStepId stepId)
+        public void TryDismiss(TutorialStepId stepId)
         {
             if (_currentStep != stepId) return;
 
@@ -90,7 +178,6 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
             TryShowChained(stepId);
         }
 
-        // 체인 가이드 탐색 — 이전 스텝 소멸 후 자동 발동
         private void TryShowChained(TutorialStepId completedStep)
         {
             foreach (TutorialStepEntry entry in _config.Steps)
@@ -100,19 +187,6 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
                     TryShow(entry.Id);
                     return;
                 }
-            }
-        }
-
-        // 아이템 추가 시 — 첫 번째는 Equip, 두 번째 이후는 Inventory 발동
-        private void TryShowOnItemAdded()
-        {
-            if (!_completedSteps.Contains(TutorialStepId.Equip))
-            {
-                TryShow(TutorialStepId.Equip);
-            }
-            else if (!_completedSteps.Contains(TutorialStepId.Inventory))
-            {
-                TryShow(TutorialStepId.Inventory);
             }
         }
 
