@@ -45,7 +45,8 @@ public class InventoryManager : MonoBehaviour
     public event Action<int> OnSelectionChanged;
     public event Action<int> OnHandSlotChanged;
 
-    
+    private GameEventPublisher _publisher;
+
     private void Awake()
     {
         if (_instance == null)
@@ -71,6 +72,9 @@ public class InventoryManager : MonoBehaviour
         _inventoryService.OnItemRemoved += HandleItemRemoved;
 
         handViewService.OnEquippedChanged += HandleHandEquippedChanged;
+
+        _publisher = new GameEventPublisher();
+        _publisher.SetSource(this);
     }
     
     #region Managing Inventory
@@ -83,6 +87,7 @@ public class InventoryManager : MonoBehaviour
     {
         _isInventoryUIOn = !_isInventoryUIOn;
         OnInventoryToggled?.Invoke(_isInventoryUIOn);
+        _publisher.TryPublish(ctx => new InventoryToggledRawEvent(ctx, _isInventoryUIOn));
     }
 
     public void SelectItem(int index)
@@ -145,7 +150,12 @@ public class InventoryManager : MonoBehaviour
         }
 
         _runtimeInstanceService.RegisterInstance(runtimeItemData);
-        return _inventoryService.TryAdd(runtimeItemData.InstanceId);
+        bool added = _inventoryService.TryAdd(runtimeItemData.InstanceId);
+        if (added)
+        {
+            _publisher.TryPublish(ctx => new ItemAddedRawEvent(ctx));
+        }
+        return added;
     }
 
     //인벤토리의 해당칸에 위치한 아이템 제거
@@ -279,5 +289,6 @@ public class InventoryManager : MonoBehaviour
     {
         int index = string.IsNullOrEmpty(instanceId) ? -1 : _inventoryService.IndexOf(instanceId);
         OnHandSlotChanged?.Invoke(index);
+        _publisher.TryPublish(ctx => new ItemEquippedRawEvent(ctx));
     }
 }

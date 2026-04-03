@@ -10,10 +10,17 @@ namespace _02.Scripts.Player
         private PlayerConfigSO _config;
         private float _verticalVelocity;
 
+        private GameEventPublisher _publisher;
+        private bool _hasPublishedMove;
+
         private void Start()
         {
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<IPlayerInput>();
+            
+            _publisher = new GameEventPublisher();
+            _publisher.SetSource(this);
+            _hasPublishedMove = false;
             
             _config = _owner.Config;
         }
@@ -49,6 +56,12 @@ namespace _02.Scripts.Player
             velocity.y = _verticalVelocity;
             
             _controller.Move(velocity * Time.deltaTime);
+            
+            if (!_hasPublishedMove && input != Vector2.zero)
+            {                                                        
+                _hasPublishedMove = true;
+                _publisher.TryPublish(ctx => new PlayerMovedRawEvent(ctx));                               
+            }
         }
     }
 }
