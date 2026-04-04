@@ -4,7 +4,7 @@ using UnityEngine;
 public class ScanCondition : MonoBehaviour,IUseCondition
 {
     [SerializeField] private bool _completeToTrue = false;
-    public bool CanUse(UseContext context)
+    public bool CanUse(InteractionContext context)
     {
         if (context?.Target != null &&
             context.Target.TryGetComponent(out IScannable scannableObject) &&

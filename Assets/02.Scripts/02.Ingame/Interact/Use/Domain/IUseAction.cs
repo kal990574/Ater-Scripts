@@ -1,4 +1,4 @@
 public interface IUseAction
 {
-    void Execute(UseContext context);
+    void Execute(InteractionContext context);
 }

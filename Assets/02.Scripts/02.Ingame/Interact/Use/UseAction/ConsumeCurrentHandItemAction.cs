@@ -3,7 +3,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class ConsumeCurrentHandItemAction : MonoBehaviour, IUseAction
 {
-    public void Execute(UseContext context)
+    public void Execute(InteractionContext context)
     {
         if (context == null)
         {

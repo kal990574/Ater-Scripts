@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public abstract class Interactable : DetectableObject, IRuntimeInteractObject, IUseRuntimeData
+public abstract class Interactable : DetectableObject, IRuntimeInteractObject, IRuntimeDataConsumer
 {
     [SerializeField] protected bool _isInteractActive;
     private IRuntimeView _instance;
@@ -27,7 +27,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     }
 
 
-    public abstract void Interact(UseContext context);
+    public abstract void Interact(InteractionContext context);
 
     private void SetActivate()
     {

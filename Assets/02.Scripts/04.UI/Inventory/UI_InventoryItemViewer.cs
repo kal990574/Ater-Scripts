@@ -4,10 +4,9 @@ using UnityEngine.InputSystem;
 
 public class UI_InventoryItemViewer : MonoBehaviour
 {
-    [SerializeField] private Transform _itemRoot;
+    [SerializeField] private Transform _examineRoot;
     [SerializeField] private Camera _itemViewerCamera;
     [SerializeField] private TextMeshProUGUI _descriptionText;
-    [SerializeField] private Transform _examineRoot;
 
     [SerializeField] private float _rotateSpeed = 0.5f;
     [SerializeField] private float _zoomSpeed = 1.0f;
@@ -24,7 +23,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
     private void Start()
     {
         _initialCameraLocalPosition = _itemViewerCamera.transform.localPosition;
-        _itemViewerCamera.transform.LookAt(_itemRoot);
+        _itemViewerCamera.transform.LookAt(_examineRoot);
 
         _runtimeInstanceManager = RuntimeInstanceManager.Instance;
         if (_runtimeInstanceManager != null)
@@ -57,7 +56,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
 
     public void ShowItem(string instanceId)
     {
-        _itemRoot.rotation = Quaternion.identity;
+        _examineRoot.rotation = Quaternion.identity;
         _itemViewerCamera.transform.localPosition = _initialCameraLocalPosition;
         _itemViewerCamera.fieldOfView = _maxFieldOfView;
 
@@ -112,8 +111,8 @@ public class UI_InventoryItemViewer : MonoBehaviour
         }
 
         Vector2 delta = Mouse.current.delta.ReadValue();
-        _itemRoot.Rotate(Vector3.up, -delta.x * _rotateSpeed, Space.World);
-        _itemRoot.Rotate(Vector3.right, delta.y * _rotateSpeed, Space.World);
+        _examineRoot.Rotate(Vector3.up, -delta.x * _rotateSpeed, Space.World);
+        _examineRoot.Rotate(Vector3.right, delta.y * _rotateSpeed, Space.World);
     }
 
     private void OnDisable()

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class UseContext
+public class InteractionContext
 {
     public GameObject User { get; }
     public GameObject TargetObject { get; }
@@ -10,7 +10,7 @@ public class UseContext
     public string HandItemInstanceId { get; }
     public RuntimeItemData Hand { get; }
 
-    public UseContext(
+    public InteractionContext(
         GameObject user,
         GameObject targetObject,
         UsableObject target,
@@ -28,7 +28,7 @@ public class UseContext
         Hand = hand;
     }
 
-    public static UseContext For(GameObject user, GameObject targetObject)
+    public static InteractionContext For(GameObject user, GameObject targetObject)
     {
         UsableObject usableObject = targetObject != null
             ? targetObject.GetComponent<UsableObject>()
@@ -37,12 +37,12 @@ public class UseContext
         return Create(user, usableObject, targetObject);
     }
 
-    public static UseContext For(GameObject user, UsableObject target)
+    public static InteractionContext For(GameObject user, UsableObject target)
     {
         return Create(user, target, target != null ? target.gameObject : null);
     }
 
-    private static UseContext Create(GameObject user, UsableObject target, GameObject targetObject)
+    private static InteractionContext Create(GameObject user, UsableObject target, GameObject targetObject)
     {
         InventoryManager inventory = InventoryManager.Instance;
         PlayerHandAbility handAbility = ResolveInventoryAbility(user);
@@ -58,7 +58,7 @@ public class UseContext
             hand = runtimeInstanceManager.GetItemInstance(handItemInstanceId);
         }
 
-        return new UseContext(
+        return new InteractionContext(
             user,
             targetObject,
             target,

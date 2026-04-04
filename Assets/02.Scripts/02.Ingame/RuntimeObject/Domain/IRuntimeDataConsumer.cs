@@ -1,4 +1,4 @@
-public interface IUseRuntimeData
+public interface IRuntimeDataConsumer
 {
     RuntimeData RuntimeData { get; }
     RuntimeItemData RuntimeItemData { get; }

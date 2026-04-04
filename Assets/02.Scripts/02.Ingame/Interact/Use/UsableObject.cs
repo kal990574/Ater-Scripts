@@ -14,7 +14,7 @@ public class UsableObject : Interactable
         _useActions = GetComponentsInChildren<IUseAction>();
     }
 
-    public override void Interact(UseContext context)
+    public override void Interact(InteractionContext context)
     {
         if (!_isInteractActive)
         {
@@ -22,7 +22,7 @@ public class UsableObject : Interactable
             return;
         }
 
-        UseContext resolvedContext = context ?? UseContext.For(gameObject, this);
+        InteractionContext resolvedContext = context ?? InteractionContext.For(gameObject, this);
         if (!CanUse(resolvedContext))
         {
             Debug.Log($"{gameObject.name} : use conditions are not satisfied");
@@ -34,7 +34,7 @@ public class UsableObject : Interactable
         OnInteractActivate();
     }
 
-    public bool CanUse(UseContext context)
+    public bool CanUse(InteractionContext context)
     {
         if (_useConditions == null || _useConditions.Length == 0)
         {
@@ -57,7 +57,7 @@ public class UsableObject : Interactable
         return true;
     }
 
-    private void ExecuteActions(UseContext context)
+    private void ExecuteActions(InteractionContext context)
     {
         if (_useActions == null || _useActions.Length == 0)
         {
