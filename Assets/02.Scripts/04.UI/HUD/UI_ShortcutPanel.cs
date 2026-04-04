@@ -5,6 +5,7 @@ public class UI_ShortcutPanel : MonoBehaviour
 {
     [SerializeField] private float _normalAlpha = 0.4f;
     [SerializeField] private float _selectedAlpha = 1.0f;
+    [SerializeField] private PlayerInventoryAbility _playerInventoryAbility;
 
     private Image[] _iconImages;
     private CanvasGroup[] _canvasGroup;
@@ -15,52 +16,113 @@ public class UI_ShortcutPanel : MonoBehaviour
         _iconImages = new Image[count];
         _canvasGroup = new CanvasGroup[count];
 
-        for (int i = 0; i < count; i++)
+        for (int index = 0; index < count; index++)
         {
-            Transform slot = transform.GetChild(i);
+            Transform slot = transform.GetChild(index);
             Transform iconChild = slot.Find("Icon");
-            _iconImages[i] = iconChild != null ? iconChild.GetComponent<Image>() : null;
+            _iconImages[index] = iconChild != null ? iconChild.GetComponent<Image>() : null;
 
-            _canvasGroup[i] = slot.GetComponent<CanvasGroup>();
-            if (_canvasGroup[i] == null)
+            _canvasGroup[index] = slot.GetComponent<CanvasGroup>();
+            if (_canvasGroup[index] == null)
             {
-                _canvasGroup[i] = slot.gameObject.AddComponent<CanvasGroup>();
+                _canvasGroup[index] = slot.gameObject.AddComponent<CanvasGroup>();
             }
+        }
+
+        if (_playerInventoryAbility == null)
+        {
+            _playerInventoryAbility = FindFirstObjectByType<PlayerInventoryAbility>();
         }
     }
 
     private void OnEnable()
     {
-        if (InventoryManager.Instance == null) return;
+        InventoryManager inventoryManager = InventoryManager.Instance;
+        if (inventoryManager != null)
+        {
+            inventoryManager.OnInventoryItemChanged += Refresh;
+        }
 
-        InventoryManager.Instance.OnInventoryItemChanged += Refresh;
-        InventoryManager.Instance.OnHandSlotChanged += UpdateHighlight;
+        if (_playerInventoryAbility != null)
+        {
+            _playerInventoryAbility.OnHandSlotChanged += UpdateHighlight;
+        }
+
         Refresh();
+
+        if (_playerInventoryAbility != null)
+        {
+            UpdateHighlight(_playerInventoryAbility.CurrentHandIndex);
+        }
+        else
+        {
+            UpdateHighlight(-1);
+        }
     }
 
     private void OnDisable()
     {
-        if(InventoryManager.Instance == null) return;
-        InventoryManager.Instance.OnInventoryItemChanged -= Refresh;
-        InventoryManager.Instance.OnHandSlotChanged -= UpdateHighlight;
+        InventoryManager inventoryManager = InventoryManager.Instance;
+        if (inventoryManager != null)
+        {
+            inventoryManager.OnInventoryItemChanged -= Refresh;
+        }
+
+        if (_playerInventoryAbility != null)
+        {
+            _playerInventoryAbility.OnHandSlotChanged -= UpdateHighlight;
+        }
     }
 
     private void Refresh()
     {
-        for(int i = 0; i < _iconImages.Length; i++)
-        {
-            string instanceId = InventoryManager.Instance.GetInventoryItemInstanceIdAt(i);
-            RuntimeItemData data = string.IsNullOrEmpty(instanceId) ? null : InventoryManager.Instance.GetItemInstance(instanceId);
+        InventoryManager inventoryManager = InventoryManager.Instance;
+        RuntimeInstanceManager runtimeInstanceManager = RuntimeInstanceManager.Instance;
 
-            _iconImages[i].sprite = data?.Icon;
-            _iconImages[i].enabled = data != null;
+        if (inventoryManager == null || runtimeInstanceManager == null)
+        {
+            ClearIcons();
+            return;
+        }
+
+        for (int index = 0; index < _iconImages.Length; index++)
+        {
+            Image iconImage = _iconImages[index];
+            if (iconImage == null)
+            {
+                continue;
+            }
+
+            string instanceId = inventoryManager.GetInventoryItemInstanceIdAt(index);
+            RuntimeItemData runtimeItemData = string.IsNullOrEmpty(instanceId)
+                ? null
+                : runtimeInstanceManager.GetItemInstance(instanceId);
+
+            iconImage.sprite = runtimeItemData != null ? runtimeItemData.Icon : null;
+            iconImage.enabled = runtimeItemData != null;
         }
     }
+
     private void UpdateHighlight(int handIndex)
     {
-        for (int i = 0; i < _canvasGroup.Length; i++)
+        for (int index = 0; index < _canvasGroup.Length; index++)
         {
-            _canvasGroup[i].alpha = i == handIndex ? _selectedAlpha : _normalAlpha;
+            _canvasGroup[index].alpha = index == handIndex ? _selectedAlpha : _normalAlpha;
+        }
+    }
+
+    private void ClearIcons()
+    {
+        for (int index = 0; index < _iconImages.Length; index++)
+        {
+            Image iconImage = _iconImages[index];
+            if (iconImage == null)
+            {
+                continue;
+            }
+
+            iconImage.sprite = null;
+            iconImage.enabled = false;
         }
     }
 }

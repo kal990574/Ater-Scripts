@@ -5,13 +5,19 @@ public class ConsumeCurrentHandItemAction : MonoBehaviour, IUseAction
 {
     public void Execute(UseContext context)
     {
-        if (context?.Inventory == null)
+        if (context == null)
         {
-            Debug.LogError($"[{nameof(ConsumeCurrentHandItemAction)}] Inventory is missing.", this);
+            Debug.LogError($"[{nameof(ConsumeCurrentHandItemAction)}] Context is missing.", this);
             return;
         }
 
-        if (!context.Inventory.RemoveCurrentHandItem())
+        if (context.InventoryAbility == null)
+        {
+            Debug.LogError($"[{nameof(ConsumeCurrentHandItemAction)}] Inventory ability is missing.", this);
+            return;
+        }
+
+        if (context.InventoryAbility.TryConsumeCurrentHandItem() == false)
         {
             Debug.LogWarning($"[{nameof(ConsumeCurrentHandItemAction)}] No current hand item to consume.", this);
         }

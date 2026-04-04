@@ -5,59 +5,72 @@ using Object = UnityEngine.Object;
 
 public class HandViewService
 {
+    private readonly Dictionary<int, GameObject> _cache = new Dictionary<int, GameObject>();
+    private readonly ItemFactory _itemFactory;
+    private readonly InventoryManager _inventoryManager;
+    private readonly RuntimeInstanceManager _runtimeInstanceManager;
+    private readonly Transform _root;
+
+    private GameObject _currentObject;
+
     public string EquippedInstanceId { get; private set; }
 
     public event Action<string> OnEquippedChanged;
 
-    private readonly Dictionary<string, GameObject> _cache = new();
-    private readonly ItemFactory _itemFactory;
-    private readonly Transform _root;
-    private GameObject _currentObject;
-
-    public HandViewService(ItemFactory itemFactory, Transform root)
+    public HandViewService(
+        ItemFactory itemFactory,
+        InventoryManager inventoryManager,
+        RuntimeInstanceManager runtimeInstanceManager,
+        Transform root)
     {
         _itemFactory = itemFactory;
+        _inventoryManager = inventoryManager;
+        _runtimeInstanceManager = runtimeInstanceManager;
         _root = root;
     }
 
-    public bool TryEquip(string instanceId)
-    {
-        if (string.IsNullOrEmpty(instanceId))
-        {
-            return false;
-        }
-
-        EquippedInstanceId = instanceId;
-        OnEquippedChanged?.Invoke(EquippedInstanceId);
-        return true;
-    }
-
-    public GameObject Show(string instanceId)
+    public GameObject Show(int index)
     {
         Hide();
-        GameObject handObject = GetOrCreate(instanceId);
-        if (handObject == null || !TryEquip(instanceId))
+
+        if (!TryGetRuntimeItemData(index, out RuntimeItemData runtimeItemData))
         {
             return null;
         }
 
+        GameObject handObject = GetOrCreate(runtimeItemData);
+        if (handObject == null)
+        {
+            Clear();
+            return null;
+        }
+
+        EquippedInstanceId = runtimeItemData.InstanceId;
+        OnEquippedChanged?.Invoke(EquippedInstanceId);
+
         _itemFactory.SetLayerRecursively(handObject, _root.gameObject.layer);
+        MoveToRoot(handObject);
         handObject.SetActive(true);
         _currentObject = handObject;
+
+        if (handObject.TryGetComponent(out IRuntimeView runtimeView))
+        {
+            runtimeView.Bind(runtimeItemData);
+            runtimeView.RefreshView();
+        }
+
         return handObject;
     }
 
     public void Hide()
     {
-        if (_currentObject == null)
+        if (_currentObject != null)
         {
-            Clear();
-            return;
+            MoveToRoot(_currentObject);
+            _currentObject.SetActive(false);
+            _currentObject = null;
         }
 
-        MoveToRoot(_currentObject);
-        _currentObject.SetActive(false);
-        _currentObject = null;
         Clear();
     }
 
@@ -72,46 +85,46 @@ public class HandViewService
         return !string.IsNullOrEmpty(instanceId) && EquippedInstanceId == instanceId;
     }
 
-    public void Remove(string instanceId)
+    private bool TryGetRuntimeItemData(int index, out RuntimeItemData runtimeItemData)
     {
-        if (string.IsNullOrEmpty(instanceId))
+        runtimeItemData = null;
+
+        if (_inventoryManager == null || _runtimeInstanceManager == null)
         {
-            return;
+            return false;
         }
 
-        if (_cache.Remove(instanceId, out GameObject cached) && cached != null)
+        if (!_inventoryManager.TryGetInventoryItemInstanceIdAt(index, out string instanceId))
         {
-            if (_currentObject == cached)
-            {
-                _currentObject = null;
-                Clear();
-            }
-
-            Object.Destroy(cached);
+            return false;
         }
+
+        runtimeItemData = _runtimeInstanceManager.GetItemInstance(instanceId);
+        return runtimeItemData != null;
     }
 
-    private GameObject GetOrCreate(string instanceId)
+    private GameObject GetOrCreate(RuntimeItemData runtimeItemData)
     {
-        if (string.IsNullOrEmpty(instanceId))
+        if (runtimeItemData == null)
         {
             return null;
         }
 
-        if (_cache.TryGetValue(instanceId, out GameObject cached) && cached != null)
+        int cacheKey = runtimeItemData.ItemId;
+        if (_cache.TryGetValue(cacheKey, out GameObject cached) && cached != null)
         {
-            _itemFactory.Bind(cached, instanceId);
+            _itemFactory.Bind(cached, runtimeItemData);
             return cached;
         }
 
-        GameObject created = _itemFactory.CreateHandObject(instanceId, _root);
+        GameObject created = _itemFactory.CreateHandObject(runtimeItemData, _root);
         if (created == null)
         {
             return null;
         }
 
         created.SetActive(false);
-        _cache[instanceId] = created;
+        _cache[cacheKey] = created;
         return created;
     }
 
@@ -121,5 +134,20 @@ public class HandViewService
         itemObject.transform.localPosition = Vector3.zero;
         itemObject.transform.localRotation = Quaternion.identity;
         itemObject.transform.localScale = Vector3.one;
+    }
+
+    public void DisposeCache()
+    {
+        foreach (KeyValuePair<int, GameObject> pair in _cache)
+        {
+            if (pair.Value != null)
+            {
+                Object.Destroy(pair.Value);
+            }
+        }
+
+        _cache.Clear();
+        _currentObject = null;
+        Clear();
     }
 }

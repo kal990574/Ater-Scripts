@@ -7,19 +7,31 @@ public class UI_InventoryItemViewer : MonoBehaviour
     [SerializeField] private Transform _itemRoot;
     [SerializeField] private Camera _itemViewerCamera;
     [SerializeField] private TextMeshProUGUI _descriptionText;
-    
+    [SerializeField] private Transform _examineRoot;
+
     [SerializeField] private float _rotateSpeed = 0.5f;
-    [SerializeField] private float _zoomSpeed = 1f;
-    [SerializeField] private float _minFieldOfView = 20f;
-    [SerializeField] private float _maxFieldOfView = 60f;
+    [SerializeField] private float _zoomSpeed = 1.0f;
+    [SerializeField] private float _minFieldOfView = 20.0f;
+    [SerializeField] private float _maxFieldOfView = 60.0f;
 
     private Vector3 _initialCameraLocalPosition;
     private bool _isDragging;
+
+    private RuntimeInstanceManager _runtimeInstanceManager;
+    private ExamineViewService _examineViewService;
+    private ItemFactory _itemFactory;
 
     private void Start()
     {
         _initialCameraLocalPosition = _itemViewerCamera.transform.localPosition;
         _itemViewerCamera.transform.LookAt(_itemRoot);
+
+        _runtimeInstanceManager = RuntimeInstanceManager.Instance;
+        if (_runtimeInstanceManager != null)
+        {
+            _itemFactory = new ItemFactory(_runtimeInstanceManager);
+            _examineViewService = new ExamineViewService(_itemFactory, _examineRoot);
+        }
     }
 
     private void Update()
@@ -49,12 +61,21 @@ public class UI_InventoryItemViewer : MonoBehaviour
         _itemViewerCamera.transform.localPosition = _initialCameraLocalPosition;
         _itemViewerCamera.fieldOfView = _maxFieldOfView;
 
-        RuntimeItemData runtimeItemData = InventoryManager.Instance != null
-            ? InventoryManager.Instance.GetItemInstance(instanceId)
-            : null;
+        if (_runtimeInstanceManager == null || _examineViewService == null)
+        {
+            return;
+        }
 
-        InventoryManager.Instance.ShowExamineItem(instanceId);
-        _descriptionText.text = runtimeItemData != null ? runtimeItemData.Description : string.Empty;
+        RuntimeItemData runtimeItemData = _runtimeInstanceManager.GetItemInstance(instanceId);
+        if (runtimeItemData == null)
+        {
+            _descriptionText.text = string.Empty;
+            _examineViewService.Hide();
+            return;
+        }
+
+        _examineViewService.Show(runtimeItemData);
+        _descriptionText.text = runtimeItemData.Description;
     }
 
     public void TryInteract(Vector2 screenPosition, RectTransform rawImageRect)
@@ -72,20 +93,20 @@ public class UI_InventoryItemViewer : MonoBehaviour
             ExamineInteractPoint examineInteractPoint = hit.collider.GetComponentInParent<ExamineInteractPoint>();
             if (examineInteractPoint != null)
             {
-                examineInteractPoint?.OnClick();
+                examineInteractPoint.OnClick();
             }
         }
     }
 
     public void Hide()
     {
-        InventoryManager.Instance.HideExamineItem();
+        _examineViewService?.Hide();
         _descriptionText.text = string.Empty;
     }
 
     private void HandleRotate()
     {
-        if (!_isDragging)
+        if (_isDragging == false)
         {
             return;
         }
@@ -98,6 +119,6 @@ public class UI_InventoryItemViewer : MonoBehaviour
     private void OnDisable()
     {
         _isDragging = false;
-        InventoryManager.Instance.HideExamineItem();
+        _examineViewService?.Hide();
     }
 }

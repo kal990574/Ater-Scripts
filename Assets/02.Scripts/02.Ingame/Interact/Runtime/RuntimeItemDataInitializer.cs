@@ -3,10 +3,10 @@ using UnityEngine;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RuntimeView))]
-public class RuntimeDataInitializer : MonoBehaviour
+public class RuntimeItemDataInitializer : MonoBehaviour
 {
     [SerializeField] private string _initialId;
-    [SerializeField] private InteractState _defaultState = new();
+    [SerializeField] private int _itemId = -1;
 
     private RuntimeView _runtimeView;
 
@@ -31,31 +31,32 @@ public class RuntimeDataInitializer : MonoBehaviour
 
     private void Start()
     {
-        InventoryManager inventoryManager = InventoryManager.Instance;
-        if (inventoryManager == null)
+        RuntimeInstanceManager runtimeInstanceManager = RuntimeInstanceManager.Instance;
+        if (runtimeInstanceManager == null)
         {
-            Debug.LogError($"[{nameof(RuntimeDataInitializer)}] {nameof(InventoryManager)}.Instance is null.", this);
+            Debug.LogError($"[{nameof(RuntimeItemDataInitializer)}] {nameof(RuntimeInstanceManager)}.Instance is null.", this);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(_initialId))
         {
-            Debug.LogError($"[{nameof(RuntimeDataInitializer)}] Initial ID is missing.", this);
+            Debug.LogError($"[{nameof(RuntimeItemDataInitializer)}] Initial ID is missing.", this);
             return;
         }
 
-        RuntimeData runtimeData = inventoryManager.GetRuntimeData(_initialId);
-        if (runtimeData == null)
+        if (_itemId < 0)
         {
-            runtimeData = inventoryManager.GetOrCreateRuntimeData(_initialId, _defaultState);
+            Debug.LogError($"[{nameof(RuntimeItemDataInitializer)}] Item ID is invalid.", this);
+            return;
         }
 
-        if (runtimeData == null)
+        RuntimeItemData runtimeItemData = runtimeInstanceManager.GetOrCreateItemInstance(_initialId, _itemId);
+        if (runtimeItemData == null)
         {
             return;
         }
 
-        _runtimeView.Bind(runtimeData.InstanceId, inventoryManager);
+        _runtimeView.Bind(runtimeItemData);
     }
 
     private void EnsureInitialId()

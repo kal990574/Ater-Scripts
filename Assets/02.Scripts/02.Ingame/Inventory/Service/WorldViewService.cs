@@ -9,9 +9,9 @@ public class WorldViewService
         _itemFactory = itemFactory;
     }
 
-    public GameObject Create(string instanceId, Transform root)
+    public GameObject Create(RuntimeItemData runtimeItemData, Transform root)
     {
-        GameObject itemObject = _itemFactory.CreateWorldObject(instanceId, root);
+        GameObject itemObject = _itemFactory.CreateWorldObject(runtimeItemData, root);
         if (itemObject == null)
         {
             return null;
@@ -21,6 +21,12 @@ public class WorldViewService
         {
             itemObject.transform.localPosition = Vector3.zero;
             _itemFactory.SetLayerRecursively(itemObject, root.gameObject.layer);
+        }
+
+        if (itemObject.TryGetComponent(out IRuntimeView runtimeView))
+        {
+            runtimeView.Bind(runtimeItemData);
+            runtimeView.RefreshView();
         }
 
         return itemObject;

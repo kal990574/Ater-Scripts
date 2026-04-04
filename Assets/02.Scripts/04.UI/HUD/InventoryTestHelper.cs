@@ -6,10 +6,32 @@ public class InventoryTestHelper : MonoBehaviour
 
     private void Start()
     {
-        foreach (int id in _testItemIds)
+        InventoryManager inventoryManager = InventoryManager.Instance;
+        RuntimeInstanceManager runtimeInstanceManager = RuntimeInstanceManager.Instance;
+
+        if (inventoryManager == null)
         {
-            RuntimeItemData data = InventoryManager.Instance.CreateItemInstance(id);
-            InventoryManager.Instance.TryAddItem(data);
+            Debug.LogError($"[{nameof(InventoryTestHelper)}] InventoryManager is missing.", this);
+            return;
+        }
+
+        if (runtimeInstanceManager == null)
+        {
+            Debug.LogError($"[{nameof(InventoryTestHelper)}] RuntimeInstanceManager is missing.", this);
+            return;
+        }
+
+        for (int index = 0; index < _testItemIds.Length; index++)
+        {
+            int itemId = _testItemIds[index];
+            RuntimeItemData runtimeItemData = runtimeInstanceManager.CreateItemInstance(itemId);
+            if (runtimeItemData == null)
+            {
+                Debug.LogWarning($"[{nameof(InventoryTestHelper)}] Failed to create item. itemId={itemId}", this);
+                continue;
+            }
+
+            inventoryManager.TryAddItem(runtimeItemData);
         }
     }
 }

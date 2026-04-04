@@ -27,12 +27,18 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
         Refresh();
     }
 
+    public void SetIndex(int index)
+    {
+        _index = index;
+    }
+
     private void Refresh()
     {
         RuntimeItemData runtimeItemData = ResolveItemInstance();
         if (runtimeItemData == null)
         {
             _itemIcon.enabled = false;
+            _itemIcon.sprite = null;
             return;
         }
 
@@ -49,7 +55,7 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
     public void OnBeginDrag(PointerEventData eventData)
     {
         RuntimeItemData runtimeItemData = ResolveItemInstance();
-        if (runtimeItemData == null)
+        if (runtimeItemData == null || _canvas == null)
         {
             return;
         }
@@ -83,11 +89,16 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
             _dragIcon = null;
         }
 
-        _itemIcon.enabled = true;
+        _itemIcon.enabled = ResolveItemInstance() != null;
     }
 
     public void OnDrop(PointerEventData eventData)
     {
+        if (eventData.pointerDrag == null)
+        {
+            return;
+        }
+
         UI_InventorySlotItem dragged = eventData.pointerDrag.GetComponent<UI_InventorySlotItem>();
         if (dragged == null)
         {
@@ -106,7 +117,7 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
             _dragIcon = null;
         }
 
-        _itemIcon.enabled = true;
+        _itemIcon.enabled = ResolveItemInstance() != null;
     }
 
     public void Select()
@@ -121,8 +132,12 @@ public class UI_InventorySlotItem : MonoBehaviour, IPointerClickHandler, IBeginD
 
     private RuntimeItemData ResolveItemInstance()
     {
-        return InventoryManager.Instance != null
-            ? InventoryManager.Instance.GetItemInstance(_instanceId)
-            : null;
+        RuntimeInstanceManager runtimeInstanceManager = RuntimeInstanceManager.Instance;
+        if (runtimeInstanceManager == null || string.IsNullOrEmpty(_instanceId))
+        {
+            return null;
+        }
+
+        return runtimeInstanceManager.GetItemInstance(_instanceId);
     }
 }

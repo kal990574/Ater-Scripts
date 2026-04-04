@@ -5,17 +5,18 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
 {
     [SerializeField, HideInInspector] private string _instanceId;
     [SerializeField] private bool _enableDebug = false;
-    private InventoryManager _inventoryManager;
+
+    private RuntimeData _runtimeData;
 
     public string InstanceId => _instanceId;
-    public RuntimeData RuntimeData => ResolveRuntimeData();
-    public RuntimeItemData RuntimeItemData => RuntimeData as RuntimeItemData;
-    public InventoryManager InventoryManager => _inventoryManager;
+    public RuntimeData RuntimeData => _runtimeData;
+    public RuntimeItemData RuntimeItemData => _runtimeData as RuntimeItemData;
 
-    public virtual void Bind(string instanceId, InventoryManager inventoryManager)
+    public virtual void Bind(RuntimeData runtimeData)
     {
-        SetInstanceId(instanceId);
-        _inventoryManager = inventoryManager;
+        _runtimeData = runtimeData;
+        _instanceId = runtimeData != null ? runtimeData.InstanceId : null;
+
         LogBoundRuntimeData();
         PropagateRuntimeData();
         RefreshView();
@@ -28,21 +29,20 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
 
     public RuntimeData EnsureRuntimeData()
     {
-        RuntimeData runtimeData = ResolveRuntimeData();
-        if (runtimeData == null)
+        if (_runtimeData == null)
         {
-            Debug.LogError($"[{nameof(RuntimeView)}] RuntimeData is not registered for '{_instanceId}'.", this);
+            Debug.LogError($"[{nameof(RuntimeView)}] RuntimeData is null for '{_instanceId}'.", this);
         }
 
-        return runtimeData;
+        return _runtimeData;
     }
 
     public RuntimeItemData EnsureItemInstance()
     {
-        RuntimeItemData runtimeItemData = ResolveRuntimeData() as RuntimeItemData;
+        RuntimeItemData runtimeItemData = _runtimeData as RuntimeItemData;
         if (runtimeItemData == null)
         {
-            Debug.LogError($"[{nameof(RuntimeView)}] RuntimeItemData is not registered for '{_instanceId}'.", this);
+            Debug.LogError($"[{nameof(RuntimeView)}] RuntimeItemData is null for '{_instanceId}'.", this);
         }
 
         return runtimeItemData;
@@ -50,7 +50,7 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
 
     public void RefreshView()
     {
-        if (ResolveRuntimeData() == null)
+        if (_runtimeData == null)
         {
             return;
         }
@@ -60,6 +60,7 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
         {
             return;
         }
+
         foreach (IStateApplier binder in binders)
         {
             binder?.ApplyState(this);
@@ -75,6 +76,7 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
         }
 
         runtimeData.State.SetBool(key, value);
+
         if (refreshView)
         {
             RefreshView();
@@ -92,6 +94,7 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
         }
 
         runtimeData.State.SetInt(key, value);
+
         if (refreshView)
         {
             RefreshView();
@@ -109,23 +112,13 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
         }
 
         runtimeData.State.SetString(key, value ?? string.Empty);
+
         if (refreshView)
         {
             RefreshView();
         }
 
         return true;
-    }
-
-    private InventoryManager ResolveInventoryManager()
-    {
-        if (_inventoryManager != null)
-        {
-            return _inventoryManager;
-        }
-
-        _inventoryManager = InventoryManager.Instance;
-        return _inventoryManager;
     }
 
     private void PropagateRuntimeData()
@@ -137,30 +130,19 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
         }
     }
 
-    private RuntimeData ResolveRuntimeData()
-    {
-        InventoryManager inventoryManager = ResolveInventoryManager();
-        if (inventoryManager == null || string.IsNullOrEmpty(_instanceId))
-        {
-            return null;
-        }
-
-        return inventoryManager.GetRuntimeData(_instanceId);
-    }
-
     private void LogBoundRuntimeData()
     {
-        if (!_enableDebug)
+        if (_enableDebug == false)
         {
             return;
         }
-        RuntimeData runtimeData = ResolveRuntimeData();
-        string runtimeType = runtimeData != null ? runtimeData.GetType().Name : "null";
-        string itemInfo = runtimeData is RuntimeItemData runtimeItemData
+
+        string runtimeType = _runtimeData != null ? _runtimeData.GetType().Name : "null";
+        string itemInfo = _runtimeData is RuntimeItemData runtimeItemData
             ? $", itemId={runtimeItemData.ItemId}, itemName={runtimeItemData.ItemName}"
             : string.Empty;
-        string stateInfo = runtimeData?.State != null
-            ? $", state={runtimeData.State.ToDebugString()}"
+        string stateInfo = _runtimeData?.State != null
+            ? $", state={_runtimeData.State.ToDebugString()}"
             : ", state=null";
 
         Debug.Log(

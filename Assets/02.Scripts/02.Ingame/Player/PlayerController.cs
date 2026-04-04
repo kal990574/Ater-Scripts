@@ -133,7 +133,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         float scroll = Input.ScrollInput;
         if(!Mathf.Approximately(scroll, 0f))
         {
-            SetActionMode(EPlayerInteractMode.Item);
+            SetInteractMode(EPlayerInteractMode.Item);
             int direction = scroll > 0f ? 1 : -1;
             GetAbility<PlayerInventoryAbility>().CycleHandItem(direction);
         }
@@ -161,7 +161,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     private void SwitchToScanMode()
     {
         GetAbility<PlayerInventoryAbility>().ClearHandItem();
-        SetActionMode(EPlayerInteractMode.Scan);
+        SetInteractMode(EPlayerInteractMode.Scan);
     }
 
     private void ToggleInventoryUI()
@@ -180,7 +180,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 
     private void SwitchToItemMode(int itemSlotIndex)
     {
-        SetActionMode(EPlayerInteractMode.Item);
+        SetInteractMode(EPlayerInteractMode.Item);
         GetAbility<PlayerInventoryAbility>().TryPickUpItem(itemSlotIndex);
     }
 
@@ -232,7 +232,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         return null;
     }
 
-    public void SetActionMode(EPlayerInteractMode mode)
+    public void SetInteractMode(EPlayerInteractMode mode)
     {
         if (_interactMode == mode)
         {
@@ -251,22 +251,22 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 
     public void EnterUIMode()
     {
-        SetActionMode(EPlayerInteractMode.UI);
+        SetInteractMode(EPlayerInteractMode.UI);
     }
 
     public void ExitUIMode()
     {
-        SetActionMode(_lastGameplayMode);
+        SetInteractMode(_lastGameplayMode);
     }
 
     public void EnterPuzzleMode()
     {
-        SetActionMode(EPlayerInteractMode.Puzzle);
+        SetInteractMode(EPlayerInteractMode.Puzzle);
     }
 
     public void ExitPuzzleMode()
     {
-        SetActionMode(_lastGameplayMode);
+        SetInteractMode(_lastGameplayMode);
     }
 
     public void EnterPuzzleMode(PadLockController padLockController)

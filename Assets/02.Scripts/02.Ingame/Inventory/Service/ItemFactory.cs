@@ -1,45 +1,44 @@
+using System;
 using UnityEngine;
 
 public class ItemFactory
 {
-    private readonly RuntimeInstanceService _runtimeInstanceService;
-    private readonly InventoryManager _inventoryManager;
+    private readonly RuntimeInstanceManager _runtimeInstanceManager;
 
-    public ItemFactory(RuntimeInstanceService runtimeInstanceService, InventoryManager inventoryManager)
+    public ItemFactory(RuntimeInstanceManager runtimeInstanceManager)
     {
-        _runtimeInstanceService = runtimeInstanceService;
-        _inventoryManager = inventoryManager;
+        _runtimeInstanceManager = runtimeInstanceManager;
     }
 
-    public GameObject CreateExamineObject(string instanceId, Transform parent)
+    public GameObject CreateExamineObject(RuntimeItemData runtimeItemData, Transform parent)
     {
-        return CreateBoundObject(instanceId, parent, item => item.ExaminePrefab);
+        return CreateBoundObject(runtimeItemData, parent, item => item.ExaminePrefab);
     }
 
-    public GameObject CreateHandObject(string instanceId, Transform parent)
+    public GameObject CreateHandObject(RuntimeItemData runtimeItemData, Transform parent)
     {
-        return CreateBoundObject(instanceId, parent, item => item.HandPrefab);
+        return CreateBoundObject(runtimeItemData, parent, item => item.HandPrefab);
     }
 
-    public GameObject CreateWorldObject(string instanceId, Transform parent)
+    public GameObject CreateWorldObject(RuntimeItemData runtimeItemData, Transform parent)
     {
-        return CreateBoundObject(instanceId, parent, item => item.WorldPrefab);
+        return CreateBoundObject(runtimeItemData, parent, item => item.WorldPrefab);
     }
 
-    public void Bind(GameObject itemObject, string instanceId)
+    public void Bind(GameObject itemObject, RuntimeItemData runtimeItemData)
     {
-        if (itemObject == null || string.IsNullOrEmpty(instanceId))
+        if (itemObject == null || runtimeItemData == null)
         {
             return;
         }
 
-        if (!itemObject.TryGetComponent(out IRuntimeView binder))
+        if (!itemObject.TryGetComponent(out IRuntimeView runtimeView))
         {
-            Debug.Log("[ItemFactory] Can't find IItemInstance binder.");
+            Debug.Log($"[{nameof(ItemFactory)}] Can't find {nameof(IRuntimeView)}.");
             return;
         }
 
-        binder.Bind(instanceId, _inventoryManager);
+        runtimeView.Bind(runtimeItemData);
     }
 
     public void SetLayerRecursively(GameObject obj, int layer)
@@ -50,27 +49,28 @@ public class ItemFactory
         }
 
         obj.layer = layer;
+
         foreach (Transform child in obj.transform)
         {
             SetLayerRecursively(child.gameObject, layer);
         }
     }
 
-    private GameObject CreateBoundObject(string instanceId, Transform parent, System.Func<RuntimeItemData, GameObject> prefabSelector)
+    private GameObject CreateBoundObject(RuntimeItemData runtimeItemData, Transform parent, Func<RuntimeItemData, GameObject> prefabSelector)
     {
-        if (!_runtimeInstanceService.TryGetItemInstance(instanceId, out RuntimeItemData itemInstanceData) || itemInstanceData == null)
+        if (runtimeItemData == null)
         {
             return null;
         }
 
-        GameObject prefab = prefabSelector(itemInstanceData);
+        GameObject prefab = prefabSelector(runtimeItemData);
         if (prefab == null)
         {
             return null;
         }
 
-        GameObject itemObject = Object.Instantiate(prefab, parent, false);
-        Bind(itemObject, instanceId);
+        GameObject itemObject = UnityEngine.Object.Instantiate(prefab, parent, false);
+        Bind(itemObject, runtimeItemData);
         return itemObject;
     }
 }
