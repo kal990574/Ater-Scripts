@@ -19,7 +19,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
 
     private RuntimeInstanceManager _runtimeInstanceManager;
     private ExamineViewService _examineViewService;
-    private ItemFactory _itemFactory;
+    private RuntimeItemFactory runtimeItemFactory;
 
     private void Start()
     {
@@ -29,8 +29,8 @@ public class UI_InventoryItemViewer : MonoBehaviour
         _runtimeInstanceManager = RuntimeInstanceManager.Instance;
         if (_runtimeInstanceManager != null)
         {
-            _itemFactory = new ItemFactory(_runtimeInstanceManager);
-            _examineViewService = new ExamineViewService(_itemFactory, _examineRoot);
+            runtimeItemFactory = new RuntimeItemFactory(_runtimeInstanceManager);
+            _examineViewService = new ExamineViewService(runtimeItemFactory, _examineRoot);
         }
     }
 

@@ -1,11 +1,11 @@
 using System;
 using UnityEngine;
 
-public class ItemFactory
+public class RuntimeItemFactory
 {
     private readonly RuntimeInstanceManager _runtimeInstanceManager;
 
-    public ItemFactory(RuntimeInstanceManager runtimeInstanceManager)
+    public RuntimeItemFactory(RuntimeInstanceManager runtimeInstanceManager)
     {
         _runtimeInstanceManager = runtimeInstanceManager;
     }
@@ -34,7 +34,7 @@ public class ItemFactory
 
         if (!itemObject.TryGetComponent(out IRuntimeView runtimeView))
         {
-            Debug.Log($"[{nameof(ItemFactory)}] Can't find {nameof(IRuntimeView)}.");
+            Debug.Log($"[{nameof(RuntimeItemFactory)}] Can't find {nameof(IRuntimeView)}.");
             return;
         }
 

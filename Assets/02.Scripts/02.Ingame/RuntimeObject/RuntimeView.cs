@@ -123,8 +123,8 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
 
     private void PropagateRuntimeData()
     {
-        INeedRuntimeData[] runtimeBindables = GetComponentsInChildren<INeedRuntimeData>(true);
-        foreach (INeedRuntimeData runtimeBindable in runtimeBindables)
+        IUseRuntimeData[] runtimeBindables = GetComponentsInChildren<IUseRuntimeData>(true);
+        foreach (IUseRuntimeData runtimeBindable in runtimeBindables)
         {
             runtimeBindable?.SetRuntimeData(this);
         }

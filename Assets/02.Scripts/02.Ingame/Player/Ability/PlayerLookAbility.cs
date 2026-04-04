@@ -4,7 +4,7 @@ using Cursor = UnityEngine.Cursor;
 namespace _02.Scripts.Player
 {
     
-    public class PlayerLook : PlayerAbility
+    public class PlayerLookAbility : PlayerAbility
     {
         [SerializeField] private Transform _cameraTarget;
 

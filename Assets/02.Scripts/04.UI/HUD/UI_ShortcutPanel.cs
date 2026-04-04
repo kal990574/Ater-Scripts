@@ -5,7 +5,7 @@ public class UI_ShortcutPanel : MonoBehaviour
 {
     [SerializeField] private float _normalAlpha = 0.4f;
     [SerializeField] private float _selectedAlpha = 1.0f;
-    [SerializeField] private PlayerInventoryAbility _playerInventoryAbility;
+    [SerializeField] private PlayerHandAbility playerHandAbility;
 
     private Image[] _iconImages;
     private CanvasGroup[] _canvasGroup;
@@ -29,9 +29,9 @@ public class UI_ShortcutPanel : MonoBehaviour
             }
         }
 
-        if (_playerInventoryAbility == null)
+        if (playerHandAbility == null)
         {
-            _playerInventoryAbility = FindFirstObjectByType<PlayerInventoryAbility>();
+            playerHandAbility = FindFirstObjectByType<PlayerHandAbility>();
         }
     }
 
@@ -43,16 +43,16 @@ public class UI_ShortcutPanel : MonoBehaviour
             inventoryManager.OnInventoryItemChanged += Refresh;
         }
 
-        if (_playerInventoryAbility != null)
+        if (playerHandAbility != null)
         {
-            _playerInventoryAbility.OnHandSlotChanged += UpdateHighlight;
+            playerHandAbility.OnHandSlotChanged += UpdateHighlight;
         }
 
         Refresh();
 
-        if (_playerInventoryAbility != null)
+        if (playerHandAbility != null)
         {
-            UpdateHighlight(_playerInventoryAbility.CurrentHandIndex);
+            UpdateHighlight(playerHandAbility.CurrentHandIndex);
         }
         else
         {
@@ -68,9 +68,9 @@ public class UI_ShortcutPanel : MonoBehaviour
             inventoryManager.OnInventoryItemChanged -= Refresh;
         }
 
-        if (_playerInventoryAbility != null)
+        if (playerHandAbility != null)
         {
-            _playerInventoryAbility.OnHandSlotChanged -= UpdateHighlight;
+            playerHandAbility.OnHandSlotChanged -= UpdateHighlight;
         }
     }
 

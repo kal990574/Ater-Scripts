@@ -135,39 +135,39 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         {
             SetInteractMode(EPlayerInteractMode.Item);
             int direction = scroll > 0f ? 1 : -1;
-            GetAbility<PlayerInventoryAbility>().CycleHandItem(direction);
+            GetAbility<PlayerHandAbility>().CycleHandItem(direction);
         }
     }
 
     private void HandleItemModeInput()
     {
-        PlayerInventoryAbility inventoryAbility = GetAbility<PlayerInventoryAbility>();
+        PlayerHandAbility handAbility = GetAbility<PlayerHandAbility>();
         if (_input.LmbPressInput)
         {
-            inventoryAbility.BeginReleaseHandItem();
+            handAbility.BeginReleaseHandItem();
         }
 
         if (_input.LmbHoldInput)
         {
-            inventoryAbility.ChargeReleaseHandItem(Time.deltaTime);
+            handAbility.ChargeReleaseHandItem(Time.deltaTime);
         }
 
         if (_input.LmbReleaseInput)
         {
-            inventoryAbility.ReleaseHandItem();
+            handAbility.ReleaseHandItem();
         }
     }
 
     private void SwitchToScanMode()
     {
-        GetAbility<PlayerInventoryAbility>().ClearHandItem();
+        GetAbility<PlayerHandAbility>().ClearHandItem();
         SetInteractMode(EPlayerInteractMode.Scan);
     }
 
     private void ToggleInventoryUI()
     {
         bool wasInUIMode = _interactMode == EPlayerInteractMode.UI;
-        GetAbility<PlayerInventoryAbility>().ToggleInventory();
+        GetAbility<PlayerHandAbility>().ToggleInventory();
 
         if (wasInUIMode)
         {
@@ -181,7 +181,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     private void SwitchToItemMode(int itemSlotIndex)
     {
         SetInteractMode(EPlayerInteractMode.Item);
-        GetAbility<PlayerInventoryAbility>().TryPickUpItem(itemSlotIndex);
+        GetAbility<PlayerHandAbility>().TryPickUpItem(itemSlotIndex);
     }
 
     private void ScanModeInput()

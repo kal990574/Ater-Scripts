@@ -6,7 +6,7 @@ public class UseContext
     public GameObject TargetObject { get; }
     public UsableObject Target { get; }
     public InventoryManager Inventory { get; }
-    public PlayerInventoryAbility InventoryAbility { get; }
+    public PlayerHandAbility HandAbility { get; }
     public string HandItemInstanceId { get; }
     public RuntimeItemData Hand { get; }
 
@@ -15,7 +15,7 @@ public class UseContext
         GameObject targetObject,
         UsableObject target,
         InventoryManager inventory,
-        PlayerInventoryAbility inventoryAbility,
+        PlayerHandAbility handAbility,
         string handItemInstanceId,
         RuntimeItemData hand)
     {
@@ -23,7 +23,7 @@ public class UseContext
         TargetObject = targetObject;
         Target = target;
         Inventory = inventory;
-        InventoryAbility = inventoryAbility;
+        HandAbility = handAbility;
         HandItemInstanceId = handItemInstanceId;
         Hand = hand;
     }
@@ -45,10 +45,10 @@ public class UseContext
     private static UseContext Create(GameObject user, UsableObject target, GameObject targetObject)
     {
         InventoryManager inventory = InventoryManager.Instance;
-        PlayerInventoryAbility inventoryAbility = ResolveInventoryAbility(user);
+        PlayerHandAbility handAbility = ResolveInventoryAbility(user);
 
-        string handItemInstanceId = inventoryAbility != null
-            ? inventoryAbility.CurrentHandItemInstanceId
+        string handItemInstanceId = handAbility != null
+            ? handAbility.CurrentHandItemInstanceId
             : null;
 
         RuntimeItemData hand = null;
@@ -63,24 +63,24 @@ public class UseContext
             targetObject,
             target,
             inventory,
-            inventoryAbility,
+            handAbility,
             handItemInstanceId,
             hand);
     }
 
-    private static PlayerInventoryAbility ResolveInventoryAbility(GameObject user)
+    private static PlayerHandAbility ResolveInventoryAbility(GameObject user)
     {
         if (user == null)
         {
             return null;
         }
 
-        PlayerInventoryAbility inventoryAbility = user.GetComponent<PlayerInventoryAbility>();
-        if (inventoryAbility != null)
+        PlayerHandAbility handAbility = user.GetComponent<PlayerHandAbility>();
+        if (handAbility != null)
         {
-            return inventoryAbility;
+            return handAbility;
         }
 
-        return user.GetComponentInChildren<PlayerInventoryAbility>();
+        return user.GetComponentInChildren<PlayerHandAbility>();
     }
 }

@@ -264,8 +264,8 @@ public class ScannableObject : MonoBehaviour, IScannable,IStateApplier
 
     public void SetInteractable()
     {
-        IInteractObject[] interactObjects = GetComponentsInChildren<IInteractObject>();
-        foreach (IInteractObject interactObject in interactObjects)
+        IRuntimeInteractObject[] interactObjects = GetComponentsInChildren<IRuntimeInteractObject>();
+        foreach (IRuntimeInteractObject interactObject in interactObjects)
         {
             interactObject.SetActivate(true);
         }

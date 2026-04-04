@@ -11,13 +11,13 @@ public class ConsumeCurrentHandItemAction : MonoBehaviour, IUseAction
             return;
         }
 
-        if (context.InventoryAbility == null)
+        if (context.HandAbility == null)
         {
             Debug.LogError($"[{nameof(ConsumeCurrentHandItemAction)}] Inventory ability is missing.", this);
             return;
         }
 
-        if (context.InventoryAbility.TryConsumeCurrentHandItem() == false)
+        if (context.HandAbility.TryConsumeCurrentHandItem() == false)
         {
             Debug.LogWarning($"[{nameof(ConsumeCurrentHandItemAction)}] No current hand item to consume.", this);
         }

@@ -2,16 +2,16 @@ using UnityEngine;
 
 public class WorldViewService
 {
-    private readonly ItemFactory _itemFactory;
+    private readonly RuntimeItemFactory runtimeItemFactory;
 
-    public WorldViewService(ItemFactory itemFactory)
+    public WorldViewService(RuntimeItemFactory runtimeItemFactory)
     {
-        _itemFactory = itemFactory;
+        this.runtimeItemFactory = runtimeItemFactory;
     }
 
     public GameObject Create(RuntimeItemData runtimeItemData, Transform root)
     {
-        GameObject itemObject = _itemFactory.CreateWorldObject(runtimeItemData, root);
+        GameObject itemObject = runtimeItemFactory.CreateWorldObject(runtimeItemData, root);
         if (itemObject == null)
         {
             return null;
@@ -20,7 +20,7 @@ public class WorldViewService
         if (root != null)
         {
             itemObject.transform.localPosition = Vector3.zero;
-            _itemFactory.SetLayerRecursively(itemObject, root.gameObject.layer);
+            runtimeItemFactory.SetLayerRecursively(itemObject, root.gameObject.layer);
         }
 
         if (itemObject.TryGetComponent(out IRuntimeView runtimeView))

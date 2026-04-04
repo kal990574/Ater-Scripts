@@ -1,4 +1,4 @@
-public interface INeedRuntimeData
+public interface IUseRuntimeData
 {
     RuntimeData RuntimeData { get; }
     RuntimeItemData RuntimeItemData { get; }

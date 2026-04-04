@@ -2,16 +2,16 @@ using UnityEngine;
 
 public class ExamineViewService
 {
-    private readonly ItemFactory _itemFactory;
+    private readonly RuntimeItemFactory runtimeItemFactory;
     private readonly Transform _root;
 
     private GameObject _currentObject;
 
     public string CurrentInstanceId { get; private set; }
 
-    public ExamineViewService(ItemFactory itemFactory, Transform root)
+    public ExamineViewService(RuntimeItemFactory runtimeItemFactory, Transform root)
     {
-        _itemFactory = itemFactory;
+        this.runtimeItemFactory = runtimeItemFactory;
         _root = root;
     }
 
@@ -24,13 +24,13 @@ public class ExamineViewService
             return null;
         }
 
-        GameObject examineObject = _itemFactory.CreateExamineObject(runtimeItemData, _root);
+        GameObject examineObject = runtimeItemFactory.CreateExamineObject(runtimeItemData, _root);
         if (examineObject == null)
         {
             return null;
         }
 
-        _itemFactory.SetLayerRecursively(examineObject, _root.gameObject.layer);
+        runtimeItemFactory.SetLayerRecursively(examineObject, _root.gameObject.layer);
         MoveToRoot(examineObject);
         examineObject.SetActive(true);
         _currentObject = examineObject;

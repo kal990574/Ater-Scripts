@@ -15,7 +15,7 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
 
         [Header("References")]
         [SerializeField] private PlayerController _playerController;
-        [SerializeField] private PlayerInventoryAbility _playerInventoryAbility;
+        [SerializeField] private PlayerHandAbility playerHandAbility;
         [SerializeField] private ExamineInteraction _examineInteraction;
 
         private IPlayerInput _playerInput;
@@ -35,9 +35,9 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
                 _playerInput = _playerController.Input;
             }
 
-            if (_playerInventoryAbility == null)
+            if (playerHandAbility == null)
             {
-                _playerInventoryAbility = _playerController.GetAbility<PlayerInventoryAbility>();
+                playerHandAbility = _playerController.GetAbility<PlayerHandAbility>();
             }
 
             GameEventHub hub = GameEventHub.Instance;
@@ -55,9 +55,9 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
                 InventoryManager.Instance.OnInventoryItemChanged += OnInventoryItemChanged;
             }
 
-            if (_playerInventoryAbility != null)
+            if (playerHandAbility != null)
             {
-                _playerInventoryAbility.OnHandSlotChanged += OnHandSlotChanged;
+                playerHandAbility.OnHandSlotChanged += OnHandSlotChanged;
             }
 
             if (_playerController != null)
@@ -91,9 +91,9 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
                 InventoryManager.Instance.OnInventoryItemChanged -= OnInventoryItemChanged;
             }
 
-            if (_playerInventoryAbility != null)
+            if (playerHandAbility != null)
             {
-                _playerInventoryAbility.OnHandSlotChanged -= OnHandSlotChanged;
+                playerHandAbility.OnHandSlotChanged -= OnHandSlotChanged;
             }
 
             if (_playerController != null)

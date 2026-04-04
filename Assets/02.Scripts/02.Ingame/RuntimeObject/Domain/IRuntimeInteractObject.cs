@@ -1,6 +1,6 @@
 using System;
 
-public interface IInteractObject
+public interface IRuntimeInteractObject
 {
     RuntimeData RuntimeData { get; }
     RuntimeItemData RuntimeItemData { get; }

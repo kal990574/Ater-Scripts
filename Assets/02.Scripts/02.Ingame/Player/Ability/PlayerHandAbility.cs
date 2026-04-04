@@ -1,7 +1,7 @@
 using _02.Scripts.Player;
 using UnityEngine;
 
-public class PlayerInventoryAbility : PlayerAbility
+public class PlayerHandAbility : PlayerAbility
 {
     [SerializeField] private float _throwDistance = 1.5f;
     [SerializeField] private float _throwHoldThreshold = 0.2f;

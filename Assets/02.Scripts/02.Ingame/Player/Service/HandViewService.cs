@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 public class HandViewService
 {
     private readonly Dictionary<int, GameObject> _cache = new Dictionary<int, GameObject>();
-    private readonly ItemFactory _itemFactory;
+    private readonly RuntimeItemFactory runtimeItemFactory;
     private readonly InventoryManager _inventoryManager;
     private readonly RuntimeInstanceManager _runtimeInstanceManager;
     private readonly Transform _root;
@@ -18,12 +18,12 @@ public class HandViewService
     public event Action<string> OnEquippedChanged;
 
     public HandViewService(
-        ItemFactory itemFactory,
+        RuntimeItemFactory runtimeItemFactory,
         InventoryManager inventoryManager,
         RuntimeInstanceManager runtimeInstanceManager,
         Transform root)
     {
-        _itemFactory = itemFactory;
+        this.runtimeItemFactory = runtimeItemFactory;
         _inventoryManager = inventoryManager;
         _runtimeInstanceManager = runtimeInstanceManager;
         _root = root;
@@ -48,7 +48,7 @@ public class HandViewService
         EquippedInstanceId = runtimeItemData.InstanceId;
         OnEquippedChanged?.Invoke(EquippedInstanceId);
 
-        _itemFactory.SetLayerRecursively(handObject, _root.gameObject.layer);
+        runtimeItemFactory.SetLayerRecursively(handObject, _root.gameObject.layer);
         MoveToRoot(handObject);
         handObject.SetActive(true);
         _currentObject = handObject;
@@ -113,11 +113,11 @@ public class HandViewService
         int cacheKey = runtimeItemData.ItemId;
         if (_cache.TryGetValue(cacheKey, out GameObject cached) && cached != null)
         {
-            _itemFactory.Bind(cached, runtimeItemData);
+            runtimeItemFactory.Bind(cached, runtimeItemData);
             return cached;
         }
 
-        GameObject created = _itemFactory.CreateHandObject(runtimeItemData, _root);
+        GameObject created = runtimeItemFactory.CreateHandObject(runtimeItemData, _root);
         if (created == null)
         {
             return null;
