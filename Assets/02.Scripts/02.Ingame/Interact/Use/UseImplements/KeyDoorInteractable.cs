@@ -8,6 +8,11 @@ public class KeyDoorInteractable : LockedDoorInteractable
     [SerializeField] private int _requiredKeyItemId = -1;
     [SerializeField] private bool _consumeRequiredItemOnUnlock = true;
 
+    protected override bool IsAdditionalInteractRequirementSatisfied()
+    {
+        return true;
+    }
+
     protected override bool CanUse(InteractionContext context, out string failureReason)
     {
         if (!IsUnlocked)

@@ -9,7 +9,7 @@ public class UsableObject : Interactable
 
     public sealed override void Interact(InteractionContext context)
     {
-        if (!_isInteractActive)
+        if (!IsInteractActive)
         {
             FailUse(UseInteractResult.NotActive, "Interaction is not active.", context);
             return;

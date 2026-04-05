@@ -8,10 +8,12 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
 {
     [SerializeField] protected bool _isInteractActive;
     private IRuntimeView _instance;
+    private ScannableObject _scannableObject;
 
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
-    public override bool CanDetect => _isDetectable && _isInteractActive;
+    public bool IsInteractActive => _isInteractActive && IsScanRequirementSatisfied() && IsAdditionalInteractRequirementSatisfied();
+    public override bool CanDetect => _isDetectable && IsInteractActive;
     protected IRuntimeView RuntimeView => _instance;
 
     public event Action OnInteract;
@@ -25,6 +27,14 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
         {
             _instance = instance;
         }
+
+        CacheScannableObject();
+        SubscribeScannableEvents();
+    }
+
+    private void OnDestroy()
+    {
+        UnsubscribeScannableEvents();
     }
 
 
@@ -43,10 +53,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     public void SetActivate(bool active)
     {
         _isInteractActive = active;
-        if (!_isInteractActive && _isOnDetected)
-        {
-            OnDetectExit();
-        }
+        RefreshInteractAvailability();
     }
 
     public void SetRuntimeData(IRuntimeView runtimeView)
@@ -63,5 +70,73 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     protected void RefreshRuntimeView()
     {
         _instance?.RefreshView();
+    }
+
+    protected virtual bool IsAdditionalInteractRequirementSatisfied()
+    {
+        return true;
+    }
+
+    protected void RefreshInteractAvailability()
+    {
+        if (!IsInteractActive && _isOnDetected)
+        {
+            OnDetectExit();
+        }
+    }
+
+    private bool IsScanRequirementSatisfied()
+    {
+        if (_scannableObject == null)
+        {
+            return true;
+        }
+
+        return _scannableObject.IsProgressComplete;
+    }
+
+    private void CacheScannableObject()
+    {
+        if (_scannableObject != null)
+        {
+            return;
+        }
+
+        _scannableObject = GetComponent<ScannableObject>();
+        if (_scannableObject == null)
+        {
+            _scannableObject = GetComponentInParent<ScannableObject>();
+        }
+
+        if (_scannableObject == null)
+        {
+            _scannableObject = GetComponentInChildren<ScannableObject>();
+        }
+    }
+
+    private void SubscribeScannableEvents()
+    {
+        if (_scannableObject == null)
+        {
+            return;
+        }
+
+        _scannableObject.OnScanComplete -= HandleScanComplete;
+        _scannableObject.OnScanComplete += HandleScanComplete;
+    }
+
+    private void UnsubscribeScannableEvents()
+    {
+        if (_scannableObject == null)
+        {
+            return;
+        }
+
+        _scannableObject.OnScanComplete -= HandleScanComplete;
+    }
+
+    private void HandleScanComplete()
+    {
+        RefreshInteractAvailability();
     }
 }

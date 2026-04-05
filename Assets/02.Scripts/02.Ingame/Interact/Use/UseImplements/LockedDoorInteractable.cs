@@ -23,6 +23,11 @@ public class LockedDoorInteractable : UsableObject
     public bool IsUnlocked => GetState(_unlockStateKey);
     public bool IsOpen => GetState(_openStateKey);
 
+    protected override bool IsAdditionalInteractRequirementSatisfied()
+    {
+        return IsUnlocked;
+    }
+
     private void Awake()
     {
         if (_runtimeView == null)
@@ -90,6 +95,7 @@ public class LockedDoorInteractable : UsableObject
         }
 
         SetState(_unlockStateKey, true);
+        RefreshInteractAvailability();
         Debug.Log($"[{nameof(LockedDoorInteractable)}] {gameObject.name} unlocked.", this);
 
         // TODO: Play unlock SFX via SoundManager.
