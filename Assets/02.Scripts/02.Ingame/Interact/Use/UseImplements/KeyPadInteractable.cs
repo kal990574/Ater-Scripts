@@ -2,10 +2,8 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class KeyPadInteractable : UsableObject
+public class KeyPadInteractable : StateInteractable
 {
-    [Header("References")]
-    [SerializeField] private RuntimeView _runtimeView;
     [SerializeField] private KeyPadController _keyPadController;
 
     [Header("State Keys")]
@@ -13,21 +11,13 @@ public class KeyPadInteractable : UsableObject
     [SerializeField] private string _completedStateKey = "is_completed";
 
     [Header("Events")]
-    [SerializeField] private UnityEvent _onInteractionFailed;
     [SerializeField] private UnityEvent _onPuzzleStarted;
     [SerializeField] private UnityEvent _onCompleted;
 
-    private void Awake()
+    protected override void OnAwake()
     {
-        if (_runtimeView == null)
-        {
-            _runtimeView = GetComponent<RuntimeView>();
-        }
-
-        if (_keyPadController == null)
-        {
-            _keyPadController = GetComponent<KeyPadController>();
-        }
+        base.OnAwake();
+        GetComponentCached(ref _keyPadController);
     }
 
     public bool Unlock()
@@ -120,19 +110,17 @@ public class KeyPadInteractable : UsableObject
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(_unlockStateKey))
+        if (!ValidateStateKey(_unlockStateKey, "Unlock state key", out failureReason))
         {
-            failureReason = "Unlock state key is not configured.";
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(_completedStateKey))
+        if (!ValidateStateKey(_completedStateKey, "Completed state key", out failureReason))
         {
-            failureReason = "Completed state key is not configured.";
             return false;
         }
 
-        if (ResolveRuntimeData()?.State == null)
+        if (!HasRuntimeState())
         {
             failureReason = "RuntimeData.State is not available.";
             return false;
@@ -140,44 +128,5 @@ public class KeyPadInteractable : UsableObject
 
         failureReason = string.Empty;
         return true;
-    }
-
-    private bool GetState(string key)
-    {
-        RuntimeData runtimeData = ResolveRuntimeData();
-        if (runtimeData?.State == null || string.IsNullOrWhiteSpace(key))
-        {
-            return false;
-        }
-
-        return runtimeData.State.GetBool(key);
-    }
-
-    private void SetState(string key, bool value)
-    {
-        if (_runtimeView != null)
-        {
-            _runtimeView.SetBoolState(key, value);
-            return;
-        }
-
-        RuntimeData runtimeData = ResolveRuntimeData();
-        if (runtimeData?.State == null)
-        {
-            return;
-        }
-
-        runtimeData.State.SetBool(key, value);
-        RefreshRuntimeView();
-    }
-
-    private RuntimeData ResolveRuntimeData()
-    {
-        if (_runtimeView != null && _runtimeView.RuntimeData != null)
-        {
-            return _runtimeView.RuntimeData;
-        }
-
-        return RuntimeData;
     }
 }

@@ -12,9 +12,15 @@ public abstract class StateApplierBase : MonoBehaviour, IStateApplier
         {
             _runtimeView = GetComponentInParent<RuntimeView>();
         }
+
+        OnAwake();
     }
 
     public abstract void ApplyState(RuntimeView binder);
+
+    protected virtual void OnAwake()
+    {
+    }
 
     protected virtual bool CheckBindValid(string binderContext = "")
     {

@@ -1,5 +1,4 @@
 using System;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -8,7 +7,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
 {
     [SerializeField] protected bool _isInteractActive;
     private IRuntimeView _instance;
-    private ScannableObject _scannableObject;
+    protected ScannableObject _scannableObject;
 
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
@@ -19,8 +18,8 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     public event Action OnInteract;
 
     [Header("Scene Event")]
-    public UnityEvent InteractEvent;
-
+    [SerializeField] protected UnityEvent _onInteractionSuccess;
+    [SerializeField] protected UnityEvent _onInteractionFailed;
     private void Awake()
     {
         if (TryGetComponent(out IRuntimeView instance))
@@ -30,15 +29,25 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
 
         CacheScannableObject();
         SubscribeScannableEvents();
+        OnAwake();
     }
 
     private void OnDestroy()
     {
+        OnBeforeDestroy();
         UnsubscribeScannableEvents();
     }
 
 
     public abstract void Interact(InteractionContext context);
+
+    protected virtual void OnAwake()
+    {
+    }
+
+    protected virtual void OnBeforeDestroy()
+    {
+    }
 
     private void SetActivate()
     {
@@ -64,12 +73,42 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     protected void OnInteractActivate()
     {
         OnInteract?.Invoke();
-        InteractEvent?.Invoke();
+        _onInteractionSuccess?.Invoke();
     }
 
     protected void RefreshRuntimeView()
     {
         _instance?.RefreshView();
+    }
+
+    protected T GetComponentCached<T>(ref T field) where T : Component
+    {
+        if (field == null)
+        {
+            field = GetComponent<T>();
+        }
+
+        return field;
+    }
+
+    protected T GetComponentInChildrenCached<T>(ref T field) where T : Component
+    {
+        if (field == null)
+        {
+            field = GetComponentInChildren<T>();
+        }
+
+        return field;
+    }
+
+    protected T GetComponentInParentCached<T>(ref T field) where T : Component
+    {
+        if (field == null)
+        {
+            field = GetComponentInParent<T>();
+        }
+
+        return field;
     }
 
     protected virtual bool IsAdditionalInteractRequirementSatisfied()

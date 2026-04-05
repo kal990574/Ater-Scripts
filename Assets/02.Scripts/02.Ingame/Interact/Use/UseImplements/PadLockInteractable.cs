@@ -5,14 +5,11 @@ using UnityEngine.Events;
 public class PadLockInteractable : UsableObject
 {
     [SerializeField] private PadLockController _padLockController;
-    [SerializeField] private UnityEvent _onInteractionFailed;
 
-    private void Awake()
+    protected override void OnAwake()
     {
-        if (_padLockController == null)
-        {
-            _padLockController = GetComponent<PadLockController>();
-        }
+        base.OnAwake();
+        GetComponentCached(ref _padLockController);
     }
 
     protected override bool CanUse(InteractionContext context, out string failureReason)

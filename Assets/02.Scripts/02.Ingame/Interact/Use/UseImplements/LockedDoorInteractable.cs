@@ -2,10 +2,8 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class LockedDoorInteractable : UsableObject
+public class LockedDoorInteractable : StateInteractable
 {
-    [Header("References")]
-    [SerializeField] private RuntimeView _runtimeView;
     [SerializeField] private Animator _doorAnimator;
 
     [Header("Animation")]
@@ -16,7 +14,6 @@ public class LockedDoorInteractable : UsableObject
     [SerializeField] private string _openStateKey = "is_open";
 
     [Header("Events")]
-    [SerializeField] protected UnityEvent _onInteractionFailed;
     [SerializeField] private UnityEvent _onUnlocked;
     [SerializeField] private UnityEvent _onOpened;
 
@@ -28,17 +25,10 @@ public class LockedDoorInteractable : UsableObject
         return IsUnlocked;
     }
 
-    private void Awake()
+    protected override void OnAwake()
     {
-        if (_runtimeView == null)
-        {
-            _runtimeView = GetComponent<RuntimeView>();
-        }
-
-        if (_doorAnimator == null)
-        {
-            _doorAnimator = GetComponent<Animator>();
-        }
+        base.OnAwake();
+        GetComponentCached(ref _doorAnimator);
     }
 
     protected override bool CanUse(InteractionContext context, out string failureReason)
@@ -126,19 +116,17 @@ public class LockedDoorInteractable : UsableObject
 
     protected virtual bool ValidateConfiguration(out string failureReason)
     {
-        if (string.IsNullOrWhiteSpace(_unlockStateKey))
+        if (!ValidateStateKey(_unlockStateKey, "Unlock state key", out failureReason))
         {
-            failureReason = "Unlock state key is not configured.";
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(_openStateKey))
+        if (!ValidateStateKey(_openStateKey, "Open state key", out failureReason))
         {
-            failureReason = "Open state key is not configured.";
             return false;
         }
 
-        if (ResolveRuntimeData()?.State == null)
+        if (!HasRuntimeState())
         {
             failureReason = "RuntimeData.State is not available.";
             return false;
@@ -146,49 +134,5 @@ public class LockedDoorInteractable : UsableObject
 
         failureReason = string.Empty;
         return true;
-    }
-
-    protected bool GetState(string key)
-    {
-        RuntimeData runtimeData = ResolveRuntimeData();
-        if (runtimeData?.State == null || string.IsNullOrWhiteSpace(key))
-        {
-            return false;
-        }
-
-        return runtimeData.State.GetBool(key);
-    }
-
-    protected void SetState(string key, bool value)
-    {
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            return;
-        }
-
-        if (_runtimeView != null)
-        {
-            _runtimeView.SetBoolState(key, value);
-            return;
-        }
-
-        RuntimeData runtimeData = ResolveRuntimeData();
-        if (runtimeData?.State == null)
-        {
-            return;
-        }
-
-        runtimeData.State.SetBool(key, value);
-        RefreshRuntimeView();
-    }
-
-    protected RuntimeData ResolveRuntimeData()
-    {
-        if (_runtimeView != null && _runtimeView.RuntimeData != null)
-        {
-            return _runtimeView.RuntimeData;
-        }
-
-        return RuntimeData;
     }
 }

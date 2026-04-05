@@ -7,7 +7,7 @@ public class UsableObject : Interactable
     public UseInteractResult LastInteractResult { get; protected set; } = UseInteractResult.None;
 
 
-    public sealed override void Interact(InteractionContext context)
+    public override void Interact(InteractionContext context)
     {
         if (!IsInteractActive)
         {

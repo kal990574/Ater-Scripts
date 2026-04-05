@@ -8,8 +8,10 @@ public class WorldBox : StateApplierBase
     [SerializeField] private string _openStateKey = string.Empty;
     [SerializeField] private string _rewardCollectedStateKey = string.Empty;
 
-    private void Awake()
+    protected override void OnAwake()
     {
+        base.OnAwake();
+
         if (scannableObject == null)
         {
             scannableObject = GetComponentInChildren<ScannableObject>();

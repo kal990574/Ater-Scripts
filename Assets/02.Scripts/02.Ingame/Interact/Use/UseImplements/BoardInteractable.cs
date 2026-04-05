@@ -2,11 +2,9 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class BoardInteractable : UsableObject
+public class BoardInteractable : StateInteractable
 {
     [Header("References")]
-    [SerializeField] private RuntimeView _runtimeView;
-    [SerializeField] private ScannableObject _scannableObject;
     [SerializeField] private Animator _animator;
 
     [Header("Animation")]
@@ -16,29 +14,12 @@ public class BoardInteractable : UsableObject
     [SerializeField] private string _openStateKey = "is_open";
 
     [Header("Events")]
-    [SerializeField] private UnityEvent _onInteractionFailed;
     [SerializeField] private UnityEvent _onOpened;
 
-    private void Awake()
+    protected override void OnAwake()
     {
-        if (_runtimeView == null)
-        {
-            _runtimeView = GetComponent<RuntimeView>();
-        }
-
-        if (_scannableObject == null)
-        {
-            _scannableObject = GetComponent<ScannableObject>();
-            if (_scannableObject == null)
-            {
-                _scannableObject = GetComponentInChildren<ScannableObject>();
-            }
-        }
-
-        if (_animator == null)
-        {
-            _animator = GetComponent<Animator>();
-        }
+        base.OnAwake();
+        GetComponentCached(ref _animator);
     }
 
     protected override bool CanUse(InteractionContext context, out string failureReason)
@@ -103,13 +84,12 @@ public class BoardInteractable : UsableObject
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(_openStateKey))
+        if (!ValidateStateKey(_openStateKey, "Open state key", out failureReason))
         {
-            failureReason = "Open state key is not configured.";
             return false;
         }
 
-        if (ResolveRuntimeData()?.State == null)
+        if (!HasRuntimeState())
         {
             failureReason = "RuntimeData.State is not available.";
             return false;
@@ -117,44 +97,5 @@ public class BoardInteractable : UsableObject
 
         failureReason = string.Empty;
         return true;
-    }
-
-    private bool GetState(string key)
-    {
-        RuntimeData runtimeData = ResolveRuntimeData();
-        if (runtimeData?.State == null || string.IsNullOrWhiteSpace(key))
-        {
-            return false;
-        }
-
-        return runtimeData.State.GetBool(key);
-    }
-
-    private void SetState(string key, bool value)
-    {
-        if (_runtimeView != null)
-        {
-            _runtimeView.SetBoolState(key, value);
-            return;
-        }
-
-        RuntimeData runtimeData = ResolveRuntimeData();
-        if (runtimeData?.State == null)
-        {
-            return;
-        }
-
-        runtimeData.State.SetBool(key, value);
-        RefreshRuntimeView();
-    }
-
-    private RuntimeData ResolveRuntimeData()
-    {
-        if (_runtimeView != null && _runtimeView.RuntimeData != null)
-        {
-            return _runtimeView.RuntimeData;
-        }
-
-        return RuntimeData;
     }
 }

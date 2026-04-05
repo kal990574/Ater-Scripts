@@ -2,10 +2,9 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class FuseBoxInteractable : UsableObject
+public class FuseBoxInteractable : StateInteractable
 {
     [Header("References")]
-    [SerializeField] private RuntimeView _runtimeView;
     [SerializeField] private GameObject _innerFuseObject;
     [SerializeField] private KeyPadInteractable _keyPadInteractable;
 
@@ -17,16 +16,7 @@ public class FuseBoxInteractable : UsableObject
     [SerializeField] private string _completedStateKey = "is_completed";
 
     [Header("Events")]
-    [SerializeField] private UnityEvent _onInteractionFailed;
     [SerializeField] private UnityEvent _onCompleted;
-
-    private void Awake()
-    {
-        if (_runtimeView == null)
-        {
-            _runtimeView = GetComponent<RuntimeView>();
-        }
-    }
 
     protected override bool CanUse(InteractionContext context, out string failureReason)
     {
@@ -114,13 +104,12 @@ public class FuseBoxInteractable : UsableObject
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(_completedStateKey))
+        if (!ValidateStateKey(_completedStateKey, "Completed state key", out failureReason))
         {
-            failureReason = "Completed state key is not configured.";
             return false;
         }
 
-        if (ResolveRuntimeData()?.State == null)
+        if (!HasRuntimeState())
         {
             failureReason = "RuntimeData.State is not available.";
             return false;
@@ -128,44 +117,5 @@ public class FuseBoxInteractable : UsableObject
 
         failureReason = string.Empty;
         return true;
-    }
-
-    private bool GetState(string key)
-    {
-        RuntimeData runtimeData = ResolveRuntimeData();
-        if (runtimeData?.State == null || string.IsNullOrWhiteSpace(key))
-        {
-            return false;
-        }
-
-        return runtimeData.State.GetBool(key);
-    }
-
-    private void SetState(string key, bool value)
-    {
-        if (_runtimeView != null)
-        {
-            _runtimeView.SetBoolState(key, value);
-            return;
-        }
-
-        RuntimeData runtimeData = ResolveRuntimeData();
-        if (runtimeData?.State == null)
-        {
-            return;
-        }
-
-        runtimeData.State.SetBool(key, value);
-        RefreshRuntimeView();
-    }
-
-    private RuntimeData ResolveRuntimeData()
-    {
-        if (_runtimeView != null && _runtimeView.RuntimeData != null)
-        {
-            return _runtimeView.RuntimeData;
-        }
-
-        return RuntimeData;
     }
 }
