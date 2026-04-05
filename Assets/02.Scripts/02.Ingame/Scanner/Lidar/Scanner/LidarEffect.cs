@@ -121,7 +121,7 @@ public class LidarEffect
         {
             Vector3 direction = Random.onUnitSphere;
             Vector3 sampleOrigin = center + direction * radius * 2.0f;
-            Vector3 surfacePoint = targetCollider.ClosestPoint(sampleOrigin);
+            Vector3 surfacePoint = bounds.ClosestPoint(sampleOrigin);
 
             if ((surfacePoint - sampleOrigin).sqrMagnitude > 0.0001f)
             {
