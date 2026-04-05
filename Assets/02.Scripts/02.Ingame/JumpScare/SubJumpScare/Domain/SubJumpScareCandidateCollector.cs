@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
 
-/// <summary>
-/// 현재 런타임 상태를 통해 타입별 후보 수집
-/// </summary>
 public class SubJumpScareCandidateCollector
 {
     public List<PostProcessSubJumpScareDefinitionSO> GetPostProcessCandidates(
@@ -21,7 +18,6 @@ public class SubJumpScareCandidateCollector
         for (int index = 0; index < database.PostProcessDefinitions.Count; index++)
         {
             PostProcessSubJumpScareDefinitionSO definition = database.PostProcessDefinitions[index];
-
             if (definition == null)
             {
                 continue;
@@ -42,21 +38,21 @@ public class SubJumpScareCandidateCollector
                 continue;
             }
 
-            if (cooldownState.IsItemCooldownActive(definition.Common.Id) == true)
+            if (cooldownState.IsItemCooldownActive(definition.Common.Id))
             {
                 continue;
             }
 
-            if (definition.Common.BlockSameItemAsPrevious == true && history.IsSameItem(definition.Common.Id) == true)
+            if (definition.Common.BlockSameItemAsPrevious && history.IsSameItem(definition.Common.Id))
             {
                 continue;
             }
 
-            if (definition.common.BlockSameTypeAsPrevious == true && history.IsSameType(definition.Common.Type) == true)
+            if (definition.Common.BlockSameTypeAsPrevious && history.IsSameType(definition.Common.Type))
             {
                 continue;
             }
-                
+
             result.Add(definition);
         }
 
@@ -79,7 +75,6 @@ public class SubJumpScareCandidateCollector
         for (int index = 0; index < database.SoundDefinitions.Count; index++)
         {
             SoundSubJumpScareDefinitionSO definition = database.SoundDefinitions[index];
-
             if (definition == null)
             {
                 continue;
@@ -100,19 +95,19 @@ public class SubJumpScareCandidateCollector
                 continue;
             }
 
-            if (cooldownState.IsItemCooldownActive(definition.Common.Id) == true)
+            if (cooldownState.IsItemCooldownActive(definition.Common.Id))
             {
                 continue;
             }
 
-            if (definition.Common.BlockSameIntensityAsPrevious == true
-                && history.IsSameIntensity(definition.Common.Intensity) == true)
+            if (definition.Common.BlockSameIntensityAsPrevious
+                && history.IsSameIntensity(definition.Common.Intensity))
             {
                 continue;
             }
 
-            if (definition.Common.BlockSameItemAsPrevious == true
-                && history.IsSameItem(definition.Common.Id) == true)
+            if (definition.Common.BlockSameItemAsPrevious
+                && history.IsSameItem(definition.Common.Id))
             {
                 continue;
             }
@@ -139,7 +134,6 @@ public class SubJumpScareCandidateCollector
         for (int index = 0; index < database.FakeEnemyDefinitions.Count; index++)
         {
             FakeEnemySubJumpScareDefinitionSO definition = database.FakeEnemyDefinitions[index];
-
             if (definition == null)
             {
                 continue;
@@ -160,13 +154,13 @@ public class SubJumpScareCandidateCollector
                 continue;
             }
 
-            if (cooldownState.IsItemCooldownActive(definition.Common.Id) == true)
+            if (cooldownState.IsItemCooldownActive(definition.Common.Id))
             {
                 continue;
             }
 
-            if (definition.Common.BlockSameItemAsPrevious == true
-                && history.IsSameItem(definition.Common.Id) == true)
+            if (definition.Common.BlockSameItemAsPrevious
+                && history.IsSameItem(definition.Common.Id))
             {
                 continue;
             }

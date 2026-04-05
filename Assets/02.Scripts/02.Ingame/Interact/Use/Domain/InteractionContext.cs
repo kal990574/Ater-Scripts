@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class InteractionContext
 {
-    public GameObject User { get; }
+    public PlayerController User { get; }
     public GameObject TargetObject { get; }
     public UsableObject Target { get; }
     public InventoryManager Inventory { get; }
@@ -11,7 +11,7 @@ public class InteractionContext
     public RuntimeItemData Hand { get; }
 
     public InteractionContext(
-        GameObject user,
+        PlayerController user,
         GameObject targetObject,
         UsableObject target,
         InventoryManager inventory,
@@ -28,7 +28,7 @@ public class InteractionContext
         Hand = hand;
     }
 
-    public static InteractionContext For(GameObject user, GameObject targetObject)
+    public static InteractionContext For(PlayerController user, GameObject targetObject)
     {
         UsableObject usableObject = targetObject != null
             ? targetObject.GetComponent<UsableObject>()
@@ -37,15 +37,19 @@ public class InteractionContext
         return Create(user, usableObject, targetObject);
     }
 
-    public static InteractionContext For(GameObject user, UsableObject target)
+    public static InteractionContext For(PlayerController user, UsableObject target)
     {
-        return Create(user, target, target != null ? target.gameObject : null);
+        GameObject targetObject = target != null
+            ? target.gameObject
+            : null;
+
+        return Create(user, target, targetObject);
     }
 
-    private static InteractionContext Create(GameObject user, UsableObject target, GameObject targetObject)
+    private static InteractionContext Create(PlayerController user, UsableObject target, GameObject targetObject)
     {
         InventoryManager inventory = InventoryManager.Instance;
-        PlayerHandAbility handAbility = ResolveInventoryAbility(user);
+        PlayerHandAbility handAbility = ResolveHandAbility(user);
 
         string handItemInstanceId = handAbility != null
             ? handAbility.CurrentHandItemInstanceId
@@ -68,7 +72,7 @@ public class InteractionContext
             hand);
     }
 
-    private static PlayerHandAbility ResolveInventoryAbility(GameObject user)
+    private static PlayerHandAbility ResolveHandAbility(PlayerController user)
     {
         if (user == null)
         {

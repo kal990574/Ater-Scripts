@@ -22,7 +22,7 @@ public class UsableObject : Interactable
             return;
         }
 
-        InteractionContext resolvedContext = context ?? InteractionContext.For(gameObject, this);
+        InteractionContext resolvedContext = context ?? InteractionContext.For((PlayerController)null, this);
         if (!CanUse(resolvedContext))
         {
             Debug.Log($"{gameObject.name} : use conditions are not satisfied");

@@ -1,12 +1,14 @@
-﻿using System;
+using System;
 
-//스캔이 가능한 대상
+// Scannable target.
 public interface IScannable
 {
-    bool IsProgressComplete {get;}  //현재 스캔이 완료되었는가
-    float CurrentProgress{get;}     //현재 스캔의 진행도
-    float ProgressRatio { get; }    //현재 스캔의 진행율
-    
+    bool IsProgressComplete { get; }
+
+    float CurrentProgress { get; }
+
+    float ProgressRatio { get; }
+
     event Action<float> OnScanProgressChanged;
     event Action OnScanComplete;
 }

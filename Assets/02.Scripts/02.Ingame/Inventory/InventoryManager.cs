@@ -9,8 +9,7 @@ public class InventoryManager : MonoBehaviour
     public static InventoryManager Instance => _instance;
 
     [Header("Debug/DontChange")]
-    [SerializeField] private bool _isInventoryUIOn = false;
-    [SerializeField] private int _selectedIndex = -1;
+    [SerializeField] private bool _isInventoryUIOn;
 
     private InventoryService _inventoryService;
 
@@ -73,7 +72,7 @@ public class InventoryManager : MonoBehaviour
     {
         if (runtimeItemData == null)
         {
-            Debug.LogError($"[{nameof(InventoryManager)}] Tried to add a null ItemInstance to inventory.", this);
+            Debug.LogError($"[{nameof(InventoryManager)}] Tried to add a null item instance.", this);
             return false;
         }
 
@@ -123,7 +122,7 @@ public class InventoryManager : MonoBehaviour
         }
 
         instanceId = _inventoryService.GetAt(index);
-        return !string.IsNullOrEmpty(instanceId);
+        return string.IsNullOrEmpty(instanceId) == false;
     }
 
     private void HandleInventoryChanged()
@@ -133,7 +132,6 @@ public class InventoryManager : MonoBehaviour
 
     private void HandleSelectionChanged(int selectedIndex)
     {
-        _selectedIndex = selectedIndex;
         OnSelectionChanged?.Invoke(selectedIndex);
     }
 }

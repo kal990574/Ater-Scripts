@@ -4,8 +4,6 @@ public abstract class MainJumpScareBase : MonoBehaviour
 {
     [Header("Main Jump Scare")]
     [SerializeField] private string _id;
-
-    [SerializeField] private bool _initActivate;
     [SerializeField] private bool _canActive;
     [SerializeField] private EMainJumpScareState _state = EMainJumpScareState.Waiting;
 
@@ -73,13 +71,13 @@ public abstract class MainJumpScareBase : MonoBehaviour
         _state = EMainJumpScareState.Finished;
         _canActive = false;
 
-        if (SubJumpScareManager.Instance == null)
+        if (JumpScareManager.Instance == null)
         {
             Debug.LogError($"JumpScareManager.Instance 가 없어 메인 점프스케어 [{_id}] 종료를 통지할 수 없습니다.", this);
             return;
         }
 
-        SubJumpScareManager.Instance.NotifyMainJumpScareFinished(_id);
+        JumpScareManager.Instance.NotifyMainJumpScareFinished(_id);
     }
 
 #if UNITY_EDITOR

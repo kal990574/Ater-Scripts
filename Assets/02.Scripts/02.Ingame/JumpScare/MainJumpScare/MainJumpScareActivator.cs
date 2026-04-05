@@ -25,12 +25,12 @@ public class MainJumpScareActivator : MonoBehaviour
 
     public void SetActive(bool activeValue)
     {
-        if (SubJumpScareManager.Instance == null)
+        if (JumpScareManager.Instance == null)
         {
             Debug.LogError("JumpScareManager.Instance 가 없어 메인 점프스케어 CanActive 를 변경할 수 없습니다.", this);
             return;
         }
 
-        SubJumpScareManager.Instance.SetMainJumpScareCanActive(_mainJumpScareId, activeValue);
+        JumpScareManager.Instance.SetMainJumpScareCanActive(_mainJumpScareId, activeValue);
     }
 }

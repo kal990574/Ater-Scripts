@@ -3,12 +3,13 @@ using System.Collections.Generic;
 
 public class InventoryService
 {
-    private readonly List<string> _itemInstanceIds = new();
+    private readonly List<string> _itemInstanceIds = new List<string>();
     private int _selectedIndex = -1;
 
     public IReadOnlyList<string> Items => _itemInstanceIds;
     public int Count => _itemInstanceIds.Count;
     public int SelectedIndex => _selectedIndex;
+
     public event Action OnInventoryChanged;
     public event Action<int> OnSelectionChanged;
     public event Action<string> OnItemAdded;
@@ -117,16 +118,15 @@ public class InventoryService
 
     public int IndexOf(string instanceId)
     {
-        return string.IsNullOrEmpty(instanceId) ? -1 : _itemInstanceIds.IndexOf(instanceId);
+        return string.IsNullOrEmpty(instanceId)
+            ? -1
+            : _itemInstanceIds.IndexOf(instanceId);
     }
 
     public string GetAt(int index)
     {
-        return index < 0 || index >= _itemInstanceIds.Count ? null : _itemInstanceIds[index];
-    }
-
-    private string GetSelectedInstanceId()
-    {
-        return GetAt(_selectedIndex);
+        return index < 0 || index >= _itemInstanceIds.Count
+            ? null
+            : _itemInstanceIds[index];
     }
 }
