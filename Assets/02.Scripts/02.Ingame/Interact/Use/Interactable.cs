@@ -12,6 +12,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
     public override bool CanDetect => _isDetectable && _isInteractActive;
+    protected IRuntimeView RuntimeView => _instance;
 
     public event Action OnInteract;
 
@@ -57,5 +58,10 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     {
         OnInteract?.Invoke();
         InteractEvent?.Invoke();
+    }
+
+    protected void RefreshRuntimeView()
+    {
+        _instance?.RefreshView();
     }
 }

@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     private readonly Dictionary<Type, PlayerAbility> _abilities = new();
     private IPlayerInput _input;
     private EPlayerInteractMode _lastGameplayMode = EPlayerInteractMode.Scan;
-    private PadLockController _activePadLockController;
+    private IPlayerPuzzleController _activePuzzleController;
 
     public PlayerConfigSO Config => _playerConfig;
     public IPlayerInput Input => _input;
@@ -269,20 +269,20 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         SetInteractMode(_lastGameplayMode);
     }
 
-    public void EnterPuzzleMode(PadLockController padLockController)
+    public void EnterPuzzleMode(IPlayerPuzzleController puzzleController)
     {
-        _activePadLockController = padLockController;
+        _activePuzzleController = puzzleController;
         EnterPuzzleMode();
     }
 
-    public void ExitPuzzleMode(PadLockController padLockController)
+    public void ExitPuzzleMode(IPlayerPuzzleController puzzleController)
     {
-        if (_activePadLockController != null && _activePadLockController != padLockController)
+        if (_activePuzzleController != null && _activePuzzleController != puzzleController)
         {
             return;
         }
 
-        _activePadLockController = null;
+        _activePuzzleController = null;
         ExitPuzzleMode();
     }
 
@@ -304,12 +304,12 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     {
         if (_input.ConfirmInput)
         {
-            _activePadLockController?.ConfirmActivePuzzle();
+            _activePuzzleController?.ConfirmActivePuzzle();
         }
 
         if (_input.CancelInput)
         {
-            _activePadLockController?.CancelActivePuzzle();
+            _activePuzzleController?.CancelActivePuzzle();
         }
     }
 

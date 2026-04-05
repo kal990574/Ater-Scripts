@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class PlayerHandAbility : PlayerAbility
 {
+    [SerializeField] private Transform _handRoot;
     [SerializeField] private float _throwDistance = 1.5f;
     [SerializeField] private float _throwHoldThreshold = 0.2f;
     [SerializeField] private float _maxThrowChargeTime = 1.5f;
@@ -13,7 +14,7 @@ public class PlayerHandAbility : PlayerAbility
     private RuntimeInstanceManager _runtimeInstanceManager;
     private HandViewService _handViewService;
     private WorldViewService _worldViewService;
-
+    private RuntimeItemFactory _itemFactory;
     private string _currentHandInstanceId;
     private bool _isChargingThrow;
     private float _throwChargeTime;
@@ -23,19 +24,7 @@ public class PlayerHandAbility : PlayerAbility
     public bool HasHandItem => _handIndex >= 0 && string.IsNullOrEmpty(_currentHandInstanceId) == false;
 
     public event System.Action<int> OnHandSlotChanged;
-
-    public void Initialize(
-        InventoryManager inventoryManager,
-        RuntimeInstanceManager runtimeInstanceManager,
-        HandViewService handViewService,
-        WorldViewService worldViewService)
-    {
-        _inventoryManager = inventoryManager;
-        _runtimeInstanceManager = runtimeInstanceManager;
-        _handViewService = handViewService;
-        _worldViewService = worldViewService;
-    }
-
+    
     private void Start()
     {
         if (_inventoryManager == null)
@@ -52,6 +41,10 @@ public class PlayerHandAbility : PlayerAbility
         {
             _inventoryManager.OnInventoryItemChanged += SyncCurrentHandItemState;
         }
+
+        _itemFactory = new RuntimeItemFactory(_runtimeInstanceManager);
+        _handViewService = new HandViewService(_itemFactory, _inventoryManager,  _runtimeInstanceManager, _handRoot);
+        _worldViewService = new WorldViewService(_itemFactory);
     }
 
     private void OnDestroy()

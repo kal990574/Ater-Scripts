@@ -2,65 +2,67 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class PadLockController : MonoBehaviour, IPlayerPuzzleController
+public class KeyPadController : MonoBehaviour, IPlayerPuzzleController
 {
-    [Header("Padlock Code")]
-    [SerializeField] private string _correctCode = "1111";
+    [Header("KeyPad Puzzle")]
+    [SerializeField] private string _correctCode = "0000";
 
-    [Header("Padlock Instance")]
-    [SerializeField] private GameObject _padlockInstancePrefab;
+    [Header("KeyPad Instance")]
+    [SerializeField] private GameObject _keyPadInstancePrefab;
     [SerializeField] private Transform _spawnParentOverride;
     [SerializeField] private Vector3 _localSpawnPosition = new(0f, 0f, 0.5f);
     [SerializeField] private Vector3 _localSpawnEulerAngles = Vector3.zero;
 
     [Header("State")]
     [SerializeField] private bool _blockOpenAfterSuccess = true;
-    [SerializeField] private GameObject _lockVisualToDisable;
     [SerializeField] private LockedDoorInteractable _doorToUnlock;
 
     [Header("Puzzle Events")]
     [SerializeField] private UnityEvent _successEvent;
     [SerializeField] private UnityEvent _failEvent;
 
-    private PadLockPuzzleInstance _activeInstance;
+    private KeyPadPuzzleInstance _activeInstance;
+    private KeyPadInteractable _activeInteractable;
     private bool _isSolved;
     private PlayerController _playerController;
 
     public bool IsSolved => _isSolved;
     public bool HasActivePuzzle => _activeInstance != null;
 
-    [ContextMenu("On")]
-    public void TryOpen()
+    public void TryOpen(KeyPadInteractable interactable)
     {
         if (_blockOpenAfterSuccess && _isSolved)
         {
+            Debug.LogWarning($"[{nameof(KeyPadController)}] {gameObject.name} puzzle open was requested, but it is already solved.", this);
             return;
         }
 
         if (_activeInstance != null)
         {
+            Debug.LogWarning($"[{nameof(KeyPadController)}] {gameObject.name} puzzle open was requested, but another keypad puzzle is already active.", this);
             return;
         }
 
-        if (_padlockInstancePrefab == null)
+        if (_keyPadInstancePrefab == null)
         {
-            Debug.LogWarning($"{gameObject.name} : padlock instance prefab is not assigned", this);
+            Debug.LogWarning($"[{nameof(KeyPadController)}] {gameObject.name} keyPad instance prefab is not assigned.", this);
             return;
         }
 
         Transform spawnParent = ResolveSpawnParent();
-        GameObject instanceObject = Instantiate(_padlockInstancePrefab, spawnParent);
+        GameObject instanceObject = Instantiate(_keyPadInstancePrefab, spawnParent);
         instanceObject.transform.localPosition = _localSpawnPosition;
         instanceObject.transform.localRotation = Quaternion.Euler(_localSpawnEulerAngles);
 
-        _activeInstance = instanceObject.GetComponent<PadLockPuzzleInstance>();
+        _activeInstance = instanceObject.GetComponent<KeyPadPuzzleInstance>();
         if (_activeInstance == null)
         {
-            Debug.LogWarning($"{instanceObject.name} : PadLockPuzzleInstance component is missing", instanceObject);
+            Debug.LogWarning($"[{nameof(KeyPadController)}] {instanceObject.name} is missing KeyPadPuzzleInstance.", instanceObject);
             Destroy(instanceObject);
             return;
         }
 
+        _activeInteractable = interactable;
         _activeInstance.Initialize(this, _correctCode);
         ResolvePlayerController()?.EnterPuzzleMode(this);
     }
@@ -85,7 +87,7 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
         _activeInstance.Cancel();
     }
 
-    public void HandlePuzzleSuccess(PadLockPuzzleInstance instance)
+    public void HandlePuzzleSuccess(KeyPadPuzzleInstance instance)
     {
         if (_activeInstance != instance)
         {
@@ -95,17 +97,14 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
         _isSolved = true;
         _successEvent?.Invoke();
         _doorToUnlock?.Unlock();
-
-        if (_lockVisualToDisable != null)
-        {
-            _lockVisualToDisable.SetActive(false);
-        }
+        _activeInteractable?.HandlePuzzleSolved();
 
         ResolvePlayerController()?.ExitPuzzleMode(this);
+        _activeInteractable = null;
         _activeInstance = null;
     }
 
-    public void HandlePuzzleFail(PadLockPuzzleInstance instance)
+    public void HandlePuzzleFail(KeyPadPuzzleInstance instance)
     {
         if (_activeInstance != instance)
         {
@@ -115,13 +114,16 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
         _failEvent?.Invoke();
     }
 
-    public void ClearActiveInstance(PadLockPuzzleInstance instance)
+    public void ClearActiveInstance(KeyPadPuzzleInstance instance)
     {
-        if (_activeInstance == instance)
+        if (_activeInstance != instance)
         {
-            ResolvePlayerController()?.ExitPuzzleMode(this);
-            _activeInstance = null;
+            return;
         }
+
+        ResolvePlayerController()?.ExitPuzzleMode(this);
+        _activeInteractable = null;
+        _activeInstance = null;
     }
 
     private Transform ResolveSpawnParent()

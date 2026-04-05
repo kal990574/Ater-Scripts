@@ -1,72 +1,104 @@
-using Unity.VisualScripting;
 using UnityEngine;
 
 
 public class UsableObject : Interactable
 {
-    private IUseCondition[] _useConditions;
-    private IUseAction[] _useActions;
+    public string LastFailureReason { get; private set; } = string.Empty;
+    public UseInteractResult LastInteractResult { get; protected set; } = UseInteractResult.None;
 
-    
-    private void Awake()
-    {
-        _useConditions = GetComponentsInChildren<IUseCondition>();
-        _useActions = GetComponentsInChildren<IUseAction>();
-    }
 
-    public override void Interact(InteractionContext context)
+    public sealed override void Interact(InteractionContext context)
     {
         if (!_isInteractActive)
         {
-            Debug.Log($"{gameObject.name} : interaction is not active");
+            FailUse(UseInteractResult.NotActive, "Interaction is not active.", context);
             return;
         }
 
         InteractionContext resolvedContext = context ?? InteractionContext.For((PlayerController)null, this);
-        if (!CanUse(resolvedContext))
+        if (!TryCanUse(resolvedContext, out string failureReason))
         {
-            Debug.Log($"{gameObject.name} : use conditions are not satisfied");
+            FailUse(LastInteractResult, failureReason, resolvedContext);
             return;
         }
 
-        Debug.Log($"{gameObject.name} : used");
-        ExecuteActions(resolvedContext);
+        LastFailureReason = string.Empty;
+        if (!OnUse(resolvedContext, out string runtimeFailureReason))
+        {
+            if (LastInteractResult == UseInteractResult.None || LastInteractResult == UseInteractResult.Success)
+            {
+                LastInteractResult = UseInteractResult.InvalidConfiguration;
+            }
+
+            if (string.IsNullOrWhiteSpace(runtimeFailureReason))
+            {
+                runtimeFailureReason = "Use execution failed.";
+            }
+
+            FailUse(LastInteractResult, runtimeFailureReason, resolvedContext);
+            return;
+        }
+
+        if (LastInteractResult == UseInteractResult.None)
+        {
+            LastInteractResult = UseInteractResult.Success;
+        }
         OnInteractActivate();
+        OnUseSucceeded(resolvedContext);
     }
 
-    public bool CanUse(InteractionContext context)
+    protected virtual bool CanUse(InteractionContext context, out string failureReason)
     {
-        if (_useConditions == null || _useConditions.Length == 0)
-        {
-            return true;
-        }
-        Debug.Log($"Condition Check {_useConditions.Length}");
-        foreach (IUseCondition useCondition in _useConditions)
-        {
-            if (useCondition == null)
-            {
-                continue;
-            }
-
-            if (!useCondition.CanUse(context))
-            {
-                return false;
-            }
-        }
-
+        failureReason = string.Empty;
         return true;
     }
 
-    private void ExecuteActions(InteractionContext context)
+    protected virtual bool OnUse(InteractionContext context, out string failureReason)
     {
-        if (_useActions == null || _useActions.Length == 0)
+        failureReason = string.Empty;
+        return true;
+    }
+
+    protected virtual void OnUseFailed(InteractionContext context, string failureReason)
+    {
+    }
+
+    protected virtual void OnUseSucceeded(InteractionContext context)
+    {
+    }
+
+    private bool TryCanUse(InteractionContext context, out string failureReason)
+    {
+        if (!CanUse(context, out failureReason))
         {
-            return;
+            if (LastInteractResult == UseInteractResult.None)
+            {
+                LastInteractResult = UseInteractResult.InvalidConfiguration;
+            }
+
+            if (string.IsNullOrWhiteSpace(failureReason))
+            {
+                failureReason = "Use requirements are not satisfied.";
+            }
+
+            return false;
         }
 
-        foreach (IUseAction useAction in _useActions)
-        {
-            useAction?.Execute(context);
-        }
+        LastInteractResult = UseInteractResult.None;
+        failureReason = string.Empty;
+        return true;
+    }
+    
+    protected void SetFailureResult(UseInteractResult result)
+    {
+        LastInteractResult = result;
+    }
+
+    private void FailUse(UseInteractResult result, string failureReason, InteractionContext context)
+    {
+        LastInteractResult = result;
+        LastFailureReason = failureReason ?? string.Empty;
+        Debug.LogWarning($"[{GetType().Name}] {gameObject.name} interaction failed. result={LastInteractResult}, reason={LastFailureReason}", this);
+        OnUseFailed(context, LastFailureReason);
     }
 }
