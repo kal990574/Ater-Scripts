@@ -11,10 +11,4 @@ public class SubJumpScareContext
 
     public bool IsMainJumpScareRunning;
     public bool IsInMainEndGraceTime;
-
-    public bool IsPostProcessActive;
-    public bool IsImportantVoicePlaying;
-
-    public bool IsSonarAvailable = true;
-    public bool CanPlaceFakeEnemyThisAttempt = true;
 }

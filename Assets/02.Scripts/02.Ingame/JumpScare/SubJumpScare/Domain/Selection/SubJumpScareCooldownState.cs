@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
 /// 서브 점프스케어의 쿨타임 관리
 /// </summary>
-using System.Collections.Generic;
-using UnityEngine;
-
 public class SubJumpScareCooldownState
 {
     private float _globalCooldownUntilTime;
@@ -29,6 +26,11 @@ public class SubJumpScareCooldownState
         return Time.time < _globalCooldownUntilTime;
     }
 
+    public float GetRemainingGlobalCooldown()
+    {
+        return Mathf.Max(0f, _globalCooldownUntilTime - Time.time);
+    }
+
     public bool IsTypeCooldownActive(ESubJumpScareType type)
     {
         if (_typeCooldownUntilMap.ContainsKey(type) == false)
@@ -37,6 +39,16 @@ public class SubJumpScareCooldownState
         }
 
         return Time.time < _typeCooldownUntilMap[type];
+    }
+
+    public float GetRemainingTypeCooldown(ESubJumpScareType type)
+    {
+        if (_typeCooldownUntilMap.TryGetValue(type, out float untilTime) == false)
+        {
+            return 0f;
+        }
+
+        return Mathf.Max(0f, untilTime - Time.time);
     }
 
     public bool IsItemCooldownActive(string itemId)
@@ -52,6 +64,24 @@ public class SubJumpScareCooldownState
         }
 
         return Time.time < _itemCooldownUntilMap[itemId];
+    }
+
+    public List<SubJumpScareItemCooldownDebugInfo> GetActiveItemCooldowns()
+    {
+        List<SubJumpScareItemCooldownDebugInfo> result = new List<SubJumpScareItemCooldownDebugInfo>();
+
+        foreach (KeyValuePair<string, float> pair in _itemCooldownUntilMap)
+        {
+            float remainingTime = Mathf.Max(0f, pair.Value - Time.time);
+            if (remainingTime <= 0f)
+            {
+                continue;
+            }
+
+            result.Add(new SubJumpScareItemCooldownDebugInfo(pair.Key, remainingTime));
+        }
+
+        return result;
     }
 
     public void Commit(SubJumpScareSelectionResult result)

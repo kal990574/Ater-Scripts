@@ -3,10 +3,13 @@
 public class MainJumpScareActivator : MonoBehaviour
 {
     [Header("Target")]
-    [SerializeField] private string _mainJumpScareId;
+    [SerializeField] protected MainJumpScareKeyReference _mainJumpScareId;
 
     [Header("Default")]
     [SerializeField] private bool _activeValue = true;
+
+    [Header("Debug")]
+    [SerializeField] protected bool _enableLog = true;
 
     public void Apply()
     {
@@ -31,6 +34,33 @@ public class MainJumpScareActivator : MonoBehaviour
             return;
         }
 
-        JumpScareManager.Instance.SetMainJumpScareCanActive(_mainJumpScareId, activeValue);
+        JumpScareManager.Instance.SetMainJumpScareCanActive(_mainJumpScareId.Value, activeValue);
+
+        if (_enableLog == true)
+        {
+            Debug.Log($"[{name}] 메인 점프스케어 [{_mainJumpScareId}] CanActive 를 {activeValue} 로 변경 요청했습니다.", this);
+        }
+    }
+
+    protected virtual bool TryActivate()
+    {
+        if (JumpScareManager.Instance == null)
+        {
+            Debug.LogError("JumpScareManager.Instance 가 없어 메인 점프스케어를 실행할 수 없습니다.", this);
+            return false;
+        }
+        
+        if (_enableLog == true)
+        {
+            Debug.Log($"[{name}] 메인 점프스케어 [{_mainJumpScareId}] 실행 요청.", this);
+        }
+        
+        if(JumpScareManager.Instance.TryExecuteMainJumpScare(_mainJumpScareId.Value) == false)
+        {
+            Debug.Log($"[{name}] 메인 점프스케어 [{_mainJumpScareId}] 실패.", this);
+            return false;
+        }
+
+        return true;
     }
 }
