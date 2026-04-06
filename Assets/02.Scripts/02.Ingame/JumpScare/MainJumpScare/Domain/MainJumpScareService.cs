@@ -3,23 +3,18 @@ using UnityEngine;
 
 public sealed class MainJumpScareService
 {
+    private readonly JumpScareManager _owner;
     private readonly Object _logContext;
-    private readonly bool _enableDebugLog;
-    private readonly bool _includeInactiveOnRegister;
 
     private readonly Dictionary<string, MainJumpScareBase> _mainJumpScaresById = new Dictionary<string, MainJumpScareBase>();
     private readonly HashSet<string> _playingMainJumpScareIds = new HashSet<string>();
 
     public bool IsAnyMainJumpScarePlaying => _playingMainJumpScareIds.Count > 0;
 
-    public MainJumpScareService(
-        Object logContext,
-        bool enableDebugLog,
-        bool includeInactiveOnRegister)
+    public MainJumpScareService(JumpScareManager owner)
     {
-        _logContext = logContext;
-        _enableDebugLog = enableDebugLog;
-        _includeInactiveOnRegister = includeInactiveOnRegister;
+        _owner = owner;
+        _logContext = owner;
     }
 
     public void RegisterSceneMainJumpScares()
@@ -27,7 +22,7 @@ public sealed class MainJumpScareService
         _mainJumpScaresById.Clear();
         _playingMainJumpScareIds.Clear();
 
-        FindObjectsInactive findObjectsInactive = _includeInactiveOnRegister
+        FindObjectsInactive findObjectsInactive = ShouldIncludeInactiveOnRegister()
             ? FindObjectsInactive.Include
             : FindObjectsInactive.Exclude;
 
@@ -45,7 +40,7 @@ public sealed class MainJumpScareService
             RegisterMainJumpScare(mainJumpScare);
         }
 
-        if (_enableDebugLog)
+        if (IsMainLogEnabled())
         {
             Debug.Log($"[MainJumpScareService] Registered {_mainJumpScaresById.Count} main jump scares.", _logContext);
         }
@@ -67,7 +62,7 @@ public sealed class MainJumpScareService
 
         if (mainJumpScare.CanActive == false)
         {
-            if (_enableDebugLog)
+            if (IsMainLogEnabled())
             {
                 Debug.LogWarning($"[MainJumpScareService] Main jump scare [{id}] is not active.", _logContext);
             }
@@ -77,7 +72,7 @@ public sealed class MainJumpScareService
 
         if (mainJumpScare.State == EMainJumpScareState.Playing)
         {
-            if (_enableDebugLog)
+            if (IsMainLogEnabled())
             {
                 Debug.LogWarning($"[MainJumpScareService] Main jump scare [{id}] is already playing.", _logContext);
             }
@@ -87,7 +82,7 @@ public sealed class MainJumpScareService
 
         if (mainJumpScare.State == EMainJumpScareState.Finished)
         {
-            if (_enableDebugLog)
+            if (IsMainLogEnabled())
             {
                 Debug.LogWarning($"[MainJumpScareService] Main jump scare [{id}] is already finished.", _logContext);
             }
@@ -97,7 +92,7 @@ public sealed class MainJumpScareService
 
         _playingMainJumpScareIds.Add(id);
 
-        if (_enableDebugLog)
+        if (IsMainLogEnabled())
         {
             Debug.Log($"[MainJumpScareService] Execute request for [{id}].", _logContext);
         }
@@ -121,7 +116,7 @@ public sealed class MainJumpScareService
 
         mainJumpScare.SetCanActive(canActive);
 
-        if (_enableDebugLog)
+        if (IsMainLogEnabled())
         {
             Debug.Log($"[MainJumpScareService] Main jump scare [{id}] active changed to {canActive}.", _logContext);
         }
@@ -149,7 +144,7 @@ public sealed class MainJumpScareService
 
         _playingMainJumpScareIds.Remove(id);
 
-        if (_enableDebugLog)
+        if (IsMainLogEnabled())
         {
             Debug.Log(
                 $"[MainJumpScareService] Finished [{id}]. Remaining count: {_playingMainJumpScareIds.Count}.",
@@ -176,9 +171,29 @@ public sealed class MainJumpScareService
 
         _mainJumpScaresById.Add(id, mainJumpScare);
 
-        if (_enableDebugLog)
+        if (IsMainLogEnabled())
         {
             Debug.Log($"[MainJumpScareService] Registered [{id}] -> {mainJumpScare.name}.", mainJumpScare);
         }
+    }
+
+    private bool IsMainLogEnabled()
+    {
+        if (_owner == null)
+        {
+            return false;
+        }
+
+        return _owner.EnableMainLog;
+    }
+
+    private bool ShouldIncludeInactiveOnRegister()
+    {
+        if (_owner == null)
+        {
+            return false;
+        }
+
+        return _owner.IncludeInactiveOnRegister;
     }
 }

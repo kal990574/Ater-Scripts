@@ -1,20 +1,16 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public sealed class SubJumpScareService
 {
+    private readonly JumpScareManager _owner;
     private readonly Object _logContext;
     private readonly PlayerController _playerController;
     private readonly TensionManager _tensionManager;
-    private readonly Transform _playerRootTransform;
-    private readonly Transform _playerCameraTransform;
     private readonly FakeEnemyJumpScareExecutor _fakeEnemyJumpScareExecutor;
     private readonly PostProcessSubJumpScareExecutor _postProcessExecutor;
     private readonly SoundSubJumpScareExecutor _soundExecutor;
     private readonly SubJumpScareDatabaseSO _database;
-
-    private readonly bool _enableLog;
-    private readonly bool _enableSelectionLog;
-    private readonly bool _enableGuaranteeLog;
 
     private readonly GameEventPublisher _eventPublisher;
     private readonly SubJumpScareSelectionCoordinator _selectionCoordinator;
@@ -22,32 +18,22 @@ public sealed class SubJumpScareService
     private float _periodicTimer;
 
     public SubJumpScareService(
-        Object logContext,
+        JumpScareManager owner,
         PlayerController playerController,
         TensionManager tensionManager,
-        Transform playerRootTransform,
-        Transform playerCameraTransform,
         FakeEnemyJumpScareExecutor fakeEnemyJumpScareExecutor,
         PostProcessSubJumpScareExecutor postProcessExecutor,
         SoundSubJumpScareExecutor soundExecutor,
-        SubJumpScareDatabaseSO database,
-        bool enableLog,
-        bool enableSelectionLog,
-        bool enableGuaranteeLog)
+        SubJumpScareDatabaseSO database)
     {
-        _logContext = logContext;
+        _owner = owner;
+        _logContext = owner;
         _playerController = playerController;
         _tensionManager = tensionManager;
-        _playerRootTransform = playerRootTransform;
-        _playerCameraTransform = playerCameraTransform;
         _fakeEnemyJumpScareExecutor = fakeEnemyJumpScareExecutor;
         _postProcessExecutor = postProcessExecutor;
         _soundExecutor = soundExecutor;
         _database = database;
-
-        _enableLog = enableLog;
-        _enableSelectionLog = enableSelectionLog;
-        _enableGuaranteeLog = enableGuaranteeLog;
 
         _selectionCoordinator = new SubJumpScareSelectionCoordinator(
             new SubJumpScareCommonValidator(),
@@ -57,11 +43,21 @@ public sealed class SubJumpScareService
             new SubJumpScareHistory());
 
         _eventPublisher = new GameEventPublisher();
-        _eventPublisher.SetSource(logContext);
+        _eventPublisher.SetSource(owner);
     }
 
     public void Dispose()
     {
+    }
+
+    public float DebugGlobalCooldownRemaining => _selectionCoordinator.GlobalCooldownRemaining;
+    public float DebugSoundCooldownRemaining => _selectionCoordinator.GetTypeCooldownRemaining(ESubJumpScareType.Sound);
+    public float DebugPostProcessCooldownRemaining => _selectionCoordinator.GetTypeCooldownRemaining(ESubJumpScareType.PostProcess);
+    public float DebugFakeEnemyCooldownRemaining => _selectionCoordinator.GetTypeCooldownRemaining(ESubJumpScareType.FakeEnemy);
+
+    public List<SubJumpScareItemCooldownDebugInfo> GetDebugItemCooldowns()
+    {
+        return _selectionCoordinator.GetActiveItemCooldowns();
     }
 
     public void Tick(
@@ -116,7 +112,7 @@ public sealed class SubJumpScareService
         SubJumpScareSelectionResult finalResult = ResolveSonarSelectionResult(selectedResult);
 
         if (_selectionCoordinator.FakeEnemyGuaranteePending
-            && _enableGuaranteeLog
+            && IsSubLogEnabled()
             && finalResult.IsSuccess == false)
         {
             Debug.Log("[SubJumpScare] Fake enemy placement failed. Retry will remain pending.", _logContext);
@@ -233,7 +229,11 @@ public sealed class SubJumpScareService
                 "Selected fake enemy definition was not found.");
         }
 
-        if (CanExecuteFakeEnemy(fakeEnemyDefinition) == false)
+        Transform playerRootTransform;
+        Transform playerCameraTransform;
+
+        if (CanExecuteFakeEnemy(fakeEnemyDefinition) == false
+            || TryResolveRuntimeReferences(out playerRootTransform, out playerCameraTransform) == false)
         {
             _selectionCoordinator.KeepFakeEnemyGuaranteePending();
 
@@ -242,7 +242,11 @@ public sealed class SubJumpScareService
                 "Fake enemy execution references are invalid.");
         }
 
-        FakeEnemyJumpScareExecuteRequest executeRequest = CreateFakeEnemyExecuteRequest(fakeEnemyDefinition);
+        FakeEnemyJumpScareExecuteRequest executeRequest = CreateFakeEnemyExecuteRequest(
+            fakeEnemyDefinition,
+            playerRootTransform,
+            playerCameraTransform);
+
         if (executeRequest.IsValid() == false)
         {
             _selectionCoordinator.KeepFakeEnemyGuaranteePending();
@@ -251,6 +255,12 @@ public sealed class SubJumpScareService
                 ESubJumpScareTriggerType.Sonar,
                 "Fake enemy execution request is invalid.");
         }
+
+        LogFakeEnemyExecuteRequest(
+            fakeEnemyDefinition,
+            executeRequest,
+            playerRootTransform,
+            playerCameraTransform);
 
         bool isSpawned = _fakeEnemyJumpScareExecutor.TryExecute(executeRequest, out _);
         if (isSpawned == false)
@@ -274,17 +284,19 @@ public sealed class SubJumpScareService
         }
 
         return _fakeEnemyJumpScareExecutor != null
-            && _playerRootTransform != null
-            && _playerCameraTransform != null;
+            && ResolvePlayerRootTransform() != null
+            && ResolvePlayerCameraTransform() != null;
     }
 
     private FakeEnemyJumpScareExecuteRequest CreateFakeEnemyExecuteRequest(
-        FakeEnemySubJumpScareDefinitionSO fakeEnemyDefinition)
+        FakeEnemySubJumpScareDefinitionSO fakeEnemyDefinition,
+        Transform playerRootTransform,
+        Transform playerCameraTransform)
     {
         return new FakeEnemyJumpScareExecuteRequest(
-            _playerCameraTransform.position,
-            _playerCameraTransform.forward,
-            _playerRootTransform,
+            playerCameraTransform.position,
+            playerCameraTransform.forward,
+            playerRootTransform,
             fakeEnemyDefinition.MinSpawnDistance,
             fakeEnemyDefinition.MaxSpawnDistance,
             fakeEnemyDefinition.AllowedForwardAngle,
@@ -301,19 +313,51 @@ public sealed class SubJumpScareService
         }
 
         return _soundExecutor != null
-            && _playerRootTransform != null
-            && _playerCameraTransform != null
+            && ResolvePlayerRootTransform() != null
+            && ResolvePlayerCameraTransform() != null
             && SoundManager.Instance != null;
     }
 
     private SoundJumpScareExecutionRequest CreateSoundExecuteRequest(
         SoundSubJumpScareDefinitionSO soundDefinition)
     {
+        Transform playerRootTransform;
+        Transform playerCameraTransform;
+
+        if (TryResolveRuntimeReferences(out playerRootTransform, out playerCameraTransform) == false)
+        {
+            return default;
+        }
+
         return new SoundJumpScareExecutionRequest(
             soundDefinition,
-            _playerRootTransform,
-            _playerCameraTransform,
+            playerRootTransform,
+            playerCameraTransform,
             SoundManager.Instance);
+    }
+
+    private void LogFakeEnemyExecuteRequest(
+        FakeEnemySubJumpScareDefinitionSO fakeEnemyDefinition,
+        FakeEnemyJumpScareExecuteRequest executeRequest,
+        Transform playerRootTransform,
+        Transform playerCameraTransform)
+    {
+        if (IsSubLogEnabled() == false)
+        {
+            return;
+        }
+
+        string definitionId = fakeEnemyDefinition == null ? "null" : fakeEnemyDefinition.Common.Id;
+        string definitionName = fakeEnemyDefinition == null ? "null" : fakeEnemyDefinition.Common.DisplayName;
+        Vector3 playerPosition = playerRootTransform == null ? Vector3.zero : playerRootTransform.position;
+        Vector3 cameraPosition = playerCameraTransform == null ? Vector3.zero : playerCameraTransform.position;
+        Vector3 cameraForward = playerCameraTransform == null ? Vector3.zero : playerCameraTransform.forward;
+
+        Debug.Log(
+            $"[SubJumpScare] FakeEnemy Execute Request | Id={definitionId} | Name={definitionName} | " +
+            $"PlayerPos={playerPosition} | CameraPos={cameraPosition} | CameraForward={cameraForward} | " +
+            $"MinDist={executeRequest.MinDistance} | MaxDist={executeRequest.MaxDistance} | AllowedAngle={executeRequest.AllowedForwardAngle}",
+            _logContext);
     }
 
     private void PublishRawResult(SubJumpScareSelectionResult result)
@@ -345,26 +389,73 @@ public sealed class SubJumpScareService
 
     private void LogResult(SubJumpScareContext context, SubJumpScareSelectionResult result)
     {
+        if (IsSubLogEnabled() == false)
+        {
+            return;
+        }
+
         if (result.IsSuccess)
         {
-            if (_enableSelectionLog == false)
-            {
-                return;
-            }
-
             Debug.Log(
                 $"[SubJumpScare] Selection Success | Trigger={result.TriggerType} | Type={result.Data.Type} | Intensity={result.Data.Intensity} | Tension={context.TotalTension} | Mode={context.CurrentPlayerInteractMode} | Id={result.Data.Id} | Name={result.Data.DisplayName}",
                 _logContext);
-            return;
         }
-
-        if (_enableLog == false)
+        else
         {
-            return;
+            Debug.Log(
+                $"[SubJumpScare] Selection Fail | Trigger={result.TriggerType} | Tension={context.TotalTension} | Mode={context.CurrentPlayerInteractMode} | Reason={result.FailReason}",
+                _logContext);
+        }
+    }
+
+    private bool TryResolveRuntimeReferences(
+        out Transform playerRootTransform,
+        out Transform playerCameraTransform)
+    {
+        playerRootTransform = ResolvePlayerRootTransform();
+        playerCameraTransform = ResolvePlayerCameraTransform();
+
+        return playerRootTransform != null && playerCameraTransform != null;
+    }
+
+    private Transform ResolvePlayerRootTransform()
+    {
+        if (_owner != null && _owner.PlayerRootTransform != null)
+        {
+            return _owner.PlayerRootTransform;
         }
 
-        Debug.Log(
-            $"[SubJumpScare] Selection Fail | Trigger={result.TriggerType} | Tension={context.TotalTension} | Mode={context.CurrentPlayerInteractMode} | Reason={result.FailReason}",
-            _logContext);
+        if (_playerController != null)
+        {
+            return _playerController.transform;
+        }
+
+        return null;
+    }
+
+    private Transform ResolvePlayerCameraTransform()
+    {
+        if (_owner != null && _owner.PlayerCameraTransform != null)
+        {
+            return _owner.PlayerCameraTransform;
+        }
+
+        Camera mainCamera = Camera.main;
+        if (mainCamera != null)
+        {
+            return mainCamera.transform;
+        }
+
+        return null;
+    }
+
+    private bool IsSubLogEnabled()
+    {
+        if (_owner == null)
+        {
+            return false;
+        }
+
+        return _owner.EnableSubLog;
     }
 }

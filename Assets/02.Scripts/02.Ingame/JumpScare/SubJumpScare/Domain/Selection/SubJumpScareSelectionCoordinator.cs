@@ -19,6 +19,8 @@ public class SubJumpScareSelectionCoordinator
         }
     }
 
+    public float GlobalCooldownRemaining => _cooldownState.GetRemainingGlobalCooldown();
+
     public SubJumpScareSelectionCoordinator(
         SubJumpScareCommonValidator commonValidator,
         SubJumpScareCandidateCollector candidateCollector,
@@ -130,6 +132,16 @@ public class SubJumpScareSelectionCoordinator
     public void KeepFakeEnemyGuaranteePending()
     {
         _fakeEnemyGuaranteePending = true;
+    }
+
+    public float GetTypeCooldownRemaining(ESubJumpScareType type)
+    {
+        return _cooldownState.GetRemainingTypeCooldown(type);
+    }
+
+    public List<SubJumpScareItemCooldownDebugInfo> GetActiveItemCooldowns()
+    {
+        return _cooldownState.GetActiveItemCooldowns();
     }
 
     private SubJumpScareSelectionResult TrySelectPostProcess(
