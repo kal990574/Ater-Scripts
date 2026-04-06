@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using Febucci.TextAnimatorForUnity;
 using Michsky.UI.Dark;
 using TMPro;
 using UnityEngine;
@@ -13,6 +14,9 @@ namespace _02.Scripts.AIHint.Component
         [Header("텍스트")]
         [SerializeField] private TextMeshProUGUI _titleText;
         [SerializeField] private TextMeshProUGUI _responseText;
+        
+        [Header("typing")]
+        [SerializeField] private TypewriterComponent _typewriter;
 
         [Header("설정")]
         [SerializeField] private float _hideDelayAfterTTS = 2f;
@@ -20,7 +24,7 @@ namespace _02.Scripts.AIHint.Component
         public void ShowRecording()
         {
             _responseText.text = "";
-            _titleText.text = "녹음 중...";
+            _titleText.text = "Ask Anything...";
             _modalWindow.ModalWindowIn();
         }
 
@@ -31,8 +35,8 @@ namespace _02.Scripts.AIHint.Component
 
         public void ShowResponse(string text)
         {
-            _titleText.text = "힌트";
-            _responseText.text = text;
+            _titleText.text = "???";
+            _typewriter.ShowText(text);
         }
 
         public async UniTask HideAfterDelay(float ttsClipLength)

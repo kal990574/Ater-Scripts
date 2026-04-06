@@ -14,6 +14,10 @@ public class LidarScanConfigSO : ScriptableObject
     [SerializeField] [Min(1)] private int _ringCount = 4;
     [SerializeField] [Min(1)] private int _raysPerRing = 12;
 
+    [Header("Resource")]
+    [SerializeField] private float _drainRate = 0.2f;
+    [SerializeField] private float _recoveryRate = 0.1f;
+    
     [Header("Effect")]
     [Min(0f)]
     [SerializeField] private float _drawDelay = 0.1f;
@@ -26,6 +30,8 @@ public class LidarScanConfigSO : ScriptableObject
     public float ConeAngle => _coneAngle;
     public int RingCount => _ringCount;
     public int RaysPerRing => _raysPerRing;
+    public float DrainRate => _drainRate;
+    public float RecoveryRate => _recoveryRate;
     public float DrawDelay => _drawDelay;
     public float MaxLineLength => _maxLineLength;
     

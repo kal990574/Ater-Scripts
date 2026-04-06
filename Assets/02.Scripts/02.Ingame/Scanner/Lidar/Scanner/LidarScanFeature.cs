@@ -16,6 +16,7 @@ public class LidarScanFeature : MonoBehaviour
     private GameEventPublisher _eventPublisher;
     private LidarEffect _lidarEffect;
     private LidarRaycast _lidarRay;
+    private float _energy = 1f;
 
     public ScannableObject CurrentTarget { get; private set; }
 
@@ -26,6 +27,9 @@ public class LidarScanFeature : MonoBehaviour
     public Transform Muzzle => muzzle;
     public LineRenderer LineRenderer => _lineRenderer;
     public bool IsOnScan { get; private set; }
+    public float Energy => _energy;
+    public bool HasEnergy => _energy > 0f;
+    public event Action<float> OnEnergyChanged;
 
     public event Action<ScannableObject> OnTargetFind;
     public event Action OnTargetLost;
@@ -53,10 +57,13 @@ public class LidarScanFeature : MonoBehaviour
 
         _lidarRay = new(this);
         _lidarEffect = new(this);
+
+        _energy = 1f;
     }
 
     public void ActiveScan()
     {
+        if (!HasEnergy) return;
         IsOnScan = true;
 
         _eventPublisher.TryPublish(
@@ -65,6 +72,8 @@ public class LidarScanFeature : MonoBehaviour
 
     public void UpdateScan(float deltaTime)
     {
+        if (!HasEnergy) return;
+        
         _lidarRay.Scan();
 
         ScannableObject previousTarget = CurrentTarget;
@@ -133,6 +142,29 @@ public class LidarScanFeature : MonoBehaviour
         
         _eventPublisher.TryPublish(
             context => new LidarScanStoppedRawEvent(context));
+    }
+
+    public void UpdateEnergy(float deltaTime, bool isHolding)
+    {
+        float previous = _energy;
+        if (IsOnScan)
+        {
+            _energy -= _config.DrainRate * deltaTime;
+            if (_energy <= 0f)
+            {
+                _energy = 0f;
+                StopScan();
+            }
+        }
+        else if (!isHolding)
+        {
+            _energy = Mathf.Min(1f, _energy + _config.RecoveryRate * deltaTime);
+        }
+
+        if (!Mathf.Approximately(previous, _energy))
+        {
+            OnEnergyChanged?.Invoke(_energy);
+        }
     }
     
     private ScannableObject ResolveTarget(IReadOnlyDictionary<ScannableObject, TargetHitData> hitMap, Vector3 origin, Vector3 forward)
