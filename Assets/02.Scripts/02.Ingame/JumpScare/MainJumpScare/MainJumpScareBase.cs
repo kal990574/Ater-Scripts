@@ -3,7 +3,7 @@
 public abstract class MainJumpScareBase : MonoBehaviour
 {
     [Header("Main Jump Scare")]
-    [SerializeField] private string _id;
+    [SerializeField] private MainJumpScareKeyReference _id;
     [SerializeField] private bool _canActive;
     [SerializeField] private EMainJumpScareState _state = EMainJumpScareState.Waiting;
 

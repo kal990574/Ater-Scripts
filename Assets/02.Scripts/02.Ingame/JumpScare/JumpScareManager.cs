@@ -1,18 +1,16 @@
 using Sirenix.OdinInspector;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class JumpScareManager : MonoBehaviour
 {
     private static JumpScareManager _instance;
-
     public static JumpScareManager Instance => _instance;
 
     [Header("References")]
     [SerializeField] private PlayerController _playerController;
     [SerializeField] private TensionManager _tensionManager;
-    [SerializeField] private Transform _playerRootTransform;
-    [SerializeField] private Transform _playerCameraTransform;
-
+    [SerializeField] private Camera _mainCamera;
     [Title("Sub JumpScare")]
     [Header("Executors")]
     [SerializeField] private FakeEnemyJumpScareExecutor _fakeEnemyJumpScareExecutor;
@@ -26,23 +24,48 @@ public class JumpScareManager : MonoBehaviour
     [SerializeField] private bool _usePeriodicTick = true;
     [SerializeField] private float _periodicInterval = 1f;
 
-    [Header("Runtime State")]
-    [SerializeField] private bool _isImportantVoicePlaying;
-    [SerializeField] private bool _isSonarAvailable = true;
-    [SerializeField] private bool _canPlaceFakeEnemyThisAttempt = true;
-
     [Header("Sub Debug")]
-    [SerializeField] private bool _enableLog = true;
-    [SerializeField] private bool _enableSelectionLog = true;
-    [SerializeField] private bool _enableGuaranteeLog = true;
+    [SerializeField] private bool _enableSubLog = true;
 
     [Header("Main Debug")]
-    [SerializeField] private bool _enableDebugLog = true;
+    [SerializeField] private bool _enableMainLog = true;
     [SerializeField] private bool _includeInactiveOnRegister = true;
 
     private CompositeSubscription _subscriptions;
     private MainJumpScareService _mainJumpScareService;
     private SubJumpScareService _subJumpScareService;
+
+    public bool EnableSubLog => _enableSubLog;
+    public bool EnableMainLog => _enableMainLog;
+    public bool IncludeInactiveOnRegister => _includeInactiveOnRegister;
+    public Transform PlayerRootTransform => _playerController.transform;
+    public Transform PlayerCameraTransform => _mainCamera.transform;
+
+    [ShowInInspector, ReadOnly, FoldoutGroup("Cooldown State")]
+    private float GlobalCooldownRemaining => _subJumpScareService?.DebugGlobalCooldownRemaining ?? 0f;
+
+    [ShowInInspector, ReadOnly, FoldoutGroup("Cooldown State")]
+    private float SoundTypeCooldownRemaining => _subJumpScareService?.DebugSoundCooldownRemaining ?? 0f;
+
+    [ShowInInspector, ReadOnly, FoldoutGroup("Cooldown State")]
+    private float PostProcessTypeCooldownRemaining => _subJumpScareService?.DebugPostProcessCooldownRemaining ?? 0f;
+
+    [ShowInInspector, ReadOnly, FoldoutGroup("Cooldown State")]
+    private float FakeEnemyTypeCooldownRemaining => _subJumpScareService?.DebugFakeEnemyCooldownRemaining ?? 0f;
+
+    [ShowInInspector, ReadOnly, FoldoutGroup("Cooldown State")]
+    private List<SubJumpScareItemCooldownDebugInfo> ActiveItemCooldowns
+    {
+        get
+        {
+            if (_subJumpScareService == null)
+            {
+                return new List<SubJumpScareItemCooldownDebugInfo>();
+            }
+
+            return _subJumpScareService.GetDebugItemCooldowns();
+        }
+    }
 
     private void Awake()
     {
@@ -55,20 +78,15 @@ public class JumpScareManager : MonoBehaviour
         _instance = this;
         DontDestroyOnLoad(gameObject);
 
-        _mainJumpScareService = new MainJumpScareService(this, _enableDebugLog, _includeInactiveOnRegister);
+        _mainJumpScareService = new MainJumpScareService(this);
         _subJumpScareService = new SubJumpScareService(
             this,
             _playerController,
             _tensionManager,
-            _playerRootTransform,
-            _playerCameraTransform,
             _fakeEnemyJumpScareExecutor,
             _postProcessJumpScareExecutor,
             _soundSubJumpScareExecutor,
-            _database,
-            _enableLog,
-            _enableSelectionLog,
-            _enableGuaranteeLog);
+            _database);
 
         _mainJumpScareService.RegisterSceneMainJumpScares();
 
@@ -89,10 +107,7 @@ public class JumpScareManager : MonoBehaviour
             _usePeriodicTick,
             _periodicInterval,
             _mainJumpScareService != null && _mainJumpScareService.IsAnyMainJumpScarePlaying,
-            false,
-            _isImportantVoicePlaying,
-            _isSonarAvailable,
-            _canPlaceFakeEnemyThisAttempt);
+            false);
     }
 
     private void OnDestroy()
@@ -110,10 +125,7 @@ public class JumpScareManager : MonoBehaviour
     {
         _subJumpScareService?.TrySelectSonar(
             _mainJumpScareService != null && _mainJumpScareService.IsAnyMainJumpScarePlaying,
-            false,
-            _isImportantVoicePlaying,
-            _isSonarAvailable,
-            _canPlaceFakeEnemyThisAttempt);
+            false);
     }
 
     [ContextMenu("Debug/Register Main JumpScares")]
@@ -122,9 +134,14 @@ public class JumpScareManager : MonoBehaviour
         _mainJumpScareService?.RegisterSceneMainJumpScares();
     }
 
-    public void ExecuteMainJumpScare(string id)
+    public bool TryExecuteMainJumpScare(string id)
     {
-        _mainJumpScareService?.ExecuteMainJumpScare(id);
+        if (_mainJumpScareService?.TryExecuteMainJumpScare(id) == true)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public void SetMainJumpScareCanActive(string id, bool canActive)
@@ -142,10 +159,7 @@ public class JumpScareManager : MonoBehaviour
     {
         _subJumpScareService?.TrySelectPeriodic(
             _mainJumpScareService != null && _mainJumpScareService.IsAnyMainJumpScarePlaying,
-            false,
-            _isImportantVoicePlaying,
-            _isSonarAvailable,
-            _canPlaceFakeEnemyThisAttempt);
+            false);
     }
 
     [ContextMenu("Debug/Try Select Sonar")]
@@ -153,9 +167,6 @@ public class JumpScareManager : MonoBehaviour
     {
         _subJumpScareService?.TrySelectSonar(
             _mainJumpScareService != null && _mainJumpScareService.IsAnyMainJumpScarePlaying,
-            false,
-            _isImportantVoicePlaying,
-            _isSonarAvailable,
-            _canPlaceFakeEnemyThisAttempt);
+            false);
     }
 }

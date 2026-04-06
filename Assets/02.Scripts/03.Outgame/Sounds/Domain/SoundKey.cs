@@ -1,4 +1,4 @@
-public static class SoundKey
+public class SoundKey
 {
     //BGM
     public const string BGM_TUTORIAL = "BGM_Tutorial";
