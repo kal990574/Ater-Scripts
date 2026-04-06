@@ -86,11 +86,7 @@ public class InventoryService
         _itemInstanceIds[index2] = temp;
 
         OnInventoryChanged?.Invoke();
-        if (_selectedIndex == -1)
-        {
-            Select(index2);
-        }
-        else if (_selectedIndex == index1 || _selectedIndex == index2)
+        if (_selectedIndex == index1 || _selectedIndex == index2)
         {
             OnSelectionChanged?.Invoke(_selectedIndex);
         }

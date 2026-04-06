@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class AchievementManager : MonoBehaviour
 {
+    private static AchievementManager _instance;
+    public static AchievementManager Instance => _instance;
+    
     [Header("Definition")]
     [SerializeField] private AchievementDefinitionDatabaseSO _definitionDatabase;
 
@@ -28,6 +31,17 @@ public class AchievementManager : MonoBehaviour
 
     private void Awake()
     {
+
+        if (_instance == null)
+        {
+            _instance = this;
+        }
+        else if (_instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         InitializeRepositories();
         LoadAllData();
     }
