@@ -69,10 +69,7 @@ public sealed class SubJumpScareService
         bool usePeriodicTick,
         float periodicInterval,
         bool isMainJumpScareRunning,
-        bool isInMainEndGraceTime,
-        bool isImportantVoicePlaying,
-        bool isSonarAvailable,
-        bool canPlaceFakeEnemyThisAttempt)
+        bool isInMainEndGraceTime)
     {
         if (usePeriodicTick == false)
         {
@@ -89,25 +86,16 @@ public sealed class SubJumpScareService
 
         TrySelectPeriodic(
             isMainJumpScareRunning,
-            isInMainEndGraceTime,
-            isImportantVoicePlaying,
-            isSonarAvailable,
-            canPlaceFakeEnemyThisAttempt);
+            isInMainEndGraceTime);
     }
 
     public void TrySelectPeriodic(
         bool isMainJumpScareRunning,
-        bool isInMainEndGraceTime,
-        bool isImportantVoicePlaying,
-        bool isSonarAvailable,
-        bool canPlaceFakeEnemyThisAttempt)
+        bool isInMainEndGraceTime)
     {
         SubJumpScareContext context = CreateContext(
             isMainJumpScareRunning,
-            isInMainEndGraceTime,
-            isImportantVoicePlaying,
-            isSonarAvailable,
-            canPlaceFakeEnemyThisAttempt);
+            isInMainEndGraceTime);
 
         SubJumpScareSelectionResult selectedResult = _selectionCoordinator.SelectPeriodic(_database, context);
         SubJumpScareSelectionResult finalResult = ResolvePeriodicSelectionResult(selectedResult);
@@ -118,17 +106,11 @@ public sealed class SubJumpScareService
 
     public void TrySelectSonar(
         bool isMainJumpScareRunning,
-        bool isInMainEndGraceTime,
-        bool isImportantVoicePlaying,
-        bool isSonarAvailable,
-        bool canPlaceFakeEnemyThisAttempt)
+        bool isInMainEndGraceTime)
     {
         SubJumpScareContext context = CreateContext(
             isMainJumpScareRunning,
-            isInMainEndGraceTime,
-            isImportantVoicePlaying,
-            isSonarAvailable,
-            canPlaceFakeEnemyThisAttempt);
+            isInMainEndGraceTime);
 
         SubJumpScareSelectionResult selectedResult = _selectionCoordinator.SelectSonar(_database, context);
         SubJumpScareSelectionResult finalResult = ResolveSonarSelectionResult(selectedResult);
@@ -341,10 +323,7 @@ public sealed class SubJumpScareService
 
     private SubJumpScareContext CreateContext(
         bool isMainJumpScareRunning,
-        bool isInMainEndGraceTime,
-        bool isImportantVoicePlaying,
-        bool isSonarAvailable,
-        bool canPlaceFakeEnemyThisAttempt)
+        bool isInMainEndGraceTime)
     {
         SubJumpScareContext context = new();
 
@@ -360,10 +339,6 @@ public sealed class SubJumpScareService
 
         context.IsMainJumpScareRunning = isMainJumpScareRunning;
         context.IsInMainEndGraceTime = isInMainEndGraceTime;
-        context.IsPostProcessActive = _postProcessExecutor != null && _postProcessExecutor.IsPlaying;
-        context.IsImportantVoicePlaying = isImportantVoicePlaying;
-        context.IsSonarAvailable = isSonarAvailable;
-        context.CanPlaceFakeEnemyThisAttempt = canPlaceFakeEnemyThisAttempt;
 
         return context;
     }

@@ -74,13 +74,6 @@ public class SubJumpScareSelectionCoordinator
             return SubJumpScareSelectionResult.CreateFail(ESubJumpScareTriggerType.Sonar, commonBlockReason);
         }
 
-        if (context.IsSonarAvailable == false)
-        {
-            return SubJumpScareSelectionResult.CreateFail(
-                ESubJumpScareTriggerType.Sonar,
-                "현재 소나 스캔을 사용할 수 없습니다.");
-        }
-
         if (IsBlockedPlayerModeForFakeEnemy(context.CurrentPlayerInteractMode) == true)
         {
             return SubJumpScareSelectionResult.CreateFail(
@@ -143,13 +136,6 @@ public class SubJumpScareSelectionCoordinator
         SubJumpScareDatabaseSO database,
         SubJumpScareContext context)
     {
-        if (context.IsPostProcessActive == true)
-        {
-            return SubJumpScareSelectionResult.CreateFail(
-                ESubJumpScareTriggerType.Periodic,
-                "이미 포스트 프로세스가 적용 중입니다.");
-        }
-
         if (_cooldownState.IsTypeCooldownActive(ESubJumpScareType.PostProcess) == true)
         {
             return SubJumpScareSelectionResult.CreateFail(
@@ -186,13 +172,6 @@ public class SubJumpScareSelectionCoordinator
                 "사운드 타입 쿨다운 중입니다.");
         }
 
-        if (context.IsImportantVoicePlaying == true)
-        {
-            return SubJumpScareSelectionResult.CreateFail(
-                ESubJumpScareTriggerType.Periodic,
-                "중요 음성이 재생 중입니다.");
-        }
-
         List<SoundSubJumpScareDefinitionSO> candidates =
             _candidateCollector.GetSoundCandidates(database, context, _cooldownState, _history);
 
@@ -220,13 +199,6 @@ public class SubJumpScareSelectionCoordinator
             return SubJumpScareSelectionResult.CreateFail(
                 ESubJumpScareTriggerType.Sonar,
                 "가짜적 타입 쿨다운 중입니다.");
-        }
-
-        if (context.CanPlaceFakeEnemyThisAttempt == false)
-        {
-            return SubJumpScareSelectionResult.CreateFail(
-                ESubJumpScareTriggerType.Sonar,
-                "현재 소나 방향/환경에서는 가짜적을 배치할 수 없습니다.");
         }
 
         List<FakeEnemySubJumpScareDefinitionSO> candidates =

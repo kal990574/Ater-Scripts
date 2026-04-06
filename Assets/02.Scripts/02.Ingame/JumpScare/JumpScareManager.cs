@@ -26,11 +26,6 @@ public class JumpScareManager : MonoBehaviour
     [SerializeField] private bool _usePeriodicTick = true;
     [SerializeField] private float _periodicInterval = 1f;
 
-    [Header("Runtime State")]
-    [SerializeField] private bool _isImportantVoicePlaying;
-    [SerializeField] private bool _isSonarAvailable = true;
-    [SerializeField] private bool _canPlaceFakeEnemyThisAttempt = true;
-
     [Header("Sub Debug")]
     [SerializeField] private bool _enableLog = true;
     [SerializeField] private bool _enableSelectionLog = true;
@@ -89,10 +84,7 @@ public class JumpScareManager : MonoBehaviour
             _usePeriodicTick,
             _periodicInterval,
             _mainJumpScareService != null && _mainJumpScareService.IsAnyMainJumpScarePlaying,
-            false,
-            _isImportantVoicePlaying,
-            _isSonarAvailable,
-            _canPlaceFakeEnemyThisAttempt);
+            false);
     }
 
     private void OnDestroy()
@@ -110,10 +102,7 @@ public class JumpScareManager : MonoBehaviour
     {
         _subJumpScareService?.TrySelectSonar(
             _mainJumpScareService != null && _mainJumpScareService.IsAnyMainJumpScarePlaying,
-            false,
-            _isImportantVoicePlaying,
-            _isSonarAvailable,
-            _canPlaceFakeEnemyThisAttempt);
+            false);
     }
 
     [ContextMenu("Debug/Register Main JumpScares")]
@@ -142,10 +131,7 @@ public class JumpScareManager : MonoBehaviour
     {
         _subJumpScareService?.TrySelectPeriodic(
             _mainJumpScareService != null && _mainJumpScareService.IsAnyMainJumpScarePlaying,
-            false,
-            _isImportantVoicePlaying,
-            _isSonarAvailable,
-            _canPlaceFakeEnemyThisAttempt);
+            false);
     }
 
     [ContextMenu("Debug/Try Select Sonar")]
@@ -153,9 +139,6 @@ public class JumpScareManager : MonoBehaviour
     {
         _subJumpScareService?.TrySelectSonar(
             _mainJumpScareService != null && _mainJumpScareService.IsAnyMainJumpScarePlaying,
-            false,
-            _isImportantVoicePlaying,
-            _isSonarAvailable,
-            _canPlaceFakeEnemyThisAttempt);
+            false);
     }
 }
