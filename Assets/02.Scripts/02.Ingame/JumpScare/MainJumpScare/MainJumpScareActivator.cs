@@ -42,6 +42,11 @@ public class MainJumpScareActivator : MonoBehaviour
         }
     }
 
+    public void Activate()
+    {
+        TryActivate();
+    }
+    
     protected virtual bool TryActivate()
     {
         if (JumpScareManager.Instance == null)
