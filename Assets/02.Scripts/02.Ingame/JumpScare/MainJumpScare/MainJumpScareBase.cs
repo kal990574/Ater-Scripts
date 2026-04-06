@@ -3,11 +3,11 @@
 public abstract class MainJumpScareBase : MonoBehaviour
 {
     [Header("Main Jump Scare")]
-    [SerializeField] private string _id;
+    [SerializeField] private MainJumpScareKeyReference _id;
     [SerializeField] private bool _canActive;
     [SerializeField] private EMainJumpScareState _state = EMainJumpScareState.Waiting;
 
-    public string Id => _id;
+    public string Id => _id.Value;
     public bool CanActive => _canActive;
     public EMainJumpScareState State => _state;
 
@@ -31,7 +31,7 @@ public abstract class MainJumpScareBase : MonoBehaviour
 
     public void Execute()
     {
-        if (string.IsNullOrWhiteSpace(_id) == true)
+        if (string.IsNullOrWhiteSpace(_id.Value) == true)
         {
             Debug.LogError($"{name} 메인 점프스케어의 ID가 비어 있어 실행할 수 없습니다.", this);
             return;
@@ -77,7 +77,7 @@ public abstract class MainJumpScareBase : MonoBehaviour
             return;
         }
 
-        JumpScareManager.Instance.NotifyMainJumpScareFinished(_id);
+        JumpScareManager.Instance.NotifyMainJumpScareFinished(_id.Value);
     }
 
 #if UNITY_EDITOR

@@ -1,33 +1,33 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using System;
 
-public static class SoundKeyDropdown
+public class MainJumpScareKeyDropDown
 {
     public static IEnumerable<string> GetValues()
     {
-        return StaticStringDropdown<SoundKey>.GetValues();
+        return StaticStringDropdown<MainJumpScareKey>.GetValues();
     }
 
     public static bool Contains(string value)
     {
-        return StaticStringDropdown<SoundKey>.Contains(value);
+        return StaticStringDropdown<MainJumpScareKey>.Contains(value);
     }
 
     public static IEnumerable<ValueDropdownItem<string>> GetItems()
     {
-        return StaticStringDropdown<SoundKey>.GetItems();
+        return StaticStringDropdown<MainJumpScareKey>.GetItems();
     }
 }
 
 [Serializable]
-public struct SoundKeyReference
+public struct MainJumpScareKeyReference
 {
     [ValueDropdown("@SoundKeyDropdown.GetItems()")]
     public string Value;
 
     public bool IsEmpty => string.IsNullOrWhiteSpace(Value);
-    public bool IsValid => SoundKeyDropdown.Contains(Value);
+    public bool IsValid => MainJumpScareKeyDropDown.Contains(Value);
 
     public override string ToString()
     {

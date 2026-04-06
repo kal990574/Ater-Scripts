@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using System.Reflection;
 using Sirenix.OdinInspector;
 
-public static class SoundKeyDropdown
+public static class StaticStringDropdown<T> where T : class
 {
     public static IEnumerable<string> GetValues()
     {
-        FieldInfo[] fields = typeof(SoundKey).GetFields(BindingFlags.Public | BindingFlags.Static);
+        FieldInfo[] fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static);
 
         foreach (FieldInfo field in fields)
         {
@@ -39,7 +39,7 @@ public static class SoundKeyDropdown
 
     public static IEnumerable<ValueDropdownItem<string>> GetItems()
     {
-        FieldInfo[] fields = typeof(SoundKey).GetFields(BindingFlags.Public | BindingFlags.Static);
+        FieldInfo[] fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static);
 
         foreach (FieldInfo field in fields)
         {
