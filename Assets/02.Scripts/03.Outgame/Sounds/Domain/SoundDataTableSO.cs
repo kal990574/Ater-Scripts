@@ -6,7 +6,7 @@ public class SoundDataTableSO : ScriptableObject
 {
     [SerializeField] private List<SoundData> _soundData;
 
-    private Dictionary<string, AudioClip> _soundMap;
+    private Dictionary<string, SoundData> _soundMap;
 
     private void OnEnable()
     {
@@ -15,31 +15,44 @@ public class SoundDataTableSO : ScriptableObject
 
     public AudioClip GetClip(string key)
     {
+        SoundData soundData = GetSoundData(key);
+        return soundData != null ? soundData.AudioClip : null;
+    }
+
+    public SoundData GetSoundData(string key)
+    {
         if (_soundMap == null)
         {
             BuildMap();
         }
 
-        if (_soundMap.TryGetValue(key, out AudioClip clip))
+        if (_soundMap.TryGetValue(key, out SoundData soundData))
         {
-            return clip;
+            return soundData;
         }
 
-        Debug.LogWarning($"[SoundDatabase] 등록되지 않은 SoundKey: {key}");
+        Debug.LogWarning($"[SoundDatabase] Unregistered SoundKey: {key}");
         return null;
     }
+
     private void BuildMap()
     {
-        _soundMap = new Dictionary<string, AudioClip>();
+        _soundMap = new Dictionary<string, SoundData>();
 
         foreach (SoundData data in _soundData)
         {
-            if (_soundMap.ContainsKey(data.Key))
+            if (data == null || string.IsNullOrWhiteSpace(data.Key))
             {
-                Debug.LogWarning($"[SoundDatabase] 중복된 SoundKey: {data.Key}");
                 continue;
             }
-            _soundMap[data.Key] = data.AudioClip;
+
+            if (_soundMap.ContainsKey(data.Key))
+            {
+                Debug.LogWarning($"[SoundDatabase] Duplicated SoundKey: {data.Key}");
+                continue;
+            }
+
+            _soundMap[data.Key] = data;
         }
     }
 }

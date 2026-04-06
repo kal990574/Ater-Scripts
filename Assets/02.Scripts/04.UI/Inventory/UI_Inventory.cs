@@ -56,6 +56,10 @@ public class UI_Inventory : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (InventoryManager.Instance == null)
+        {
+            return;
+        }
         InventoryManager.Instance.OnInventoryToggled -= Show;
     }
 

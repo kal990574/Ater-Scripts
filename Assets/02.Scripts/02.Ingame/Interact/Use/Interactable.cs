@@ -1,33 +1,53 @@
 using System;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public abstract class Interactable : DetectableObject, IInteractObject, INeedRuntimeData
+public abstract class Interactable : DetectableObject, IRuntimeInteractObject, IRuntimeDataConsumer
 {
     [SerializeField] protected bool _isInteractActive;
     private IRuntimeView _instance;
+    protected ScannableObject _scannableObject;
 
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
-    public override bool CanDetect => _isDetectable && _isInteractActive;
+    public bool IsInteractActive => _isInteractActive && IsScanRequirementSatisfied() && IsAdditionalInteractRequirementSatisfied();
+    public override bool CanDetect => _isDetectable && IsInteractActive;
+    protected IRuntimeView RuntimeView => _instance;
 
     public event Action OnInteract;
 
     [Header("Scene Event")]
-    public UnityEvent InteractEvent;
-
+    [SerializeField] protected UnityEvent _onInteractionSuccess;
+    [SerializeField] protected UnityEvent _onInteractionFailed;
     private void Awake()
     {
         if (TryGetComponent(out IRuntimeView instance))
         {
             _instance = instance;
         }
+
+        CacheScannableObject();
+        SubscribeScannableEvents();
+        OnAwake();
+    }
+
+    private void OnDestroy()
+    {
+        OnBeforeDestroy();
+        UnsubscribeScannableEvents();
     }
 
 
-    public abstract void Interact(UseContext context);
+    public abstract void Interact(InteractionContext context);
+
+    protected virtual void OnAwake()
+    {
+    }
+
+    protected virtual void OnBeforeDestroy()
+    {
+    }
 
     private void SetActivate()
     {
@@ -42,10 +62,7 @@ public abstract class Interactable : DetectableObject, IInteractObject, INeedRun
     public void SetActivate(bool active)
     {
         _isInteractActive = active;
-        if (!_isInteractActive && _isOnDetected)
-        {
-            OnDetectExit();
-        }
+        RefreshInteractAvailability();
     }
 
     public void SetRuntimeData(IRuntimeView runtimeView)
@@ -56,6 +73,109 @@ public abstract class Interactable : DetectableObject, IInteractObject, INeedRun
     protected void OnInteractActivate()
     {
         OnInteract?.Invoke();
-        InteractEvent?.Invoke();
+        _onInteractionSuccess?.Invoke();
+    }
+
+    protected void RefreshRuntimeView()
+    {
+        _instance?.RefreshView();
+    }
+
+    protected T GetComponentCached<T>(ref T field) where T : Component
+    {
+        if (field == null)
+        {
+            field = GetComponent<T>();
+        }
+
+        return field;
+    }
+
+    protected T GetComponentInChildrenCached<T>(ref T field) where T : Component
+    {
+        if (field == null)
+        {
+            field = GetComponentInChildren<T>();
+        }
+
+        return field;
+    }
+
+    protected T GetComponentInParentCached<T>(ref T field) where T : Component
+    {
+        if (field == null)
+        {
+            field = GetComponentInParent<T>();
+        }
+
+        return field;
+    }
+
+    protected virtual bool IsAdditionalInteractRequirementSatisfied()
+    {
+        return true;
+    }
+
+    protected void RefreshInteractAvailability()
+    {
+        if (!IsInteractActive && _isOnDetected)
+        {
+            OnDetectExit();
+        }
+    }
+
+    private bool IsScanRequirementSatisfied()
+    {
+        if (_scannableObject == null)
+        {
+            return true;
+        }
+
+        return _scannableObject.IsProgressComplete;
+    }
+
+    private void CacheScannableObject()
+    {
+        if (_scannableObject != null)
+        {
+            return;
+        }
+
+        _scannableObject = GetComponent<ScannableObject>();
+        if (_scannableObject == null)
+        {
+            _scannableObject = GetComponentInParent<ScannableObject>();
+        }
+
+        if (_scannableObject == null)
+        {
+            _scannableObject = GetComponentInChildren<ScannableObject>();
+        }
+    }
+
+    private void SubscribeScannableEvents()
+    {
+        if (_scannableObject == null)
+        {
+            return;
+        }
+
+        _scannableObject.OnScanComplete -= HandleScanComplete;
+        _scannableObject.OnScanComplete += HandleScanComplete;
+    }
+
+    private void UnsubscribeScannableEvents()
+    {
+        if (_scannableObject == null)
+        {
+            return;
+        }
+
+        _scannableObject.OnScanComplete -= HandleScanComplete;
+    }
+
+    private void HandleScanComplete()
+    {
+        RefreshInteractAvailability();
     }
 }

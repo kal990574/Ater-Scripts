@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class PadLockController : MonoBehaviour
+public class PadLockController : MonoBehaviour, IPlayerPuzzleController
 {
     [Header("Padlock Code")]
     [SerializeField] private string _correctCode = "1111";
@@ -16,6 +16,7 @@ public class PadLockController : MonoBehaviour
     [Header("State")]
     [SerializeField] private bool _blockOpenAfterSuccess = true;
     [SerializeField] private GameObject _lockVisualToDisable;
+    [SerializeField] private LockedDoorInteractable _doorToUnlock;
 
     [Header("Puzzle Events")]
     [SerializeField] private UnityEvent _successEvent;
@@ -24,6 +25,9 @@ public class PadLockController : MonoBehaviour
     private PadLockPuzzleInstance _activeInstance;
     private bool _isSolved;
     private PlayerController _playerController;
+
+    public bool IsSolved => _isSolved;
+    public bool HasActivePuzzle => _activeInstance != null;
 
     [ContextMenu("On")]
     public void TryOpen()
@@ -90,6 +94,7 @@ public class PadLockController : MonoBehaviour
 
         _isSolved = true;
         _successEvent?.Invoke();
+        _doorToUnlock?.Unlock();
 
         if (_lockVisualToDisable != null)
         {

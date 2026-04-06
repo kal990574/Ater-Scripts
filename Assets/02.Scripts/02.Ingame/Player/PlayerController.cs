@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     private readonly Dictionary<Type, PlayerAbility> _abilities = new();
     private IPlayerInput _input;
     private EPlayerInteractMode _lastGameplayMode = EPlayerInteractMode.Scan;
-    private PadLockController _activePadLockController;
+    private IPlayerPuzzleController _activePuzzleController;
 
     public PlayerConfigSO Config => _playerConfig;
     public IPlayerInput Input => _input;
@@ -133,41 +133,41 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         float scroll = Input.ScrollInput;
         if(!Mathf.Approximately(scroll, 0f))
         {
-            SetActionMode(EPlayerInteractMode.Item);
+            SetInteractMode(EPlayerInteractMode.Item);
             int direction = scroll > 0f ? 1 : -1;
-            GetAbility<PlayerInventoryAbility>().CycleHandItem(direction);
+            GetAbility<PlayerHandAbility>().CycleHandItem(direction);
         }
     }
 
     private void HandleItemModeInput()
     {
-        PlayerInventoryAbility inventoryAbility = GetAbility<PlayerInventoryAbility>();
+        PlayerHandAbility handAbility = GetAbility<PlayerHandAbility>();
         if (_input.LmbPressInput)
         {
-            inventoryAbility.BeginReleaseHandItem();
+            handAbility.BeginReleaseHandItem();
         }
 
         if (_input.LmbHoldInput)
         {
-            inventoryAbility.ChargeReleaseHandItem(Time.deltaTime);
+            handAbility.ChargeReleaseHandItem(Time.deltaTime);
         }
 
         if (_input.LmbReleaseInput)
         {
-            inventoryAbility.ReleaseHandItem();
+            handAbility.ReleaseHandItem();
         }
     }
 
     private void SwitchToScanMode()
     {
-        GetAbility<PlayerInventoryAbility>().ClearHandItem();
-        SetActionMode(EPlayerInteractMode.Scan);
+        GetAbility<PlayerHandAbility>().ClearHandItem();
+        SetInteractMode(EPlayerInteractMode.Scan);
     }
 
     private void ToggleInventoryUI()
     {
         bool wasInUIMode = _interactMode == EPlayerInteractMode.UI;
-        GetAbility<PlayerInventoryAbility>().ToggleInventory();
+        GetAbility<PlayerHandAbility>().ToggleInventory();
 
         if (wasInUIMode)
         {
@@ -180,8 +180,8 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 
     private void SwitchToItemMode(int itemSlotIndex)
     {
-        SetActionMode(EPlayerInteractMode.Item);
-        GetAbility<PlayerInventoryAbility>().TryPickUpItem(itemSlotIndex);
+        SetInteractMode(EPlayerInteractMode.Item);
+        GetAbility<PlayerHandAbility>().TryPickUpItem(itemSlotIndex);
     }
 
     private void ScanModeInput()
@@ -232,7 +232,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         return null;
     }
 
-    public void SetActionMode(EPlayerInteractMode mode)
+    public void SetInteractMode(EPlayerInteractMode mode)
     {
         if (_interactMode == mode)
         {
@@ -251,38 +251,38 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 
     public void EnterUIMode()
     {
-        SetActionMode(EPlayerInteractMode.UI);
+        SetInteractMode(EPlayerInteractMode.UI);
     }
 
     public void ExitUIMode()
     {
-        SetActionMode(_lastGameplayMode);
+        SetInteractMode(_lastGameplayMode);
     }
 
     public void EnterPuzzleMode()
     {
-        SetActionMode(EPlayerInteractMode.Puzzle);
+        SetInteractMode(EPlayerInteractMode.Puzzle);
     }
 
     public void ExitPuzzleMode()
     {
-        SetActionMode(_lastGameplayMode);
+        SetInteractMode(_lastGameplayMode);
     }
 
-    public void EnterPuzzleMode(PadLockController padLockController)
+    public void EnterPuzzleMode(IPlayerPuzzleController puzzleController)
     {
-        _activePadLockController = padLockController;
+        _activePuzzleController = puzzleController;
         EnterPuzzleMode();
     }
 
-    public void ExitPuzzleMode(PadLockController padLockController)
+    public void ExitPuzzleMode(IPlayerPuzzleController puzzleController)
     {
-        if (_activePadLockController != null && _activePadLockController != padLockController)
+        if (_activePuzzleController != null && _activePuzzleController != puzzleController)
         {
             return;
         }
 
-        _activePadLockController = null;
+        _activePuzzleController = null;
         ExitPuzzleMode();
     }
 
@@ -304,12 +304,12 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     {
         if (_input.ConfirmInput)
         {
-            _activePadLockController?.ConfirmActivePuzzle();
+            _activePuzzleController?.ConfirmActivePuzzle();
         }
 
         if (_input.CancelInput)
         {
-            _activePadLockController?.CancelActivePuzzle();
+            _activePuzzleController?.CancelActivePuzzle();
         }
     }
 

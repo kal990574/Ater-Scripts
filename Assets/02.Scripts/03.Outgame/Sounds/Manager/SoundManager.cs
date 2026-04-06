@@ -21,6 +21,7 @@ public class SoundManager : MonoBehaviour, ISoundService
             Destroy(gameObject);
             return;
         }
+
         _instance = this;
     }
 
@@ -34,41 +35,47 @@ public class SoundManager : MonoBehaviour, ISoundService
 
     public void PlayBGM(string key, float fadeTime = 1f)
     {
-        AudioClip clip = GetClip(key);
-        if (clip == null) return;
-        _bgmController.Play(clip, fadeTime);
+        SoundData soundData = GetSoundData(key);
+        if (soundData == null || soundData.AudioClip == null) return;
+        _bgmController.Play(soundData.AudioClip, fadeTime);
     }
+
     public void StopBGM(float fadeTime = 1f)
     {
         _bgmController.Stop(fadeTime);
     }
+
     public void PlaySFX(string key, Vector3 position, float volume = 1f)
     {
-        AudioClip clip = GetClip(key);
-        if (clip == null) return;
-        _sfxController.PlaySFX(clip, position, volume);
+        SoundData soundData = GetSoundData(key);
+        if (soundData == null || soundData.AudioClip == null) return;
+        _sfxController.PlaySFX(soundData, position, volume);
     }
+
     public void PlaySFX2D(string key, float volume = 1f)
     {
-        AudioClip clip = GetClip(key);
-        if (clip == null) return;
-        _sfxController.PlaySFX2D(clip, volume);
+        SoundData soundData = GetSoundData(key);
+        if (soundData == null || soundData.AudioClip == null) return;
+        _sfxController.PlaySFX2D(soundData, volume);
     }
+
     public void PlayStinger(string key, float volume = 1f)
     {
-        AudioClip clip = GetClip(key);
-        if (clip == null) return;
-        _sfxController.PlayStinger(clip, volume);
+        SoundData soundData = GetSoundData(key);
+        if (soundData == null || soundData.AudioClip == null) return;
+        _sfxController.PlayStinger(soundData, volume);
     }
 
     public void SetMasterVolume(float volume)
     {
         _mixerController.SetMasterVolume(volume);
     }
+
     public void SetBGMVolume(float volume)
     {
         _mixerController.SetBGMVolume(volume);
     }
+
     public void SetSFXVolume(float volume)
     {
         _mixerController.SetSFXVolume(volume);
@@ -85,15 +92,16 @@ public class SoundManager : MonoBehaviour, ISoundService
         _sfxController.PauseSFX();
         _sfxController.PauseStinger();
     }
+
     public void ResumeAll()
     {
         _bgmController.Resume();
         _sfxController.ResumeSFX();
         _sfxController.ResumeStinger();
     }
-    private AudioClip GetClip(string key)
-    {
-        return _soundDataTableSO.GetClip(key);
-    }
 
+    private SoundData GetSoundData(string key)
+    {
+        return _soundDataTableSO.GetSoundData(key);
+    }
 }

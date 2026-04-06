@@ -11,13 +11,13 @@ public class PlayerInteractAbility : PlayerAbility
             return;
         }
         
-        if (!target.Transform.TryGetComponent(out IInteractObject interactableObject))
+        if (!target.Transform.TryGetComponent(out IRuntimeInteractObject interactableObject))
         {
             Debug.Log("[PlayerInteractAbility] :해당 대상은 상호작용 가능하지 않음");
             return;
         }
 
-        UseContext context = UseContext.For(_owner.gameObject, target.Transform.gameObject);
+        InteractionContext context = InteractionContext.For(_owner, target.Transform.gameObject);
         interactableObject.Interact(context);
     }
 }
