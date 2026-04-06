@@ -66,6 +66,7 @@ public class UI_Inventory : MonoBehaviour
     public void Refresh()
     {
         _uiInventoryContainer.Refresh(InventoryManager.Instance.ReadonlyPlayerInventoryInstanceIds);
+        ApplySelection(InventoryManager.Instance.SelectedIndex, true);
     }
 
     private void HandleSlotClicked(int index)
@@ -80,7 +81,17 @@ public class UI_Inventory : MonoBehaviour
 
     private void HandleSelectionChanged(int index)
     {
-        if (_selectedIndex == index)
+        ApplySelection(index, false);
+    }
+
+    private void Show(bool isOn)
+    {
+        gameObject.SetActive(isOn);
+    }
+
+    private void ApplySelection(int index, bool forceRefresh)
+    {
+        if (forceRefresh == false && _selectedIndex == index)
         {
             return;
         }
@@ -96,10 +107,5 @@ public class UI_Inventory : MonoBehaviour
         }
 
         _uiInventoryItemViewer.ShowItem(instanceId);
-    }
-
-    private void Show(bool isOn)
-    {
-        gameObject.SetActive(isOn);
     }
 }
