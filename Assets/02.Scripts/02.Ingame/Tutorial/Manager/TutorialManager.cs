@@ -15,7 +15,7 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
 
         [Header("References")]
         [SerializeField] private PlayerController _playerController;
-        [SerializeField] private PlayerHandAbility playerHandAbility;
+        [SerializeField] private PlayerHandAbility _playerHandAbility;
         [SerializeField] private ExamineInteraction _examineInteraction;
 
         private IPlayerInput _playerInput;
@@ -35,9 +35,9 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
                 _playerInput = _playerController.Input;
             }
 
-            if (playerHandAbility == null)
+            if (_playerHandAbility == null)
             {
-                playerHandAbility = _playerController.GetAbility<PlayerHandAbility>();
+                _playerHandAbility = _playerController.GetAbility<PlayerHandAbility>();
             }
 
             GameEventHub hub = GameEventHub.Instance;
@@ -52,12 +52,11 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
             {
                 InventoryManager.Instance.OnInventoryToggled += OnInventoryToggled;
                 InventoryManager.Instance.OnSelectionChanged += OnSelectionChanged;
-                InventoryManager.Instance.OnInventoryItemChanged += OnInventoryItemChanged;
             }
 
-            if (playerHandAbility != null)
+            if (_playerHandAbility != null)
             {
-                playerHandAbility.OnHandSlotChanged += OnHandSlotChanged;
+                _playerHandAbility.OnHandSlotChanged += OnHandSlotChanged;
             }
 
             if (_playerController != null)
@@ -88,12 +87,11 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
             {
                 InventoryManager.Instance.OnInventoryToggled -= OnInventoryToggled;
                 InventoryManager.Instance.OnSelectionChanged -= OnSelectionChanged;
-                InventoryManager.Instance.OnInventoryItemChanged -= OnInventoryItemChanged;
             }
 
-            if (playerHandAbility != null)
+            if (_playerHandAbility != null)
             {
-                playerHandAbility.OnHandSlotChanged -= OnHandSlotChanged;
+                _playerHandAbility.OnHandSlotChanged -= OnHandSlotChanged;
             }
 
             if (_playerController != null)
@@ -137,18 +135,6 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
             if (index >= 0)
             {
                 TryDismiss(TutorialStepId.InspectNote);
-            }
-        }
-
-        private void OnInventoryItemChanged()
-        {
-            if (_currentStep == TutorialStepId.FindKey)
-            {
-                TryDismiss(TutorialStepId.FindKey);
-            }
-            else if (_currentStep == TutorialStepId.FindNote)
-            {
-                TryDismiss(TutorialStepId.FindNote);
             }
         }
 
