@@ -43,7 +43,6 @@ public class MainJumpScareTriggerZone_Once : MainJumpScareActivator
         }
 
         _hasTriggered = true;
-
         if (_enableLog == true)
         {
             Debug.Log($"[{name}] 1회성 메인 점프스케어 트리거가 소모되었습니다.", this);

@@ -39,7 +39,7 @@ public class SoundSFXEmitter : MonoBehaviour
             return;
         }
 
-        soundService.PlaySFX(_soundKey.Value, ResolvePosition(), _volume);
+        soundService.PlaySFX(_soundKey, ResolvePosition(), _volume);
     }
 
     public void PlayAtSelf()
@@ -69,7 +69,7 @@ public class SoundSFXEmitter : MonoBehaviour
             return;
         }
 
-        soundService.PlaySFX(_soundKey.Value, position, _volume);
+        soundService.PlaySFX(_soundKey, position, _volume);
     }
 
     public void SetTargetTransform(Transform targetTransform)
@@ -115,7 +115,7 @@ public class SoundSFXEmitter : MonoBehaviour
 
         if (_soundKey.IsValid == false)
         {
-            Debug.LogWarning($"[{nameof(SoundSFXEmitter)}] Broken sound key '{_soundKey.Value}'. {BuildDebugContext()}", this);
+            Debug.LogWarning($"[{nameof(SoundSFXEmitter)}] Broken sound key '{_soundKey}'. {BuildDebugContext()}", this);
             return false;
         }
 

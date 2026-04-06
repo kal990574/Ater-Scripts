@@ -23,14 +23,19 @@ public class MainJumpScareKeyDropDown
 [Serializable]
 public struct MainJumpScareKeyReference
 {
-    [ValueDropdown("@SoundKeyDropdown.GetItems()")]
+    [ValueDropdown("@MainJumpScareKeyDropDown.GetItems()")]
     public string Value;
-
+    
     public bool IsEmpty => string.IsNullOrWhiteSpace(Value);
     public bool IsValid => MainJumpScareKeyDropDown.Contains(Value);
 
     public override string ToString()
     {
         return Value;
+    }
+    
+    public static implicit operator string(MainJumpScareKeyReference reference)
+    {
+        return reference.Value;
     }
 }

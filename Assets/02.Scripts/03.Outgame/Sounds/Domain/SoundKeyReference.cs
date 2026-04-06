@@ -33,4 +33,9 @@ public struct SoundKeyReference
     {
         return Value;
     }
+    
+    public static implicit operator string(SoundKeyReference reference)
+    {
+        return reference.Value;
+    }
 }

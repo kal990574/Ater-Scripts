@@ -46,18 +46,18 @@ public sealed class MainJumpScareService
         }
     }
 
-    public void ExecuteMainJumpScare(string id)
+    public bool TryExecuteMainJumpScare(string id)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
             Debug.LogError("[MainJumpScareService] Main jump scare id is required.", _logContext);
-            return;
+            return false;
         }
 
         if (_mainJumpScaresById.TryGetValue(id, out MainJumpScareBase mainJumpScare) == false)
         {
             Debug.LogError($"[MainJumpScareService] Main jump scare [{id}] was not found.", _logContext);
-            return;
+            return false;
         }
 
         if (mainJumpScare.CanActive == false)
@@ -67,7 +67,7 @@ public sealed class MainJumpScareService
                 Debug.LogWarning($"[MainJumpScareService] Main jump scare [{id}] is not active.", _logContext);
             }
 
-            return;
+            return false;
         }
 
         if (mainJumpScare.State == EMainJumpScareState.Playing)
@@ -77,7 +77,7 @@ public sealed class MainJumpScareService
                 Debug.LogWarning($"[MainJumpScareService] Main jump scare [{id}] is already playing.", _logContext);
             }
 
-            return;
+            return false;
         }
 
         if (mainJumpScare.State == EMainJumpScareState.Finished)
@@ -87,7 +87,7 @@ public sealed class MainJumpScareService
                 Debug.LogWarning($"[MainJumpScareService] Main jump scare [{id}] is already finished.", _logContext);
             }
 
-            return;
+            return false;
         }
 
         _playingMainJumpScareIds.Add(id);
@@ -98,6 +98,7 @@ public sealed class MainJumpScareService
         }
 
         mainJumpScare.Execute();
+        return true;
     }
 
     public void SetMainJumpScareCanActive(string id, bool canActive)

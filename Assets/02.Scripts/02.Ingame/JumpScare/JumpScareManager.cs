@@ -134,9 +134,14 @@ public class JumpScareManager : MonoBehaviour
         _mainJumpScareService?.RegisterSceneMainJumpScares();
     }
 
-    public void ExecuteMainJumpScare(string id)
+    public bool TryExecuteMainJumpScare(string id)
     {
-        _mainJumpScareService?.ExecuteMainJumpScare(id);
+        if (_mainJumpScareService?.TryExecuteMainJumpScare(id) == true)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public void SetMainJumpScareCanActive(string id, bool canActive)

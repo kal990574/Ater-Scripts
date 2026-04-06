@@ -49,12 +49,16 @@ public class MainJumpScareActivator : MonoBehaviour
             Debug.LogError("JumpScareManager.Instance 가 없어 메인 점프스케어를 실행할 수 없습니다.", this);
             return false;
         }
-
-        JumpScareManager.Instance.ExecuteMainJumpScare(_mainJumpScareId.Value);
-
+        
         if (_enableLog == true)
         {
             Debug.Log($"[{name}] 메인 점프스케어 [{_mainJumpScareId}] 실행 요청.", this);
+        }
+        
+        if(JumpScareManager.Instance.TryExecuteMainJumpScare(_mainJumpScareId.Value) == false)
+        {
+            Debug.Log($"[{name}] 메인 점프스케어 [{_mainJumpScareId}] 실패.", this);
+            return false;
         }
 
         return true;
