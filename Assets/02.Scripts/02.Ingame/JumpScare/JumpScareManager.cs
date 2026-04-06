@@ -16,8 +16,9 @@ public class JumpScareManager : MonoBehaviour
     [Title("Sub JumpScare")]
     [Header("Executors")]
     [SerializeField] private FakeEnemyJumpScareExecutor _fakeEnemyJumpScareExecutor;
-    [SerializeField] private PostProcessSubJumpScareExecutor _postProcessExecutor;
-
+    [SerializeField] private PostProcessSubJumpScareExecutor _postProcessJumpScareExecutor;
+    [SerializeField] private SoundSubJumpScareExecutor _soundSubJumpScareExecutor;
+    
     [Header("Data")]
     [SerializeField] private SubJumpScareDatabaseSO _database;
 
@@ -62,7 +63,8 @@ public class JumpScareManager : MonoBehaviour
             _playerRootTransform,
             _playerCameraTransform,
             _fakeEnemyJumpScareExecutor,
-            _postProcessExecutor,
+            _postProcessJumpScareExecutor,
+            _soundSubJumpScareExecutor,
             _database,
             _enableLog,
             _enableSelectionLog,

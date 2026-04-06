@@ -13,18 +13,11 @@ public class SubJumpScareDatabaseSO : ScriptableObject
     [Header("Fake Enemy Definitions")]
     public List<FakeEnemySubJumpScareDefinitionSO> FakeEnemyDefinitions = new List<FakeEnemySubJumpScareDefinitionSO>();
 
-    // =========================
-    // Runtime Cache
-    // =========================
-
+    private Dictionary<string, SoundSubJumpScareDefinitionSO> _soundDict;
     private Dictionary<string, FakeEnemySubJumpScareDefinitionSO> _fakeEnemyDict;
     private Dictionary<string, PostProcessSubJumpScareDefinitionSO> _postProcessDict;
 
     private bool _isCacheBuilt;
-
-    // =========================
-    // Cache Build
-    // =========================
 
     private void EnsureCache()
     {
@@ -38,10 +31,31 @@ public class SubJumpScareDatabaseSO : ScriptableObject
 
     private void BuildCache()
     {
+        _soundDict = new Dictionary<string, SoundSubJumpScareDefinitionSO>();
         _fakeEnemyDict = new Dictionary<string, FakeEnemySubJumpScareDefinitionSO>();
         _postProcessDict = new Dictionary<string, PostProcessSubJumpScareDefinitionSO>();
 
-        // Fake Enemy
+        for (int i = 0; i < SoundDefinitions.Count; i++)
+        {
+            SoundSubJumpScareDefinitionSO current = SoundDefinitions[i];
+
+            if (IsValid(current) == false)
+            {
+                continue;
+            }
+
+            string id = current.Common.Id;
+
+            if (_soundDict.ContainsKey(id) == false)
+            {
+                _soundDict.Add(id, current);
+            }
+            else
+            {
+                Debug.LogWarning($"[SubJumpScareDatabase] 중복 Sound ID 발견: {id}", this);
+            }
+        }
+
         for (int i = 0; i < FakeEnemyDefinitions.Count; i++)
         {
             FakeEnemySubJumpScareDefinitionSO current = FakeEnemyDefinitions[i];
@@ -63,7 +77,6 @@ public class SubJumpScareDatabaseSO : ScriptableObject
             }
         }
 
-        // Post Process
         for (int i = 0; i < PostProcessDefinitions.Count; i++)
         {
             PostProcessSubJumpScareDefinitionSO current = PostProcessDefinitions[i];
@@ -98,27 +111,23 @@ public class SubJumpScareDatabaseSO : ScriptableObject
         return definition.IsValid();
     }
 
-    // =========================
-    // Public API
-    // =========================
+    public bool TryGetSoundDefinition(string id, out SoundSubJumpScareDefinitionSO definition)
+    {
+        EnsureCache();
+        return _soundDict.TryGetValue(id, out definition);
+    }
 
     public bool TryGetFakeEnemyDefinition(string id, out FakeEnemySubJumpScareDefinitionSO definition)
     {
         EnsureCache();
-
         return _fakeEnemyDict.TryGetValue(id, out definition);
     }
 
     public bool TryGetPostProcessDefinition(string id, out PostProcessSubJumpScareDefinitionSO definition)
     {
         EnsureCache();
-
         return _postProcessDict.TryGetValue(id, out definition);
     }
-
-    // =========================
-    // Editor 대응
-    // =========================
 
 #if UNITY_EDITOR
     private void OnValidate()

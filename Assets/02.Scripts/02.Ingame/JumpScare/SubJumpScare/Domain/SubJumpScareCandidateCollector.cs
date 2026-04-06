@@ -90,7 +90,7 @@ public class SubJumpScareCandidateCollector
                 continue;
             }
 
-            if (definition.Clip == null)
+            if (definition.SoundEntries == null || definition.SoundEntries.Count == 0)
             {
                 continue;
             }

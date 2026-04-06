@@ -9,6 +9,7 @@ public sealed class SubJumpScareService
     private readonly Transform _playerCameraTransform;
     private readonly FakeEnemyJumpScareExecutor _fakeEnemyJumpScareExecutor;
     private readonly PostProcessSubJumpScareExecutor _postProcessExecutor;
+    private readonly SoundSubJumpScareExecutor _soundExecutor;
     private readonly SubJumpScareDatabaseSO _database;
 
     private readonly bool _enableLog;
@@ -28,6 +29,7 @@ public sealed class SubJumpScareService
         Transform playerCameraTransform,
         FakeEnemyJumpScareExecutor fakeEnemyJumpScareExecutor,
         PostProcessSubJumpScareExecutor postProcessExecutor,
+        SoundSubJumpScareExecutor soundExecutor,
         SubJumpScareDatabaseSO database,
         bool enableLog,
         bool enableSelectionLog,
@@ -40,6 +42,7 @@ public sealed class SubJumpScareService
         _playerCameraTransform = playerCameraTransform;
         _fakeEnemyJumpScareExecutor = fakeEnemyJumpScareExecutor;
         _postProcessExecutor = postProcessExecutor;
+        _soundExecutor = soundExecutor;
         _database = database;
 
         _enableLog = enableLog;
@@ -83,6 +86,7 @@ public sealed class SubJumpScareService
         }
 
         _periodicTimer = 0f;
+
         TrySelectPeriodic(
             isMainJumpScareRunning,
             isInMainEndGraceTime,
@@ -180,9 +184,41 @@ public sealed class SubJumpScareService
 
         if (selectedResult.Data.Type == ESubJumpScareType.Sound)
         {
-            return SubJumpScareSelectionResult.CreateFail(
-                ESubJumpScareTriggerType.Periodic,
-                "Sound jump scare executor is not assigned.");
+            if (_database == null
+                || _database.TryGetSoundDefinition(
+                    selectedResult.Data.Id,
+                    out SoundSubJumpScareDefinitionSO soundDefinition) == false)
+            {
+                return SubJumpScareSelectionResult.CreateFail(
+                    ESubJumpScareTriggerType.Periodic,
+                    "Selected sound definition was not found.");
+            }
+
+            if (CanExecuteSound(soundDefinition) == false)
+            {
+                return SubJumpScareSelectionResult.CreateFail(
+                    ESubJumpScareTriggerType.Periodic,
+                    "Sound execution references are invalid.");
+            }
+
+            SoundJumpScareExecutionRequest executeRequest = CreateSoundExecuteRequest(soundDefinition);
+            if (executeRequest.IsValid() == false)
+            {
+                return SubJumpScareSelectionResult.CreateFail(
+                    ESubJumpScareTriggerType.Periodic,
+                    "Sound execution request is invalid.");
+            }
+
+            SoundJumpScareExecutionResult executeResult = _soundExecutor.TryExecute(executeRequest);
+            if (executeResult.IsSuccess == false)
+            {
+                return SubJumpScareSelectionResult.CreateFail(
+                    ESubJumpScareTriggerType.Periodic,
+                    executeResult.Reason);
+            }
+
+            _selectionCoordinator.ConfirmPeriodicTriggered(selectedResult);
+            return selectedResult;
         }
 
         return SubJumpScareSelectionResult.CreateFail(
@@ -273,6 +309,29 @@ public sealed class SubJumpScareService
             fakeEnemyDefinition.PosePrefabs,
             false,
             0);
+    }
+
+    private bool CanExecuteSound(SoundSubJumpScareDefinitionSO soundDefinition)
+    {
+        if (soundDefinition == null)
+        {
+            return false;
+        }
+
+        return _soundExecutor != null
+            && _playerRootTransform != null
+            && _playerCameraTransform != null
+            && SoundManager.Instance != null;
+    }
+
+    private SoundJumpScareExecutionRequest CreateSoundExecuteRequest(
+        SoundSubJumpScareDefinitionSO soundDefinition)
+    {
+        return new SoundJumpScareExecutionRequest(
+            soundDefinition,
+            _playerRootTransform,
+            _playerCameraTransform,
+            SoundManager.Instance);
     }
 
     private void PublishRawResult(SubJumpScareSelectionResult result)
