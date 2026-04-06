@@ -8,7 +8,8 @@ public class SoundSFXEmitter : MonoBehaviour
     {
         Self,
         TargetTransform,
-        WorldPosition
+        WorldPosition,
+        LocalPositionOnSelf
     }
 
     [Header("Sound")]
@@ -19,11 +20,13 @@ public class SoundSFXEmitter : MonoBehaviour
     [SerializeField] private EmitPointType _emitPointType = EmitPointType.Self;
     [SerializeField, ShowIf(nameof(UsesTargetTransform))] private Transform _targetTransform;
     [SerializeField, ShowIf(nameof(UsesWorldPosition))] private Vector3 _worldPosition;
+    [SerializeField, ShowIf(nameof(UsesLocalPositionOnSelf))] private Vector3 _localPositionOnSelf;
 
     private ISoundService SoundService => SoundManager.Instance;
 
     private bool UsesTargetTransform => _emitPointType == EmitPointType.TargetTransform;
     private bool UsesWorldPosition => _emitPointType == EmitPointType.WorldPosition;
+    private bool UsesLocalPositionOnSelf => _emitPointType == EmitPointType.LocalPositionOnSelf;
 
     public void Play()
     {
@@ -79,6 +82,11 @@ public class SoundSFXEmitter : MonoBehaviour
         _worldPosition = worldPosition;
     }
 
+    public void SetLocalPositionOnSelf(Vector3 localPositionOnSelf)
+    {
+        _localPositionOnSelf = localPositionOnSelf;
+    }
+
     private Vector3 ResolvePosition()
     {
         switch (_emitPointType)
@@ -88,6 +96,9 @@ public class SoundSFXEmitter : MonoBehaviour
 
             case EmitPointType.WorldPosition:
                 return _worldPosition;
+
+            case EmitPointType.LocalPositionOnSelf:
+                return transform.TransformPoint(_localPositionOnSelf);
 
             default:
                 return transform.position;
