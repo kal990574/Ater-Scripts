@@ -15,6 +15,10 @@ namespace _02.Scripts.Sonar
         [Header("Easing")]
         [SerializeField] private AnimationCurve _expandCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+        [Header("Resource")]
+        [SerializeField] private int _maxCharges = 5;
+        [SerializeField] private float _chargeRecoveryTime = 5f;
+        
         [Header("Visual")]
         [SerializeField] private float _ringWidth = 2f;
         [SerializeField] private Color _scanColor = new(0.4f, 0.7f, 1.0f, 1.0f);
@@ -30,6 +34,8 @@ namespace _02.Scripts.Sonar
         public float ExpandSpeed => _expandSpeed;
         public float TrailDuration => _trailDuration;
         public AnimationCurve ExpandCurve => _expandCurve;
+        public int MaxCharges => _maxCharges;
+        public float ChargeRecoveryTime => _chargeRecoveryTime;
 
         public float RingWidth => _ringWidth;
         public Color ScanColor => _scanColor;

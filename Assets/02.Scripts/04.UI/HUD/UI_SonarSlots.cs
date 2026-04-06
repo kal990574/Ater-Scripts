@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using _02.Scripts.Sonar;
+using System;
 
 public class UI_SonarSlots : MonoBehaviour
 {
@@ -7,6 +9,9 @@ public class UI_SonarSlots : MonoBehaviour
 
     [SerializeField] private float _activeAlpha = 1f;
     [SerializeField] private float _inactiveAlpha = 0.4f;
+    
+    [Header("Binding")]
+    [SerializeField] private SonarScanFeature _sonarScanFeature;
 
     private int _currentCount = 0;
 
@@ -24,8 +29,30 @@ public class UI_SonarSlots : MonoBehaviour
 
     private void Start()
     {
-        SetCount(MaxCount);
+        if (_sonarScanFeature != null)
+        {
+            SetCount(_sonarScanFeature.CurrentCharges);
+            _sonarScanFeature.OnChargesChanged += OnChargesChanged;
+        }
+        else
+        {
+            SetCount(MaxCount);
+        }
+        
         RefreshSlot();
+    }
+
+    private void OnChargesChanged(int current, int max)
+    {
+        SetCount(current);
+    }
+
+    private void OnDestroy()
+    {
+        if (_sonarScanFeature != null)
+        {
+            _sonarScanFeature.OnChargesChanged -= OnChargesChanged;
+        }
     }
 
     public void SetCount(int count)

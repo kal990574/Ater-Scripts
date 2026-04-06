@@ -11,6 +11,8 @@ public class PlayerScanAbility : PlayerAbility
 
     [SerializeField] private GameObject _scannerModel;
     [SerializeField] private bool _isScannerActive = false;
+
+    private bool _isLidarHolding = false;
     
     private void Start()
     {
@@ -36,10 +38,8 @@ public class PlayerScanAbility : PlayerAbility
 
     private void Update()
     {
-        if (!_sonarScanFeature.IsReady)
-        {
-            _sonarScanFeature.UpdateCoolDown();
-        }
+        _sonarScanFeature.UpdateCoolDown();
+        _lidarScanFeature.UpdateEnergy(Time.deltaTime, _isLidarHolding);
     }
 
     private void OnDestroy()
@@ -49,6 +49,7 @@ public class PlayerScanAbility : PlayerAbility
 
     public void LidarScanDeactive()
     {
+        _isLidarHolding = false;
         _lidarScanFeature.StopScan();
     }
 
@@ -67,6 +68,7 @@ public class PlayerScanAbility : PlayerAbility
         {
             return;
         }
+        _isLidarHolding = true;
         _lidarScanFeature.ActiveScan();
     }
 

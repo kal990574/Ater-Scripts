@@ -1,5 +1,5 @@
 using UnityEngine;
-using _02.Scripts.Player;
+using System;
 
 namespace _02.Scripts.Sonar
 {
@@ -13,10 +13,15 @@ namespace _02.Scripts.Sonar
         
         private GameEventPublisher _eventPublisher;
         private float _cooldownTimer;
+        private int _currentCharges;
+        private float _recoveryTimer;
         
-        public bool IsReady => _cooldownTimer <= 0f;
+        public bool IsReady => _cooldownTimer <= 0f && _currentCharges > 0;
         public float CooldownProgress => _cooldownTimer > 0f ? 1f - (_cooldownTimer / _config.Cooldown) : 1f;
-
+        public int CurrentCharges => _currentCharges;
+        public int MaxCharges => _config.MaxCharges;
+        public event Action<int, int> OnChargesChanged;
+        
         public void Initialize()
         {
             if (_config == null)
@@ -35,6 +40,9 @@ namespace _02.Scripts.Sonar
             _eventPublisher.SetSource(this);
             
             _cooldownTimer = 0;
+            
+            _currentCharges = _config.MaxCharges;
+            _recoveryTimer = 0f;
         }
         
         
@@ -44,6 +52,17 @@ namespace _02.Scripts.Sonar
             {
                 _cooldownTimer -= Time.deltaTime;
             }
+
+            if (_currentCharges < _config.MaxCharges)
+            {
+                _recoveryTimer += Time.deltaTime;
+                if (_recoveryTimer >= _config.ChargeRecoveryTime)
+                {
+                    _recoveryTimer -= _config.ChargeRecoveryTime;
+                    _currentCharges = Mathf.Min(_currentCharges + 1, _config.MaxCharges);
+                    OnChargesChanged?.Invoke(_currentCharges, _config.MaxCharges);
+                }
+            }
         }
 
         public void TryScan()
@@ -52,6 +71,9 @@ namespace _02.Scripts.Sonar
             if (_effect.IsScanning) return;
             
             _cooldownTimer = _config.Cooldown;
+            _currentCharges--;
+            _recoveryTimer = 0f;
+            OnChargesChanged?.Invoke(_currentCharges, _config.MaxCharges);
             _effect.Play(transform.position, _cameraTarget.forward);
             _cameraFeedback.Play();
             
