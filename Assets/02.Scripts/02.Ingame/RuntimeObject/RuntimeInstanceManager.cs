@@ -1,15 +1,21 @@
-﻿using UnityEngine;
+using System.Collections.Generic;
+using Sirenix.OdinInspector;
+using UnityEngine;
 
 public class RuntimeInstanceManager : MonoBehaviour
 {
     private static RuntimeInstanceManager _instance;
-
     public static RuntimeInstanceManager Instance => _instance;
 
     [Header("Reference")]
     [SerializeField] private ItemDataTableSO _itemDataTableSo;
 
     private RuntimeInstanceService _runtimeInstanceService;
+
+    [ShowInInspector, ReadOnly, FoldoutGroup("Debug")]
+    [DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
+    private IReadOnlyDictionary<string, RuntimeData> RuntimeInstances =>
+        _runtimeInstanceService?.Instances;
 
     private void Awake()
     {

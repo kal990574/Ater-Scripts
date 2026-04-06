@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+using System.Collections.Generic;
+using Sirenix.OdinInspector;
+using UnityEngine;
 
 public class FakeEnemyJumpScareExecutor : MonoBehaviour
 {
@@ -82,6 +84,67 @@ public class FakeEnemyJumpScareExecutor : MonoBehaviour
             }
 
             return _placementResolver.BodyHeight;
+        }
+    }
+
+    [ShowInInspector, ReadOnly, FoldoutGroup("Placement Snapshot")]
+    private FakeEnemyPlacementResult DebugPlacementResult =>
+        DebugSnapshot?.Result ?? FakeEnemyPlacementResult.CreateFailure(EFakeEnemyPlacementFailReason.None);
+
+    [ShowInInspector, ReadOnly, FoldoutGroup("Placement Snapshot")]
+    private int DebugCandidateCount => DebugSnapshot?.Candidates?.Count ?? 0;
+
+    [ShowInInspector, ReadOnly, FoldoutGroup("Placement Snapshot")]
+    private IEnumerable<FakeEnemyPlacementCandidateDebugInfo> DebugCandidates =>
+        DebugSnapshot?.Candidates;
+
+    [ShowInInspector, ReadOnly, FoldoutGroup("Placement Snapshot")]
+    private string DebugCandidateSummary
+    {
+        get
+        {
+            if (DebugSnapshot?.Candidates == null || DebugSnapshot.Candidates.Count == 0)
+            {
+                return "No candidates";
+            }
+
+            int groundMiss = 0;
+            int invalidGroundTag = 0;
+            int invalidDistance = 0;
+            int overlapBlocked = 0;
+            int occluded = 0;
+            int valid = 0;
+            int selected = 0;
+
+            foreach (FakeEnemyPlacementCandidateDebugInfo candidate in DebugSnapshot.Candidates)
+            {
+                switch (candidate.State)
+                {
+                    case EFakeEnemyPlacementCandidateState.GroundMiss:
+                        groundMiss++;
+                        break;
+                    case EFakeEnemyPlacementCandidateState.InvalidGroundTag:
+                        invalidGroundTag++;
+                        break;
+                    case EFakeEnemyPlacementCandidateState.InvalidDistance:
+                        invalidDistance++;
+                        break;
+                    case EFakeEnemyPlacementCandidateState.OverlapBlocked:
+                        overlapBlocked++;
+                        break;
+                    case EFakeEnemyPlacementCandidateState.Occluded:
+                        occluded++;
+                        break;
+                    case EFakeEnemyPlacementCandidateState.Valid:
+                        valid++;
+                        break;
+                    case EFakeEnemyPlacementCandidateState.Selected:
+                        selected++;
+                        break;
+                }
+            }
+
+            return $"GroundMiss={groundMiss}, InvalidGroundTag={invalidGroundTag}, InvalidDistance={invalidDistance}, OverlapBlocked={overlapBlocked}, Occluded={occluded}, Valid={valid}, Selected={selected}";
         }
     }
 

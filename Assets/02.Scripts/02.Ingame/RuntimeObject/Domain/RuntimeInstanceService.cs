@@ -6,6 +6,8 @@ public class RuntimeInstanceService
     private ItemDataTableSO itemDataTableSo;
     private readonly Dictionary<string, RuntimeData> _instances = new();
 
+    public IReadOnlyDictionary<string, RuntimeData> Instances => _instances;
+
     public RuntimeInstanceService(ItemDataTableSO itemDataTableSo)
     {
         this.itemDataTableSo = itemDataTableSo;
