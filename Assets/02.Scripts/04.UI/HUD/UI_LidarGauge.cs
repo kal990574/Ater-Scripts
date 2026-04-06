@@ -22,7 +22,7 @@ public class UI_LidarGauge : MonoBehaviour
     //    _testCharge = Mathf.Clamp01(_testCharge);
     //    SetFillAmount(_testCharge);
     //}
-    private void OnEnable()
+    private void Start()
     {
         if (_lidarScanFeature != null)
         {

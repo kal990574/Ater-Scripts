@@ -8,6 +8,7 @@ using _02.Scripts.AIHint.Infrastructure.OpenAI;
 using _02.Scripts.Core.Infrastructure;
 using _02.Scripts.Player;
 using Cysharp.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 
 namespace _02.Scripts.AIHint.Component
@@ -30,6 +31,9 @@ namespace _02.Scripts.AIHint.Component
 
         [Header("UI")]
         [SerializeField] private HintUIComponent _hintUI;
+        
+        [Header("phone")]
+        [SerializeField] private PhoneViewController _phoneView;
 
 #if UNITY_EDITOR
         [Header("테스트")]
@@ -103,6 +107,7 @@ namespace _02.Scripts.AIHint.Component
 
             _isRecording = true;
             _recordStartTime = Time.time;
+            _phoneView.Show().Forget();
             _hintUI.ShowRecording();
             Debug.Log("[AIHint] 녹음 시작...");
         }
@@ -147,6 +152,7 @@ namespace _02.Scripts.AIHint.Component
         private async UniTaskVoid TestHintWithText()
         {
             _isProcessing = true;
+            _phoneView.Show().Forget();
             _hintUI.ShowRecording();
             Debug.Log($"[AIHint-Test] 질문: {_testQuery}");
 
@@ -161,6 +167,7 @@ namespace _02.Scripts.AIHint.Component
                 {
                     Debug.LogWarning($"[AIHint-Test] LLM 실패: {response.HintText}");
                     _hintUI.Hide();
+                    await _phoneView.Hide();
                     return;
                 }
 
@@ -176,6 +183,7 @@ namespace _02.Scripts.AIHint.Component
             {
                 Debug.LogError($"[AIHint-Test] 예외: {e}");
                 _hintUI.Hide();
+                await _phoneView.Hide();
             }
             finally
             {
@@ -184,12 +192,13 @@ namespace _02.Scripts.AIHint.Component
         }
 #endif
 
-        private void HandleHintResult(HintResult result)
+        private async void HandleHintResult(HintResult result)
         {
             if (!result.IsSuccess)
             {
                 Debug.LogWarning($"[AIHint] 실패: {result.HintText}");
                 _hintUI.Hide();
+                await _phoneView.Hide();
                 return;
             }
 
@@ -202,16 +211,18 @@ namespace _02.Scripts.AIHint.Component
             }
             else
             {
-                _hintUI.HideAfterDelay(0f).Forget();
+                await _hintUI.HideAfterDelay(0f);
+                await _phoneView.Hide();
             }
         }
 
-        private void PlayHintAudio(byte[] wavData)
+        private async void PlayHintAudio(byte[] wavData)
         {
             var clip = WavDecoder.Decode(wavData);
             _audioSource.PlayOneShot(clip);
             Debug.Log($"[AIHint] 음성 재생 시작({clip.length:F1}초");
-            _hintUI.HideAfterDelay(clip.length).Forget();
+            await _hintUI.HideAfterDelay(clip.length);
+            await _phoneView.Hide();
         }
 
         private PlayerHintState CollectPlayerState()
