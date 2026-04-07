@@ -20,4 +20,8 @@ public interface ISoundService
 
     void PauseAll();
     void ResumeAll();
+    
+    // loop
+    AudioSource PlayLoopSFX(string key, Vector3 position, float volume = 1f);
+    void StopLoopSFX(AudioSource source);
 }
