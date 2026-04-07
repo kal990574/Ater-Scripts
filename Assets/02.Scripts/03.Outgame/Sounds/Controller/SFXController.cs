@@ -212,4 +212,34 @@ public class SFXController : MonoBehaviour
     {
         _stingerSource.UnPause();
     }
+
+    public AudioSource PlayLoopSFX(SoundData soundData, Vector3 position, float volume = 1f)
+    {
+        if (soundData == null || soundData.AudioClip == null) return null;
+
+        float finalVolume = soundData.BaseVolume * volume;
+        GameObject sfxInstance = LeanPool.Spawn(_sfxPrefab, position, Quaternion.identity);
+        AudioSource source = sfxInstance.GetComponent<AudioSource>();
+        ApplySoundData(source, soundData, PlaybackMode.UseSoundData);
+        source.clip = soundData.AudioClip;
+        source.volume = finalVolume;
+        source.pitch = 1f;
+        source.loop = true;
+        source.Play();
+
+        if (_isPaused) source.Pause();
+
+        _activeSFX.Add(new SFXEntry { Source = source, Coroutine = null });
+        return source;
+    }
+
+    public void StopLoopSFX(AudioSource source)
+    {
+        if (source == null) return;
+
+        source.Stop();
+        source.loop = false;
+        _activeSFX.RemoveAll(entry => entry.Source == source);
+        LeanPool.Despawn(source.gameObject);
+    }
 }

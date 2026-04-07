@@ -104,4 +104,16 @@ public class SoundManager : MonoBehaviour, ISoundService
     {
         return _soundDataTableSO.GetSoundData(key);
     }
+
+    public AudioSource PlayLoopSFX(string key, Vector3 position, float volume = 1f)
+    {
+        SoundData soundData = GetSoundData(key);
+        if (soundData == null || soundData.AudioClip == null) return null;
+        return _sfxController.PlayLoopSFX(soundData, position, volume);
+    }
+
+    public void StopLoopSFX(AudioSource source)
+    {
+        _sfxController.StopLoopSFX(source);
+    }
 }
