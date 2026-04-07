@@ -5,8 +5,10 @@ public class TimingQTERunner : IQuickTimeEvent
 {
     private const float MaxProgress = 100f;
 
+    private readonly QTEManager _owner;
     private readonly TimingQuickTimeEventConfig _config;
     private readonly ITimingQuickTimeEventView _view;
+    private readonly ISoundService _sound;
 
     private float _notificationRemainingTime;
     private float _previousNeedleProgress;
@@ -14,17 +16,19 @@ public class TimingQTERunner : IQuickTimeEvent
     private float _successZoneStartProgress;
     private float _successZoneSizeProgress;
     private float _greatZonePercent;
-
+    
     public bool IsPlaying { get; private set; }
     public bool IsFinished { get; private set; }
     public EQuickTimeEventResult Result { get; private set; }
 
     public event Action<EQuickTimeEventResult> OnEnded;
 
-    public TimingQTERunner(TimingQuickTimeEventConfig config, ITimingQuickTimeEventView view)
+    public TimingQTERunner(QTEManager owner,TimingQuickTimeEventConfig config, ITimingQuickTimeEventView view)
     {
+        _owner = owner;
         _config = config;
         _view = view;
+        _sound = _owner.SoundService;
     }
 
     public void Begin()
@@ -157,31 +161,19 @@ public class TimingQTERunner : IQuickTimeEvent
             return;
         }
 
-        //soundManager.PlaySFX2D(_config.NotificationClip);
+        _sound.PlaySFX2D(_config.NotificationClip);
     }
 
     private void PlayResultFeedback(EQuickTimeEventResult result)
     {
-        AudioClip clip = result switch
+        SoundKeyReference clip = result switch
         {
             EQuickTimeEventResult.Success => _config.SuccessClip,
             EQuickTimeEventResult.GreatSuccess => _config.GreatSuccessClip,
             EQuickTimeEventResult.Fail => _config.FailClip,
-            _ => null
         };
 
-        if (clip == null)
-        {
-            return;
-        }
-
-        SoundManager soundManager = UnityEngine.Object.FindFirstObjectByType<SoundManager>();
-        if (soundManager == null)
-        {
-            return;
-        }
-
-        //soundManager.PlaySFX2D(clip);
+        _sound.PlaySFX2D(clip);
     }
 
     private EQuickTimeEventResult JudgeCurrentNeedleProgress()

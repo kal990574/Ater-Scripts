@@ -26,6 +26,10 @@ public class LidarScanConfigSO : ScriptableObject
     [SerializeField] private Gradient _nonTargetGradient = default;
     [SerializeField] private Gradient _onTargetGradient = default;
 
+    [Header("Audio")] 
+    [SerializeField] private SoundKeyReference _scanActived;
+    [SerializeField] private SoundKeyReference _scanFailed;
+    
     public RaycastSetting Query => _query;
     public float ConeAngle => _coneAngle;
     public int RingCount => _ringCount;
@@ -37,4 +41,7 @@ public class LidarScanConfigSO : ScriptableObject
     
     public Gradient  NonTargetGradient => _nonTargetGradient;
     public Gradient OnTargetGradient => _onTargetGradient;
+    
+    public SoundKeyReference ScanActived => _scanActived;
+    public SoundKeyReference ScanFailed => _scanFailed;
 }

@@ -9,7 +9,7 @@ public class DarknessPostProcessService : IPostProcessEffectService
     private Vignette _vignette;
     private ColorAdjustments _colorAdjustments;
     private DarknessSnapshot _snapshot;
-
+    
     private const float MaxVignetteIntensity = 0.65f;
     private const float MaxVignetteSmoothness = 0.45f;
     private const float MaxDarkPostExposure = -6f;

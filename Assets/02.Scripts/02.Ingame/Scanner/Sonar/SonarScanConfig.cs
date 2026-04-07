@@ -28,6 +28,11 @@ namespace _02.Scripts.Sonar
         [SerializeField] [Range(0.5f, 5f)] private float _ringGradientPower = 2f;
         [SerializeField] private float _trailFadeSpeed = 20f;
 
+        [Header("Audio")] 
+        [SerializeField] private SoundKeyReference _sonarActive;
+        [SerializeField] private SoundKeyReference sonarEmpty;
+        [SerializeField]private SoundKeyReference _sonarCoolTime;
+
         public float ScanRadius => _scanRadius;
         public float ScanAngle => _scanAngle;
         public float Cooldown => _cooldown;
@@ -44,5 +49,9 @@ namespace _02.Scripts.Sonar
         public float RingFillIntensity => _ringFillIntensity;
         public float RingGradientPower => _ringGradientPower;
         public float TrailFadeSpeed => _trailFadeSpeed;
+        
+        public SoundKeyReference SonarActive => _sonarActive;
+        public SoundKeyReference SonarCoolTime => _sonarCoolTime;
+        public SoundKeyReference SonarEmpty => sonarEmpty;
     }
 }
