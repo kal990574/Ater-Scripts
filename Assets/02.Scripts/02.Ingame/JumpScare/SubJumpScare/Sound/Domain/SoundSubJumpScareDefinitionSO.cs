@@ -21,12 +21,12 @@ public class SoundSubJumpScareDefinitionSO : SubJumpScareDefinitionSOBase
     }
 
     [Title("Sound")]
-    [BoxGroup("Sound/Playback")]
+    [BoxGroup("Playback")]
     [PropertyTooltip("같은 정의 내부에서 랜덤 선택될 사운드 키 목록입니다.")]
     [ListDrawerSettings(Expanded = true)]
     public List<SoundJumpScareClipEntry> SoundEntries = new List<SoundJumpScareClipEntry>();
 
-    [BoxGroup("Sound/Playback")]
+    [BoxGroup("Playback")]
     [MinValue(0f)]
     [MaxValue(1f)]
     [PropertyTooltip("사운드 재생 기본 볼륨입니다.")]
