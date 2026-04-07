@@ -28,6 +28,7 @@ public class PostProcessSubJumpScareExecutor : MonoBehaviour
     private ChromaticAberration _chromaticAberration;
     private LensDistortion _lensDistortion;
 
+    private ISoundService _sound => SoundManager.Instance;
     public bool IsInitialized
     {
         get
@@ -149,8 +150,12 @@ public class PostProcessSubJumpScareExecutor : MonoBehaviour
         _isPlaying = true;
         _currentDefinition = definition;
 
+        if (_sound != null && definition.Sound.Value != null)
+        {
+            _sound.PlaySFX2D(definition.Sound, definition.SoundVolume);
+        }
+        
         bool isApplied = ApplyEffect(definition);
-
         if (isApplied == false)
         {
             _isPlaying = false;

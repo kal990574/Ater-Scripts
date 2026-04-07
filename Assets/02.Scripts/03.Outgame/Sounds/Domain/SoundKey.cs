@@ -35,13 +35,10 @@ public class SoundKey
     public const string Inventory_Swap = "Inventory_Swap";
 
     //Mannequin
-    public const string Mannequin_Squeak_1 = "Mannequin_Squeak_1";
-    public const string Mannequin_Squeak_2 = "Mannequin_Squeak_2";
-    public const string Mannequin_Squeak_3 = "Mannequin_Squeak_3";
-    public const string Mannequin_Squeak_4 = "Mannequin_Squeak_4";
+    public const string Mannequin_Squeak = "Mannequin_Squeak";
 
-    public const string Manneauin_Walk_1 = "Manneauin_Walk_1";
-    public const string Manneauin_Walk_2 = "Manneauin_Walk_2";
+
+    public const string Manneauin_Walk = "Manneauin_Walk";
 
     //칠판
     public const string BOARD_OPEN = "Board_Open";
@@ -83,7 +80,25 @@ public class SoundKey
     public const string Keycard_Use = "Keycard_Use";
     public const string Keycard_Open = "Keycard_Open";
 
-
+    //점프스케어
+    public const string JumpScare_Tutorial1 =  "JumpScare_Tutorial1";
+    public const string JumpScare_Tutorial2 =  "JumpScare_Tutorial2";
+    public const string JumpScare_Tutorial3 =  "JumpScare_Tutorial3";
+    
+    public const string JumpScare_SubFakeEnemy_Terror =  "JumpScare_SubFakeEnemy_Terror";
+    
+    public const string JumpScare_SubPost_Dark =  "JumpScare_SubPost_Dark";
+    public const string JumpScare_SubPost_Noise =  "JumpScare_SubPost_Noise";
+    public const string JumpScare_SubPost_GrayScale =  "JumpScare_SubPost_GrayScale";
+    
+    public const string JumpScare_SubSound_Broke =  "JumpScare_SubSound_Broke";
+    public const string JumpScare_SubSound_Wind=  "JumpScare_SubSound_Wind";
+    public const string JumpScare_SubSound_Clap =  "JumpScare_SubSound_Clap";
+    public const string JumpScare_SubSound_Foot =  "JumpScare_SubSound_Foot";
+    public const string JumpScare_SubSound_Hello =  "JumpScare_SubSound_Hello";
+    public const string JumpScare_SubSound_Laughing =  "JumpScare_SubSound_Laughing";
+    
+    
     //----------Stinger----------
 
 

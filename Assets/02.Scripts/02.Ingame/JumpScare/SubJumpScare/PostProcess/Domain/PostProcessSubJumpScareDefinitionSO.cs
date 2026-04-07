@@ -42,12 +42,13 @@ public class PostProcessSubJumpScareDefinitionSO : SubJumpScareDefinitionSOBase
     [PropertyTooltip("효과가 유지되는 총 시간입니다.")]
     public float Duration = 2f;
 
-    private bool UseEffectStrength()
-    {
-        return EffectType == EPostProcessEffectType.Darkness ||
-               EffectType == EPostProcessEffectType.Noise;
-    }
-
+    [BoxGroup("Sound")]
+    [PropertyTooltip("효과가 나타날때 들리는 SFX")]
+    public SoundKeyReference Sound;
+    [BoxGroup("Sound")]
+    [PropertyTooltip("SFX의 볼륨 0~1")]
+    [MinValue(0f),MaxValue(1)]
+    public float SoundVolume = 1;
     private void OnValidate()
     {
         common = EnsureCommon(common);

@@ -14,12 +14,14 @@ public class QTEManager : MonoBehaviour
 
     private IQuickTimeEvent _currentEvent;
     private IQTEInvoker _currentOwner;
+    
     private Action<EQuickTimeEventResult> _onEnded;
 
     public ITimingQuickTimeEventView TimingQuickTimeEventView => uiCircleTimingQteUi;
     public bool IsPlaying => _currentEvent != null && _currentEvent.IsPlaying;
     public IQTEInvoker CurrentOwner => _currentOwner;
     public IQuickTimeEvent CurrentEvent => _currentEvent;
+    public ISoundService SoundService => SoundManager.Instance;
 
     private void Awake()
     {
@@ -154,7 +156,7 @@ public class QTEManager : MonoBehaviour
 
         if (config is TimingQuickTimeEventConfig timingConfig)
         {
-            return new TimingQTERunner(timingConfig, TimingQuickTimeEventView);
+            return new TimingQTERunner(this, timingConfig, TimingQuickTimeEventView);
         }
 
         Debug.LogError($"[{nameof(QTEManager)}] Unsupported QTE config type: {config.GetType().Name}", this);

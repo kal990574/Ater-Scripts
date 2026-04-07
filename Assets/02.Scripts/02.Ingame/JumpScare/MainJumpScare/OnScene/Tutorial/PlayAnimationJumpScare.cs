@@ -8,7 +8,6 @@ public class PlayAnimationJumpScare : MainJumpScareBase
 
     [Header("References")]
     [SerializeField] private Animator _targetAnimator;
-    [SerializeField] private SoundSFXEmitter _soundEmitter;
 
     [Header("Animation")]
     [SerializeField] private string _triggerParameterName = "Open";
@@ -56,8 +55,7 @@ public class PlayAnimationJumpScare : MainJumpScareBase
 
         _isPlayingAnimation = true;
         _hasFinishedAnimation = false;
-
-        PlaySound();
+        
         PlayAnimation();
 
         if (_enableLog == true)
@@ -179,22 +177,7 @@ public class PlayAnimationJumpScare : MainJumpScareBase
         NotifyAnimationFinished();
         _monitorCoroutine = null;
     }
-
-    private void PlaySound()
-    {
-        if (_soundEmitter == null)
-        {
-            if (_enableLog == true)
-            {
-                Debug.LogWarning($"[{name}] SoundSFXEmitter 가 없어 사운드를 재생하지 않습니다.", this);
-            }
-
-            return;
-        }
-
-        _soundEmitter.Play();
-    }
-
+    
     public void NotifyAnimationFinished()
     {
         if (_isPlayingAnimation == false)
