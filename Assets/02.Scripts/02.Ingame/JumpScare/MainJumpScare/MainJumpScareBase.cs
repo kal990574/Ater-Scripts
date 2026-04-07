@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
 
 public abstract class MainJumpScareBase : MonoBehaviour
 {
@@ -7,6 +8,9 @@ public abstract class MainJumpScareBase : MonoBehaviour
     [SerializeField] private bool _canActive;
     [SerializeField] private EMainJumpScareState _state = EMainJumpScareState.Waiting;
 
+    [SerializeField] protected UnityEvent OnStartEvent;
+    [SerializeField] protected UnityEvent OnEndEvent;
+    
     public string Id => _id;
     public bool CanActive => _canActive;
     public EMainJumpScareState State => _state;
@@ -56,6 +60,7 @@ public abstract class MainJumpScareBase : MonoBehaviour
         }
 
         _state = EMainJumpScareState.Playing;
+        OnStartEvent?.Invoke();
         OnExecute();
     }
 
@@ -78,6 +83,7 @@ public abstract class MainJumpScareBase : MonoBehaviour
         }
 
         JumpScareManager.Instance.NotifyMainJumpScareFinished(_id);
+        OnEndEvent?.Invoke();
     }
 
 #if UNITY_EDITOR
