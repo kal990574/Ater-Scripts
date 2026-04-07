@@ -71,6 +71,11 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
 
             _currentSceneData = sceneData;
 
+            if (!string.IsNullOrEmpty(sceneData.BgmKey) && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayBGM(sceneData.BgmKey);
+            }
+
             _isTransitioning = false;
             OnTransitionCompleted?.Invoke();
         }
