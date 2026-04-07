@@ -1,11 +1,11 @@
 ﻿using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class DropJumpScare : MainJumpScareBase
 {
     [Header("References")]
     [SerializeField] private Rigidbody _rigidbody;
-    [SerializeField] private SoundSFXEmitter _impactSound;
 
     [Header("Collision Filter")]
     [SerializeField] private LayerMask _environmentLayerMask;
@@ -30,6 +30,7 @@ public class DropJumpScare : MainJumpScareBase
     [SerializeField, ReadOnly] private Quaternion _initialWorldRotation;
     [SerializeField, ReadOnly] private bool _initialIsKinematic;
 
+    [SerializeField] private UnityEvent _onDropCollision;
     private bool _isInitialStateCached;
 
     protected override void Awake()
@@ -121,13 +122,12 @@ public class DropJumpScare : MainJumpScareBase
 
         _hasValidImpact = true;
         _impactElapsedTime = 0.0f;
-
         if (_enableLog == true)
         {
             Debug.Log($"[{name}] 첫 유효 충돌을 감지했습니다. 대상: {collision.gameObject.name}", this);
         }
 
-        PlayImpactSound();
+        _onDropCollision?.Invoke();
     }
 
     private bool IsValidGroundCollision(Collision collision)
@@ -161,21 +161,7 @@ public class DropJumpScare : MainJumpScareBase
         int layerBit = 1 << layer;
         return (layerMask.value & layerBit) != 0;
     }
-
-    private void PlayImpactSound()
-    {
-        if (_impactSound == null)
-        {
-            if (_enableLog == true)
-            {
-                Debug.LogWarning($"[{name}] _impactSound 가 없어 충돌 사운드를 재생하지 않습니다.", this);
-            }
-
-            return;
-        }
-
-        _impactSound.Play();
-    }
+    
 
     private bool IsStopped()
     {

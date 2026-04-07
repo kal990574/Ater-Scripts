@@ -4,8 +4,8 @@ using UnityEngine.Serialization;
 public class QuickTimeEventTester : MonoBehaviour
 {
     [Header("Required References")]
+    [SerializeField] private QTEManager _qteManager;
     [SerializeField] private UI_CircleTimingQTE _timingView;
-    [FormerlySerializedAs("config")]
     [SerializeField] private TimingQuickTimeEventConfig _config;
 
     [Header("Input")]
@@ -16,7 +16,7 @@ public class QuickTimeEventTester : MonoBehaviour
     private IQuickTimeEvent _currentEvent;
     private TimingQTERunner _timingEvent;
 
-    private void Awake()
+    private void Start()
     {
         if (_timingView == null || _config == null)
         {
@@ -25,7 +25,7 @@ public class QuickTimeEventTester : MonoBehaviour
             return;
         }
 
-        _timingEvent = new TimingQTERunner(_config, _timingView);
+        _timingEvent = new TimingQTERunner(_qteManager, _config, _timingView);
         _timingEvent.OnEnded += HandleEnded;
     }
 

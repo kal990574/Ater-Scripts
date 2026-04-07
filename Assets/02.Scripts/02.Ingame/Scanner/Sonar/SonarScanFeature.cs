@@ -15,12 +15,14 @@ namespace _02.Scripts.Sonar
         private float _cooldownTimer;
         private int _currentCharges;
         private float _recoveryTimer;
-        
-        public bool IsReady => _cooldownTimer <= 0f && _currentCharges > 0;
+
+        public bool IsCooltimeReady => _cooldownTimer <= 0f;
+        public bool HaveResources =>  _currentCharges > 0;
         public float CooldownProgress => _cooldownTimer > 0f ? 1f - (_cooldownTimer / _config.Cooldown) : 1f;
         public int CurrentCharges => _currentCharges;
         public int MaxCharges => _config.MaxCharges;
         public event Action<int, int> OnChargesChanged;
+        public ISoundService SoundService => SoundManager.Instance;
         
         public void Initialize()
         {
@@ -67,8 +69,22 @@ namespace _02.Scripts.Sonar
 
         public void TryScan()
         {
-            if (!IsReady) return;
-            if (_effect.IsScanning) return;
+            if (_effect.IsScanning)
+            {
+                return;
+            }
+            
+            if (!IsCooltimeReady)
+            {
+                SoundService.PlaySFX2D(_config.SonarCoolTime);
+                return;
+            }
+            
+            if (!HaveResources)
+            {
+                SoundService.PlaySFX2D(_config.SonarEmpty);
+                return;
+            }
             
             _cooldownTimer = _config.Cooldown;
             _currentCharges--;
@@ -76,7 +92,7 @@ namespace _02.Scripts.Sonar
             OnChargesChanged?.Invoke(_currentCharges, _config.MaxCharges);
             _effect.Play(transform.position, _cameraTarget.forward);
             _cameraFeedback.Play();
-            
+            SoundService.PlaySFX2D(_config.SonarActive);
             _eventPublisher.TryPublish(
                 context => new SonarScanStartedRawEvent(context));
         }

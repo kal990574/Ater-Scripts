@@ -18,19 +18,22 @@ public class LidarScanFeature : MonoBehaviour
     private LidarRaycast _lidarRay;
     private float _energy = 1f;
 
-    public ScannableObject CurrentTarget { get; private set; }
+    private AudioSource _soundInstance;
 
+    public ScannableObject CurrentTarget { get; private set; }
     public LidarEffect LidarEffect => _lidarEffect;
     public LidarRaycast LidarRay => _lidarRay;
     public LidarScanConfigSO Config => _config;
     public Vector3 StartPos => _rayOrigin.position + _originOffset;
     public Transform Muzzle => muzzle;
     public LineRenderer LineRenderer => _lineRenderer;
+    public ISoundService SoundService => SoundManager.Instance;
+    
     public bool IsOnScan { get; private set; }
     public float Energy => _energy;
     public bool HasEnergy => _energy > 0f;
+    
     public event Action<float> OnEnergyChanged;
-
     public event Action<ScannableObject> OnTargetFind;
     public event Action OnTargetLost;
     
@@ -66,13 +69,21 @@ public class LidarScanFeature : MonoBehaviour
         if (!HasEnergy) return;
         IsOnScan = true;
 
+        
+        _soundInstance = SoundService.PlayLoopSFX(_config.ScanActived,transform.position);
+        
         _eventPublisher.TryPublish(
             context => new LidarScanStartedRawEvent(context));
     }
 
     public void UpdateScan(float deltaTime)
     {
-        if (!HasEnergy) return;
+        if (!HasEnergy)
+        {
+            StopScan();
+            SoundService.PlaySFX2D(_config.ScanFailed);
+            return;
+        }
         
         _lidarRay.Scan();
 
@@ -90,6 +101,11 @@ public class LidarScanFeature : MonoBehaviour
             }
             
             CurrentTarget.OnScanning(deltaTime);
+        }
+
+        if (_soundInstance != null)
+        {
+            _soundInstance.transform.position = transform.position;
         }
 
         LidarEffect.DrawLidarEffect(_lidarRay.RayResults, CurrentTarget);
@@ -139,6 +155,10 @@ public class LidarScanFeature : MonoBehaviour
         _lidarRay.ClearScanResults();
         LidarEffect.ResetLine();
         IsOnScan = false;
+        
+        
+        SoundService.StopLoopSFX(_soundInstance);
+        _soundInstance = null;
         
         _eventPublisher.TryPublish(
             context => new LidarScanStoppedRawEvent(context));

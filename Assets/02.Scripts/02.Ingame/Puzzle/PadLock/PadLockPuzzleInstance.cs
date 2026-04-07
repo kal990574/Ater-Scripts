@@ -37,6 +37,7 @@ public class PadLockPuzzleInstance : MonoBehaviour
 
     public void SetRowValue(PadLockRowSelector.RowIndex rowIndex, int value)
     {
+        _owner.OnSpin();
         switch (rowIndex)
         {
             case PadLockRowSelector.RowIndex.Row1:

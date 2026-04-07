@@ -19,6 +19,7 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
     [SerializeField] private LockedDoorInteractable _doorToUnlock;
 
     [Header("Puzzle Events")]
+    [SerializeField] private UnityEvent _spinEvnet;
     [SerializeField] private UnityEvent _successEvent;
     [SerializeField] private UnityEvent _failEvent;
 
@@ -122,6 +123,11 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
             ResolvePlayerController()?.ExitPuzzleMode(this);
             _activeInstance = null;
         }
+    }
+
+    public void OnSpin()
+    {
+        _spinEvnet?.Invoke();
     }
 
     private Transform ResolveSpawnParent()

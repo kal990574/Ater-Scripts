@@ -6,12 +6,12 @@ public class TimingQuickTimeEventConfig : QTEConfigSOBase
     [Header("Notification")]
     [Min(0f)]
     public float NotificationDuration = 0f;
-    public AudioClip NotificationClip;
+    public SoundKeyReference NotificationClip;
 
     [Header("Result Feedback")]
-    public AudioClip SuccessClip;
-    public AudioClip GreatSuccessClip;
-    public AudioClip FailClip;
+    public SoundKeyReference SuccessClip;
+    public SoundKeyReference GreatSuccessClip;
+    public SoundKeyReference FailClip;
 
     [Header("Needle")]
     [Min(0f)]
