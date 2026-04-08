@@ -8,12 +8,10 @@ namespace _02.Scripts.Core.Component
     [DefaultExecutionOrder(-50)]
     public class InGameBootstrap : MonoBehaviour
     {
-        // TODO: 씬 별 타이머 값 적용
         [Header("Timer")]
-        [SerializeField] private float _timeLimitSeconds = 300f;
+        [SerializeField] private ChapterTimerManager _timerManager;
 
         private UIManager _uiManager;
-        private ChapterTimerManager _timerManager;
 
         private void Awake()
         {
@@ -21,9 +19,7 @@ namespace _02.Scripts.Core.Component
             _uiManager = new UIManager(gameManager);
             Managers.Register<IUIManager>(_uiManager);
 
-            _timerManager = new ChapterTimerManager();
             Managers.Register<IChapterTimerManager>(_timerManager);
-            _timerManager.StartTimer(_timeLimitSeconds);
         }
 
         private void OnDestroy()

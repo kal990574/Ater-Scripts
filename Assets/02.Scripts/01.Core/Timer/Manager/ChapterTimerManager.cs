@@ -4,9 +4,12 @@ using UnityEngine;
 
 namespace _02.Scripts.Core.Timer.Manager
 {
-    public class ChapterTimerManager : IChapterTimerManager
+    public class ChapterTimerManager : MonoBehaviour, IChapterTimerManager
     {
-        [Header("time threshold")]
+        [Header("Timer")]
+        [SerializeField] private float _timeLimitSeconds = 300f;
+
+        [Header("Time Threshold")]
         [SerializeField] private float _warningThreshold = 180f;
         [SerializeField] private float _criticalThreshold = 60f;
 
@@ -18,9 +21,14 @@ namespace _02.Scripts.Core.Timer.Manager
         public event Action<TimerState> OnTimerStateChanged;
         public event Action OnTimerExpired;
 
-        public void StartTimer(float totalSeconds)
+        private void Start()
         {
-            _timerData = new ChapterTimerData(totalSeconds);
+            StartTimer();
+        }
+
+        public void StartTimer()
+        {
+            _timerData = new ChapterTimerData(_timeLimitSeconds);
             _timerData.State = TimerState.Running;
             OnTimerStateChanged?.Invoke(TimerState.Running);
         }
@@ -33,12 +41,12 @@ namespace _02.Scripts.Core.Timer.Manager
             OnTimerStateChanged?.Invoke(TimerState.Ready);
         }
 
-        public void Tick(float deltaTime)
+        private void Update()
         {
             if (_timerData == null) return;
             if (_timerData.State == TimerState.Ready || _timerData.State == TimerState.Expired) return;
 
-            _timerData.RemainingTime -= deltaTime;
+            _timerData.RemainingTime -= Time.deltaTime;
 
             if (_timerData.RemainingTime <= 0f)
             {
