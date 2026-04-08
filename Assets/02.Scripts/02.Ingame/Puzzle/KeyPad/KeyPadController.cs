@@ -15,9 +15,9 @@ public class KeyPadController : MonoBehaviour, IPlayerPuzzleController
 
     [Header("State")]
     [SerializeField] private bool _blockOpenAfterSuccess = true;
-    [SerializeField] private LockedDoorInteractable _doorToUnlock;
 
-    [Header("Puzzle Events")]
+    [Header("Puzzle Events")] 
+    [SerializeField] private UnityEvent _buttonEvent;
     [SerializeField] private UnityEvent _successEvent;
     [SerializeField] private UnityEvent _failEvent;
 
@@ -67,6 +67,16 @@ public class KeyPadController : MonoBehaviour, IPlayerPuzzleController
         ResolvePlayerController()?.EnterPuzzleMode(this);
     }
 
+    public void ButtonClick()
+    {
+        if (_activeInstance == null)
+        {
+            return;
+        }
+
+        _buttonEvent?.Invoke();
+    }
+
     public void ConfirmActivePuzzle()
     {
         if (_activeInstance == null)
@@ -96,7 +106,6 @@ public class KeyPadController : MonoBehaviour, IPlayerPuzzleController
 
         _isSolved = true;
         _successEvent?.Invoke();
-        _doorToUnlock?.Unlock();
         _activeInteractable?.HandlePuzzleSolved();
 
         ResolvePlayerController()?.ExitPuzzleMode(this);

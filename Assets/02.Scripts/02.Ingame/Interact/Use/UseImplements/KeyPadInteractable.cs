@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -19,8 +20,8 @@ public class KeyPadInteractable : StateInteractable
         base.OnAwake();
         GetComponentCached(ref _keyPadController);
     }
-
-    public bool Unlock()
+    
+    public override bool Unlock()
     {
         if (!ValidateConfiguration(out string failureReason))
         {
@@ -51,34 +52,34 @@ public class KeyPadInteractable : StateInteractable
     {
         if (!ValidateConfiguration(out failureReason))
         {
-            SetFailureResult(UseInteractResult.InvalidConfiguration);
+            SetFailureResult(EUseInteractResult.InvalidConfiguration);
             return false;
         }
 
         if (!GetState(_unlockStateKey))
         {
-            SetFailureResult(UseInteractResult.Locked);
+            SetFailureResult(EUseInteractResult.Locked);
             failureReason = "The keypad is locked because the fuse box is not completed.";
             return false;
         }
 
         if (GetState(_completedStateKey))
         {
-            SetFailureResult(UseInteractResult.AlreadyCompleted);
+            SetFailureResult(EUseInteractResult.AlreadyCompleted);
             failureReason = "The keypad puzzle is already completed.";
             return false;
         }
 
         if (_keyPadController.IsSolved)
         {
-            SetFailureResult(UseInteractResult.AlreadyCompleted);
+            SetFailureResult(EUseInteractResult.AlreadyCompleted);
             failureReason = "The keypad controller is already solved.";
             return false;
         }
 
         if (_keyPadController.HasActivePuzzle)
         {
-            SetFailureResult(UseInteractResult.PuzzleAlreadyRunning);
+            SetFailureResult(EUseInteractResult.PuzzleAlreadyRunning);
             failureReason = "The keypad puzzle is already running.";
             return false;
         }
@@ -93,7 +94,7 @@ public class KeyPadInteractable : StateInteractable
         Debug.Log($"[{nameof(KeyPadInteractable)}] {gameObject.name} started the keypad puzzle.", this);
         _onPuzzleStarted?.Invoke();
         failureReason = string.Empty;
-        SetFailureResult(UseInteractResult.Success);
+        SetFailureResult(EUseInteractResult.Success);
         return true;
     }
 

@@ -1,4 +1,4 @@
-public enum UseInteractResult
+public enum EUseInteractResult
 {
     None = 0,
     Success = 1,

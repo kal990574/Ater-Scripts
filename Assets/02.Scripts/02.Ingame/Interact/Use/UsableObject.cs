@@ -1,17 +1,30 @@
+
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 
 public class UsableObject : Interactable
 {
     public string LastFailureReason { get; private set; } = string.Empty;
-    public UseInteractResult LastInteractResult { get; protected set; } = UseInteractResult.None;
+    public EUseInteractResult LastInteractResult { get; protected set; } = EUseInteractResult.None;
 
+
+    [Button]
+    public void UnlockForce()
+    {
+        Unlock();
+    }
+    
+    public virtual bool Unlock()
+    {
+        return true;
+    }
 
     public override void Interact(InteractionContext context)
     {
         if (!IsInteractActive)
         {
-            FailUse(UseInteractResult.NotActive, "Interaction is not active.", context);
+            FailUse(EUseInteractResult.NotActive, "Interaction is not active.", context);
             return;
         }
 
@@ -25,9 +38,9 @@ public class UsableObject : Interactable
         LastFailureReason = string.Empty;
         if (!OnUse(resolvedContext, out string runtimeFailureReason))
         {
-            if (LastInteractResult == UseInteractResult.None || LastInteractResult == UseInteractResult.Success)
+            if (LastInteractResult == EUseInteractResult.None || LastInteractResult == EUseInteractResult.Success)
             {
-                LastInteractResult = UseInteractResult.InvalidConfiguration;
+                LastInteractResult = EUseInteractResult.InvalidConfiguration;
             }
 
             if (string.IsNullOrWhiteSpace(runtimeFailureReason))
@@ -39,9 +52,9 @@ public class UsableObject : Interactable
             return;
         }
 
-        if (LastInteractResult == UseInteractResult.None)
+        if (LastInteractResult == EUseInteractResult.None)
         {
-            LastInteractResult = UseInteractResult.Success;
+            LastInteractResult = EUseInteractResult.Success;
         }
         OnInteractActivate();
         OnUseSucceeded(resolvedContext);
@@ -71,9 +84,9 @@ public class UsableObject : Interactable
     {
         if (!CanUse(context, out failureReason))
         {
-            if (LastInteractResult == UseInteractResult.None)
+            if (LastInteractResult == EUseInteractResult.None)
             {
-                LastInteractResult = UseInteractResult.InvalidConfiguration;
+                LastInteractResult = EUseInteractResult.InvalidConfiguration;
             }
 
             if (string.IsNullOrWhiteSpace(failureReason))
@@ -84,17 +97,17 @@ public class UsableObject : Interactable
             return false;
         }
 
-        LastInteractResult = UseInteractResult.None;
+        LastInteractResult = EUseInteractResult.None;
         failureReason = string.Empty;
         return true;
     }
     
-    protected void SetFailureResult(UseInteractResult result)
+    protected void SetFailureResult(EUseInteractResult result)
     {
         LastInteractResult = result;
     }
 
-    private void FailUse(UseInteractResult result, string failureReason, InteractionContext context)
+    private void FailUse(EUseInteractResult result, string failureReason, InteractionContext context)
     {
         LastInteractResult = result;
         LastFailureReason = failureReason ?? string.Empty;
