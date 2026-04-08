@@ -11,6 +11,8 @@ public class DetectableObject : MonoBehaviour , IDetectable
     public Transform Transform => transform;
     public virtual bool CanDetect => _isDetectable;
 
+    [SerializeField] private string _hoverDescription;
+    public string HoverDescription =>  _hoverDescription;
     public event Action<bool> OnDetected;
 
     [Header("Detected Event")]
@@ -43,4 +45,6 @@ public class DetectableObject : MonoBehaviour , IDetectable
         DetectOffEvent?.Invoke();
         _isOnDetected = false;
     }
+
+    
 }

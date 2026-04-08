@@ -6,7 +6,8 @@ public class FuseBoxInteractable : StateInteractable
 {
     [Header("References")]
     [SerializeField] private GameObject _innerFuseObject;
-    [SerializeField] private KeyPadInteractable _keyPadInteractable;
+    [SerializeField] private GameObject _fuseLightOn;
+    [SerializeField] private GameObject _fuseLightOff;
 
     [Header("Fuse Settings")]
     [SerializeField] private int _requiredFuseItemId = 11;
@@ -22,13 +23,13 @@ public class FuseBoxInteractable : StateInteractable
     {
         if (!ValidateConfiguration(out failureReason))
         {
-            SetFailureResult(UseInteractResult.InvalidConfiguration);
+            SetFailureResult(EUseInteractResult.InvalidConfiguration);
             return false;
         }
 
         if (GetState(_completedStateKey))
         {
-            SetFailureResult(UseInteractResult.AlreadyCompleted);
+            SetFailureResult(EUseInteractResult.AlreadyCompleted);
             failureReason = "The fuse box is already completed.";
             return false;
         }
@@ -36,14 +37,14 @@ public class FuseBoxInteractable : StateInteractable
         RuntimeItemData handItem = context?.Hand;
         if (handItem == null)
         {
-            SetFailureResult(UseInteractResult.EmptyHand);
+            SetFailureResult(EUseInteractResult.EmptyHand);
             failureReason = "A fuse is required, but the player's hand item is empty.";
             return false;
         }
 
         if (handItem.ItemId != _requiredFuseItemId)
         {
-            SetFailureResult(UseInteractResult.NonRequireItem);
+            SetFailureResult(EUseInteractResult.NonRequireItem);
             failureReason = $"The equipped item does not match the required fuse. equippedItemId={handItem.ItemId}, requiredItemId={_requiredFuseItemId}";
             return false;
         }
@@ -58,7 +59,7 @@ public class FuseBoxInteractable : StateInteractable
         {
             if (context?.HandAbility == null)
             {
-                SetFailureResult(UseInteractResult.ConsumeFailed);
+                SetFailureResult(EUseInteractResult.ConsumeFailed);
                 failureReason = "Failed to consume the fuse because HandAbility is missing.";
                 Debug.LogError($"[{nameof(FuseBoxInteractable)}] {gameObject.name} could not consume the fuse because HandAbility is missing.", this);
                 return false;
@@ -66,19 +67,17 @@ public class FuseBoxInteractable : StateInteractable
 
             if (!context.HandAbility.TryConsumeCurrentHandItem())
             {
-                SetFailureResult(UseInteractResult.ConsumeFailed);
+                SetFailureResult(EUseInteractResult.ConsumeFailed);
                 failureReason = $"Failed to consume the required fuse. requiredItemId={_requiredFuseItemId}";
                 Debug.LogError($"[{nameof(FuseBoxInteractable)}] {gameObject.name} failed to consume the required fuse. requiredItemId={_requiredFuseItemId}", this);
                 return false;
             }
         }
 
-        if (_innerFuseObject != null)
-        {
-            _innerFuseObject.SetActive(true);
-        }
+        _innerFuseObject.SetActive(true);
+        _fuseLightOn.SetActive(true);
+        _fuseLightOff.SetActive(false);
 
-        _keyPadInteractable?.Unlock();
         SetState(_completedStateKey, true);
 
         // TODO: Play fuse insertion SFX via SoundManager.
@@ -86,7 +85,7 @@ public class FuseBoxInteractable : StateInteractable
         Debug.Log($"[{nameof(FuseBoxInteractable)}] {gameObject.name} completed successfully. requiredItemId={_requiredFuseItemId}", this);
         _onCompleted?.Invoke();
         SetActivate(false);
-        SetFailureResult(UseInteractResult.Success);
+        SetFailureResult(EUseInteractResult.Success);
         failureReason = string.Empty;
         return true;
     }

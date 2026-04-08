@@ -16,21 +16,21 @@ public class PadLockInteractable : UsableObject
     {
         if (_padLockController == null)
         {
-            SetFailureResult(UseInteractResult.InvalidConfiguration);
+            SetFailureResult(EUseInteractResult.InvalidConfiguration);
             failureReason = "PadLockController reference is missing.";
             return false;
         }
 
         if (_padLockController.IsSolved)
         {
-            SetFailureResult(UseInteractResult.AlreadyUnlocked);
+            SetFailureResult(EUseInteractResult.AlreadyUnlocked);
             failureReason = "The padlock puzzle is already solved.";
             return false;
         }
 
         if (_padLockController.HasActivePuzzle)
         {
-            SetFailureResult(UseInteractResult.PuzzleAlreadyRunning);
+            SetFailureResult(EUseInteractResult.PuzzleAlreadyRunning);
             failureReason = "The padlock puzzle is already running.";
             return false;
         }
@@ -44,7 +44,7 @@ public class PadLockInteractable : UsableObject
         _padLockController.TryOpen();
         Debug.Log($"[{nameof(PadLockInteractable)}] {gameObject.name} started the padlock puzzle.", this);
         failureReason = string.Empty;
-        SetFailureResult(UseInteractResult.Success);
+        SetFailureResult(EUseInteractResult.Success);
         return true;
     }
 

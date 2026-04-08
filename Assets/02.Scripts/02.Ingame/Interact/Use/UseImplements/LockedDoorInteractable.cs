@@ -35,20 +35,20 @@ public class LockedDoorInteractable : StateInteractable
     {
         if (!ValidateConfiguration(out failureReason))
         {
-            SetFailureResult(UseInteractResult.InvalidConfiguration);
+            SetFailureResult(EUseInteractResult.InvalidConfiguration);
             return false;
         }
 
         if (IsOpen)
         {
-            SetFailureResult(UseInteractResult.AlreadyOpen);
+            SetFailureResult(EUseInteractResult.AlreadyOpen);
             failureReason = "The door is already open.";
             return false;
         }
 
         if (!IsUnlocked)
         {
-            SetFailureResult(UseInteractResult.Locked);
+            SetFailureResult(EUseInteractResult.Locked);
             failureReason = "The door is locked.";
             return false;
         }
@@ -61,7 +61,7 @@ public class LockedDoorInteractable : StateInteractable
     {
         OpenDoor();
         failureReason = string.Empty;
-        SetFailureResult(UseInteractResult.Success);
+        SetFailureResult(EUseInteractResult.Success);
         return true;
     }
 
@@ -69,8 +69,8 @@ public class LockedDoorInteractable : StateInteractable
     {
         _onInteractionFailed?.Invoke();
     }
-
-    public virtual bool Unlock()
+    
+    public override bool Unlock()
     {
         if (!ValidateConfiguration(out string failureReason))
         {
@@ -87,8 +87,6 @@ public class LockedDoorInteractable : StateInteractable
         SetState(_unlockStateKey, true);
         RefreshInteractAvailability();
         Debug.Log($"[{nameof(LockedDoorInteractable)}] {gameObject.name} unlocked.", this);
-
-        // TODO: Play unlock SFX via SoundManager.
 
         _onUnlocked?.Invoke();
         return true;

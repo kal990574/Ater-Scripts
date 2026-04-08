@@ -16,8 +16,7 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
     [Header("State")]
     [SerializeField] private bool _blockOpenAfterSuccess = true;
     [SerializeField] private GameObject _lockVisualToDisable;
-    [SerializeField] private LockedDoorInteractable _doorToUnlock;
-
+    
     [Header("Puzzle Events")]
     [SerializeField] private UnityEvent _spinEvnet;
     [SerializeField] private UnityEvent _successEvent;
@@ -95,8 +94,7 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
 
         _isSolved = true;
         _successEvent?.Invoke();
-        _doorToUnlock?.Unlock();
-
+        
         if (_lockVisualToDisable != null)
         {
             _lockVisualToDisable.SetActive(false);
