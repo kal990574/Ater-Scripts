@@ -23,6 +23,7 @@ public class SoundManager : MonoBehaviour, ISoundService
         }
 
         _instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     private void OnDestroy()

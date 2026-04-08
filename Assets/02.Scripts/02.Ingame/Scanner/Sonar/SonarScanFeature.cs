@@ -94,7 +94,13 @@ namespace _02.Scripts.Sonar
             _cameraFeedback.Play();
             SoundService.PlaySFX2D(_config.SonarActive);
             _eventPublisher.TryPublish(
-                context => new SonarScanStartedRawEvent(context));
+                context => new SonarScanStartedRawEvent(
+                    context,
+                    transform.position,
+                    _cameraTarget.forward,
+                    _config.ExpandSpeed,
+                    _config.ScanRadius,
+                    _config.ScanAngle));
         }
     }
 }

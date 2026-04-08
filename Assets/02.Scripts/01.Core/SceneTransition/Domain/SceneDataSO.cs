@@ -8,6 +8,9 @@ namespace _02.Scripts._01.Core.SceneTransition.Domain
         [Header("Scene Info")]
         [SerializeField] private string _sceneName;
         [SerializeField] private int _chapterId;
+        
+        [Header("BGM Info")]
+        [SerializeField] private SoundKeyReference _bgmKey;
 
         [Header("Loading Screen")]
         [SerializeField] private string _displayText;
@@ -17,5 +20,6 @@ namespace _02.Scripts._01.Core.SceneTransition.Domain
         public int ChapterId => _chapterId;
         public string DisplayText => _displayText;
         public string LoadingTip => _loadingTip;
+        public string BgmKey => _bgmKey;
     }
 }
