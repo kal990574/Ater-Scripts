@@ -9,10 +9,14 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     private IRuntimeView _instance;
     protected ScannableObject _scannableObject;
 
+    [SerializeField] private string _hoverDescriptionBeforeScan = "";
+
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
     public bool IsInteractActive => _isInteractActive && IsScanRequirementSatisfied() && IsAdditionalInteractRequirementSatisfied();
     public override bool CanDetect => _isDetectable && IsInteractActive;
+    public override string HoverDescription =>
+    IsScanRequirementSatisfied() ? base.HoverDescription : _hoverDescriptionBeforeScan;
     protected IRuntimeView RuntimeView => _instance;
 
     public event Action OnInteract;

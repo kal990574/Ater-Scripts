@@ -7,8 +7,13 @@ public class PlayerDetectAbility : PlayerAbility
 
     private PlayerTargetDetector _playerTargetDetector;
     private IDetectable _currentTarget;
+    private GameEventPublisher _eventPublisher;
+
+    private IDetectable _currentPromptTarget;
+    private string _lastPublishedDescription;
 
     public IDetectable CurrentTarget => _currentTarget;
+
 
     private void Start()
     {
@@ -16,20 +21,47 @@ public class PlayerDetectAbility : PlayerAbility
         _playerTargetDetector = new PlayerTargetDetector(
             new RaycastService(),
             _query);
+
+        _eventPublisher = new GameEventPublisher();
+        _eventPublisher.SetSource(this);
     }
 
     private void Update()
     {
         IDetectable nextDetectTarget =
             _playerTargetDetector.Detect(_camera.transform.position, _camera.transform.forward);
-        if (ReferenceEquals(_currentTarget, nextDetectTarget))
+
+        if (!ReferenceEquals(_currentTarget, nextDetectTarget))
         {
-            return;
+            _currentTarget?.OnDetectExit();
+            _currentTarget = nextDetectTarget;
+            _currentTarget?.OnDetectEnter();
         }
 
-        _currentTarget?.OnDetectExit();
-        _currentTarget = nextDetectTarget;
-        _currentTarget?.OnDetectEnter();
+        UpdatePromptEvent();
+    }
+
+    private void UpdatePromptEvent()
+    {
+        IDetectable promptTarget = null;
+
+        if (Physics.Raycast(_camera.transform.position, _camera.transform.forward,
+            out RaycastHit hit, _query.Distance))
+        {
+            promptTarget = hit.collider.GetComponentInParent<IDetectable>();
+        }
+
+        string desc = promptTarget?.HoverDescription ?? string.Empty;
+        bool changed = !ReferenceEquals(_currentPromptTarget, promptTarget)
+                       || desc != _lastPublishedDescription;
+
+        if (!changed) return;
+
+        _currentPromptTarget = promptTarget;
+        _lastPublishedDescription = desc;
+
+        bool isVisible = promptTarget != null && !string.IsNullOrEmpty(desc);
+        _eventPublisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, isVisible, desc));
     }
 
     private void OnDisable()
@@ -46,5 +78,9 @@ public class PlayerDetectAbility : PlayerAbility
 
         _currentTarget.OnDetectExit();
         _currentTarget = null;
+
+        _currentPromptTarget = null;
+        _lastPublishedDescription = string.Empty;
+        _eventPublisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, false, string.Empty));
     }
 }

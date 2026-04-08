@@ -12,7 +12,7 @@ public class DetectableObject : MonoBehaviour , IDetectable
     public virtual bool CanDetect => _isDetectable;
 
     [SerializeField] private string _hoverDescription;
-    public string HoverDescription =>  _hoverDescription;
+    public virtual string HoverDescription =>  _hoverDescription;
     public event Action<bool> OnDetected;
 
     [Header("Detected Event")]
