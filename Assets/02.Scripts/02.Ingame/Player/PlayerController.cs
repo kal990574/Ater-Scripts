@@ -96,6 +96,8 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         if (Target != null && _input.InteractInput)
         {
             GetAbility<PlayerInteractAbility>().Interact(Target);
+            GetAbility<PlayerDetectAbility>().ForceHidePrompt();
+
         }
     }
 

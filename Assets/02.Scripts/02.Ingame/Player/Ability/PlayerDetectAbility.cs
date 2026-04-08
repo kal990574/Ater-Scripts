@@ -11,6 +11,7 @@ public class PlayerDetectAbility : PlayerAbility
 
     private IDetectable _currentPromptTarget;
     private string _lastPublishedDescription;
+    private bool _suppressPromptUntilLookAway;
 
     public IDetectable CurrentTarget => _currentTarget;
 
@@ -51,6 +52,17 @@ public class PlayerDetectAbility : PlayerAbility
             promptTarget = hit.collider.GetComponentInParent<IDetectable>();
         }
 
+        if (_suppressPromptUntilLookAway)
+        {
+            if (promptTarget == null)
+            {
+                _suppressPromptUntilLookAway = false;
+                _currentPromptTarget = null;
+                _lastPublishedDescription = string.Empty;
+            }
+            return;
+        }
+
         string desc = promptTarget?.HoverDescription ?? string.Empty;
         bool changed = !ReferenceEquals(_currentPromptTarget, promptTarget)
                        || desc != _lastPublishedDescription;
@@ -62,6 +74,13 @@ public class PlayerDetectAbility : PlayerAbility
 
         bool isVisible = promptTarget != null && !string.IsNullOrEmpty(desc);
         _eventPublisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, isVisible, desc));
+    }
+
+    public void ForceHidePrompt()
+    {
+        _suppressPromptUntilLookAway = true;
+        _lastPublishedDescription = string.Empty;
+        _eventPublisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, false, string.Empty));
     }
 
     private void OnDisable()

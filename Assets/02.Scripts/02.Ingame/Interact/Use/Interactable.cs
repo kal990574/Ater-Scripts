@@ -15,8 +15,16 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
     public bool IsInteractActive => _isInteractActive && IsScanRequirementSatisfied() && IsAdditionalInteractRequirementSatisfied();
     public override bool CanDetect => _isDetectable && IsInteractActive;
-    public override string HoverDescription =>
-    IsScanRequirementSatisfied() ? base.HoverDescription : _hoverDescriptionBeforeScan;
+    public override bool CanShowHoverUI => _isDetectable && _isInteractActive;
+    public override string HoverDescription
+    {
+        get
+        {
+            if (!IsScanRequirementSatisfied()) return _hoverDescriptionBeforeScan; 
+            if (!_isInteractActive) return string.Empty;                           
+            return base.HoverDescription;                                          
+        }
+    }
     protected IRuntimeView RuntimeView => _instance;
 
     public event Action OnInteract;

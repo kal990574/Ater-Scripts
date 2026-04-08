@@ -13,6 +13,9 @@ public class DetectableObject : MonoBehaviour , IDetectable
 
     [SerializeField] private string _hoverDescription;
     public virtual string HoverDescription =>  _hoverDescription;
+
+    public virtual bool CanShowHoverUI => _isDetectable;
+
     public event Action<bool> OnDetected;
 
     [Header("Detected Event")]
