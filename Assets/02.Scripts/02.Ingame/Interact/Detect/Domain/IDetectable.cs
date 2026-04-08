@@ -7,6 +7,6 @@ public interface IDetectable
     bool CanDetect { get; }
     void OnDetectEnter();
     void OnDetectExit();
-
+    string HoverDescription { get; }
     event Action<bool> OnDetected;
 }

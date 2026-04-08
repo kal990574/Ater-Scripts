@@ -43,14 +43,14 @@ public class KeyDoorInteractable : LockedDoorInteractable
         RuntimeItemData handItem = context?.Hand;
         if (handItem == null)
         {
-            SetFailureResult(UseInteractResult.EmptyHand);
+            SetFailureResult(EUseInteractResult.EmptyHand);
             failureReason = "A key is required, but the player's hand item is empty.";
             return false;
         }
 
         if (handItem.ItemId != _requiredKeyItemId)
         {
-            SetFailureResult(UseInteractResult.NonRequireItem);
+            SetFailureResult(EUseInteractResult.NonRequireItem);
             failureReason = $"The equipped item does not match the required key. equippedItemId={handItem.ItemId}, requiredItemId={_requiredKeyItemId}";
             return false;
         }
@@ -65,7 +65,7 @@ public class KeyDoorInteractable : LockedDoorInteractable
         {
             if (context?.HandAbility == null)
             {
-                SetFailureResult(UseInteractResult.ConsumeFailed);
+                SetFailureResult(EUseInteractResult.ConsumeFailed);
                 failureReason = "Failed to consume the key because HandAbility is missing.";
                 Debug.LogError($"[{nameof(KeyDoorInteractable)}] {gameObject.name} could not consume the key because HandAbility is missing.", this);
                 return false;
@@ -73,7 +73,7 @@ public class KeyDoorInteractable : LockedDoorInteractable
 
             if (!context.HandAbility.TryConsumeCurrentHandItem())
             {
-                SetFailureResult(UseInteractResult.ConsumeFailed);
+                SetFailureResult(EUseInteractResult.ConsumeFailed);
                 failureReason = $"Failed to consume the required key. requiredItemId={_requiredKeyItemId}";
                 Debug.LogError($"[{nameof(KeyDoorInteractable)}] {gameObject.name} failed to consume the required key. requiredItemId={_requiredKeyItemId}", this);
                 return false;
@@ -82,13 +82,13 @@ public class KeyDoorInteractable : LockedDoorInteractable
 
         if (!Unlock())
         {
-            SetFailureResult(UseInteractResult.InvalidConfiguration);
+            SetFailureResult(EUseInteractResult.InvalidConfiguration);
             failureReason = "Door unlock request failed.";
             return false;
         }
         
         failureReason = string.Empty;
-        SetFailureResult(UseInteractResult.Success);
+        SetFailureResult(EUseInteractResult.Success);
         return true;
     }
 

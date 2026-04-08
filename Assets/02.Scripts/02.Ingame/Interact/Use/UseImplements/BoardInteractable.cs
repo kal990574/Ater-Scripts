@@ -26,20 +26,20 @@ public class BoardInteractable : StateInteractable
     {
         if (!ValidateConfiguration(out failureReason))
         {
-            SetFailureResult(UseInteractResult.InvalidConfiguration);
+            SetFailureResult(EUseInteractResult.InvalidConfiguration);
             return false;
         }
 
         if (GetState(_openStateKey))
         {
-            SetFailureResult(UseInteractResult.AlreadyOpen);
+            SetFailureResult(EUseInteractResult.AlreadyOpen);
             failureReason = "The board is already open.";
             return false;
         }
 
         if (!_scannableObject.IsProgressComplete)
         {
-            SetFailureResult(UseInteractResult.NotScanned);
+            SetFailureResult(EUseInteractResult.NotScanned);
             failureReason = "The board cannot be opened before scan completion.";
             return false;
         }
@@ -66,7 +66,7 @@ public class BoardInteractable : StateInteractable
         Debug.Log($"[{nameof(BoardInteractable)}] {gameObject.name} opened successfully. animationState={_openAnimationStateName}", this);
         _onOpened?.Invoke();
         SetActivate(false);
-        SetFailureResult(UseInteractResult.Success);
+        SetFailureResult(EUseInteractResult.Success);
         failureReason = string.Empty;
         return true;
     }
