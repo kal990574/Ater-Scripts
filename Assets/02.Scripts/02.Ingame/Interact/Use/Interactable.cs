@@ -90,27 +90,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
 
         return field;
     }
-
-    protected T GetComponentInChildrenCached<T>(ref T field) where T : Component
-    {
-        if (field == null)
-        {
-            field = GetComponentInChildren<T>();
-        }
-
-        return field;
-    }
-
-    protected T GetComponentInParentCached<T>(ref T field) where T : Component
-    {
-        if (field == null)
-        {
-            field = GetComponentInParent<T>();
-        }
-
-        return field;
-    }
-
+    
     protected virtual bool IsAdditionalInteractRequirementSatisfied()
     {
         return true;
