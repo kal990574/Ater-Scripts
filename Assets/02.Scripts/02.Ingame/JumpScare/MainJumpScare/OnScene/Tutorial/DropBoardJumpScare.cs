@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-public class DropJumpScare : MainJumpScareBase
+public class DropBoardJumpScare : MainJumpScareBase
 {
     [Header("References")]
     [SerializeField] private Rigidbody _rigidbody;
@@ -36,14 +36,14 @@ public class DropJumpScare : MainJumpScareBase
     protected override void Awake()
     {
         base.Awake();
-        _rigidbody = GetComponent<Rigidbody>();
+        ResolveRigidbodyReference();
         CacheInitialState();
         InitializePhysicsState();
     }
 
     private void Reset()
     {
-        
+        ResolveRigidbodyReference();
     }
 
     private void Update()
@@ -76,8 +76,7 @@ public class DropJumpScare : MainJumpScareBase
             FinishJumpScare();
         }
     }
-
-    [Button]
+    
     protected override void OnExecute()
     {
         if (_rigidbody == null)
@@ -204,8 +203,7 @@ public class DropJumpScare : MainJumpScareBase
         NotifyFinished();
     }
 
-    [Button]
-    public void ResetJumpScare()
+    protected override void OnResetJumpScare()
     {
         if (_isInitialStateCached == false)
         {
@@ -225,8 +223,8 @@ public class DropJumpScare : MainJumpScareBase
             _rigidbody.Sleep();
         }
 
-        transform.position = _initialWorldPosition;
-        transform.rotation = _initialWorldRotation;
+        TargetTransform.position = _initialWorldPosition;
+        TargetTransform.rotation = _initialWorldRotation;
 
         if (_rigidbody != null)
         {
@@ -241,8 +239,8 @@ public class DropJumpScare : MainJumpScareBase
 
     private void CacheInitialState()
     {
-        _initialWorldPosition = transform.position;
-        _initialWorldRotation = transform.rotation;
+        _initialWorldPosition = TargetTransform.position;
+        _initialWorldRotation = TargetTransform.rotation;
         _initialIsKinematic = _rigidbody != null && _rigidbody.isKinematic;
         _isInitialStateCached = true;
     }
@@ -262,5 +260,15 @@ public class DropJumpScare : MainJumpScareBase
         _rigidbody.linearVelocity = Vector3.zero;
         _rigidbody.angularVelocity = Vector3.zero;
         _rigidbody.isKinematic = true;
+    }
+
+    private void ResolveRigidbodyReference()
+    {
+        if (_rigidbody != null)
+        {
+            return;
+        }
+
+        _rigidbody = TargetObject.GetComponent<Rigidbody>();
     }
 }

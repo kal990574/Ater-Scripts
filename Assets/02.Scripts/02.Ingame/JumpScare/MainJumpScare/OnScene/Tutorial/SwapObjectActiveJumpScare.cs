@@ -32,8 +32,7 @@ public class SwapObjectActiveJumpScare :  MainJumpScareBase
     private void Reset()
     {
     }
-
-    [Button]
+    
     protected override void OnExecute()
     {
         if (_beforeObject != null)
@@ -56,8 +55,7 @@ public class SwapObjectActiveJumpScare :  MainJumpScareBase
         NotifyFinished();
     }
 
-    [Button]
-    public void ResetJumpScare()
+    protected override void OnResetJumpScare()
     {
         if (_isInitialStateCached == false)
         {

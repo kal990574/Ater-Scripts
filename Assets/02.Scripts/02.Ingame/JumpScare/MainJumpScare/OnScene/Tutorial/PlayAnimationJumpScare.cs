@@ -34,16 +34,16 @@ public class PlayAnimationJumpScare : MainJumpScareBase
     {
         base.Awake();
 
+        ResolveAnimatorReference();
         _triggerParameterHash = Animator.StringToHash(_triggerParameterName);
         InitializeRuntimeState();
     }
 
     private void Reset()
     {
-        _targetAnimator = GetComponentInChildren<Animator>();
+        ResolveAnimatorReference();
     }
-
-    [Button]
+    
     protected override void OnExecute()
     {
         if (_targetAnimator == null)
@@ -199,8 +199,7 @@ public class PlayAnimationJumpScare : MainJumpScareBase
         FinishAnimationJumpScare();
     }
 
-    [Button]
-    public void ResetJumpScare()
+    protected override void OnResetJumpScare()
     {
         InitializeRuntimeState();
 
@@ -249,6 +248,16 @@ public class PlayAnimationJumpScare : MainJumpScareBase
     {
         _isPlayingAnimation = false;
         _hasFinishedAnimation = false;
+    }
+
+    private void ResolveAnimatorReference()
+    {
+        if (_targetAnimator != null)
+        {
+            return;
+        }
+
+        _targetAnimator = TargetObject.GetComponentInChildren<Animator>();
     }
 
     private int GetValidLayerIndex()
