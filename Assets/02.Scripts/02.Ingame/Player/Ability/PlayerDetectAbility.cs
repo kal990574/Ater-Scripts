@@ -7,8 +7,14 @@ public class PlayerDetectAbility : PlayerAbility
 
     private PlayerTargetDetector _playerTargetDetector;
     private IDetectable _currentTarget;
+    private GameEventPublisher _eventPublisher;
+
+    private IDetectable _currentPromptTarget;
+    private string _lastPublishedDescription;
+    private bool _suppressPromptUntilLookAway;
 
     public IDetectable CurrentTarget => _currentTarget;
+
 
     private void Start()
     {
@@ -16,20 +22,65 @@ public class PlayerDetectAbility : PlayerAbility
         _playerTargetDetector = new PlayerTargetDetector(
             new RaycastService(),
             _query);
+
+        _eventPublisher = new GameEventPublisher();
+        _eventPublisher.SetSource(this);
     }
 
     private void Update()
     {
         IDetectable nextDetectTarget =
             _playerTargetDetector.Detect(_camera.transform.position, _camera.transform.forward);
-        if (ReferenceEquals(_currentTarget, nextDetectTarget))
+
+        if (!ReferenceEquals(_currentTarget, nextDetectTarget))
         {
+            _currentTarget?.OnDetectExit();
+            _currentTarget = nextDetectTarget;
+            _currentTarget?.OnDetectEnter();
+        }
+
+        UpdatePromptEvent();
+    }
+
+    private void UpdatePromptEvent()
+    {
+        IDetectable promptTarget = null;
+
+        if (Physics.Raycast(_camera.transform.position, _camera.transform.forward,
+            out RaycastHit hit, _query.Distance))
+        {
+            promptTarget = hit.collider.GetComponentInParent<IDetectable>();
+        }
+
+        if (_suppressPromptUntilLookAway)
+        {
+            if (promptTarget == null)
+            {
+                _suppressPromptUntilLookAway = false;
+                _currentPromptTarget = null;
+                _lastPublishedDescription = string.Empty;
+            }
             return;
         }
 
-        _currentTarget?.OnDetectExit();
-        _currentTarget = nextDetectTarget;
-        _currentTarget?.OnDetectEnter();
+        string desc = promptTarget?.HoverDescription ?? string.Empty;
+        bool changed = !ReferenceEquals(_currentPromptTarget, promptTarget)
+                       || desc != _lastPublishedDescription;
+
+        if (!changed) return;
+
+        _currentPromptTarget = promptTarget;
+        _lastPublishedDescription = desc;
+
+        bool isVisible = promptTarget != null && !string.IsNullOrEmpty(desc);
+        _eventPublisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, isVisible, desc));
+    }
+
+    public void ForceHidePrompt()
+    {
+        _suppressPromptUntilLookAway = true;
+        _lastPublishedDescription = string.Empty;
+        _eventPublisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, false, string.Empty));
     }
 
     private void OnDisable()
@@ -46,5 +97,9 @@ public class PlayerDetectAbility : PlayerAbility
 
         _currentTarget.OnDetectExit();
         _currentTarget = null;
+
+        _currentPromptTarget = null;
+        _lastPublishedDescription = string.Empty;
+        _eventPublisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, false, string.Empty));
     }
 }
