@@ -13,12 +13,26 @@ public class LockedDoorInteractable : StateInteractable
     [SerializeField] private string _unlockStateKey = "is_unlocked";
     [SerializeField] private string _openStateKey = "is_open";
 
+    [Header("Hover Description")]
+    [SerializeField] private string _hoverDescriptionUnlocked = "";
+
     [Header("Events")]
     [SerializeField] private UnityEvent _onUnlocked;
     [SerializeField] private UnityEvent _onOpened;
 
     public bool IsUnlocked => GetState(_unlockStateKey);
     public bool IsOpen => GetState(_openStateKey);
+
+    public override string HoverDescription
+    {
+        get
+        {
+            if (IsUnlocked)
+                return _hoverDescriptionUnlocked;
+
+            return base.HoverDescription;
+        }
+    }
 
     protected override bool IsAdditionalInteractRequirementSatisfied()
     {
