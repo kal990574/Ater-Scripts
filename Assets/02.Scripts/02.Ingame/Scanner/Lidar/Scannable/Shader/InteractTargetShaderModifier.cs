@@ -68,19 +68,24 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void ApplyInitialShaderState()
     {
+        ApplyOutlineConfig();
+
+        Color hoverOutlineColor = _oultineConfig != null ? _oultineConfig.OnHoverOutlineColor : Color.white;
+        Color abstractOutlineColor = _oultineConfig != null ? _oultineConfig.AbstractOutlineColor : Color.white;
+
         if (scannable == null)
         {
-            SetOutlineColor(_oultineConfig.OnHoverOutlineColor);
+            SetOutlineColor(hoverOutlineColor);
             ApplyProgressState(1f);
         }
         else if (scannable.IsProgressComplete)
         {
-            SetOutlineColor(_oultineConfig.OnHoverOutlineColor);
+            SetOutlineColor(hoverOutlineColor);
             ApplyProgressState(1f);
         }
         else
         {
-            SetOutlineColor(_oultineConfig.AbstractOutlineColor);
+            SetOutlineColor(abstractOutlineColor);
             ApplyProgressState(0.0f);
         }
         
@@ -160,7 +165,9 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void UpdateOutlineColor(float ratio)
     {
-        Color outlineColor = Color.Lerp(_oultineConfig.AbstractOutlineColor, _oultineConfig.OnHoverOutlineColor, ratio);
+        Color from = _oultineConfig != null ? _oultineConfig.AbstractOutlineColor : Color.white;
+        Color to = _oultineConfig != null ? _oultineConfig.OnHoverOutlineColor : Color.white;
+        Color outlineColor = Color.Lerp(from, to, ratio);
         SetOutlineColor(outlineColor);
     }
 
@@ -210,6 +217,16 @@ public class InteractTargetShaderModifier : MonoBehaviour
         _shaderPropertyController.SetColor(OUTLINE_COLOR_NAME, value);
     }
 
+    private void ApplyOutlineConfig()
+    {
+        if (_oultineConfig == null)
+        {
+            return;
+        }
+
+        _shaderPropertyController.SetFloat(OUTLINE_THICKNESS_NAME, _oultineConfig.GetOutlineThickness());
+    }
+
     private void SetBlendCutOffRatio(float value)
     {
         _shaderPropertyController.SetFloat(TEXTURE_BLENDING_CUTOFF_NAME, value);
@@ -241,11 +258,26 @@ public class InteractTargetShaderModifier : MonoBehaviour
     private void RefreshOutlineState()
     {
         bool shouldShowOutline = _isDetected || IsScanInProgress();
-        _shaderPropertyController.SetOutlineEnabled(shouldShowOutline);
+        AllInOneShaderController.OutlineType outlineType = shouldShowOutline
+            ? ConvertOutlineType(_oultineConfig != null ? _oultineConfig.Type : OutlineShaderConfigSO.OutlineType.Simple)
+            : AllInOneShaderController.OutlineType.None;
+
+        _shaderPropertyController.SetOutlineType(outlineType);
     }
 
     private bool IsScanInProgress()
     {
         return _currentScanRatio > 0.0f && _currentScanRatio < 1.0f;
+    }
+
+    private static AllInOneShaderController.OutlineType ConvertOutlineType(OutlineShaderConfigSO.OutlineType outlineType)
+    {
+        return outlineType switch
+        {
+            OutlineShaderConfigSO.OutlineType.Simple => AllInOneShaderController.OutlineType.Simple,
+            OutlineShaderConfigSO.OutlineType.Constant => AllInOneShaderController.OutlineType.Constant,
+            OutlineShaderConfigSO.OutlineType.FadeWithDistance => AllInOneShaderController.OutlineType.FadeWithDistance,
+            _ => AllInOneShaderController.OutlineType.None
+        };
     }
 }

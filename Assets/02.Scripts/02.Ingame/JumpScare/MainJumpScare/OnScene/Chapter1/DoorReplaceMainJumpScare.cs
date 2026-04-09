@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class DoorReplaceMainJumpScare : MainJumpScareBase
 {
@@ -11,7 +12,7 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
     [Title("Hierarchy References")]
     [SerializeField] private GameObject _doorRoot;
     [SerializeField] private Transform _doorTransform;
-
+    
     [Title("Door Tween")]
     [SerializeField] private Vector3 _doorClosedLocalEulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
     [SerializeField] private float _doorCloseDuration = 0.3f;
@@ -33,6 +34,10 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
     [SerializeField, ReadOnly] private bool _isPlaying;
     [SerializeField, ReadOnly] private Sequence _sequence;
 
+    [SerializeField] private UnityEvent _onCloseStartEvent;
+    [SerializeField] private UnityEvent _onCloseEndEvent;
+    [SerializeField] private UnityEvent _onFadeStartEvent;
+    [SerializeField] private UnityEvent _onFadeEndEvent;
     private Vector3 _cachedDoorInitialLocalEulerAngles;
 
     protected override void Awake()
@@ -83,16 +88,29 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
 
         _sequence = DOTween.Sequence();
         _sequence.SetUpdate(UpdateType.Normal);
+        _sequence.AppendCallback(() =>
+        {
+            _onCloseStartEvent?.Invoke();
+        });
 
         _sequence.Append(
             _doorTransform.DOLocalRotate(_doorClosedLocalEulerAngles, _doorCloseDuration)
                 .SetEase(_doorCloseEase)
         );
+        _sequence.AppendCallback(() =>
+        {
+            _onCloseEndEvent?.Invoke();
+        });
 
         if (_fadeStartDelay > 0.0f)
         {
             _sequence.AppendInterval(_fadeStartDelay);
         }
+
+        _sequence.AppendCallback(() =>
+        {
+            _onFadeStartEvent?.Invoke();
+        });
 
         _sequence.Append(
             DOTween.To(
@@ -136,6 +154,8 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
 
     private void HandleFadeCompleted()
     {
+        _onFadeEndEvent?.Invoke();
+
         if (_disableDoorRootOnFadeComplete == true && _doorRoot != null)
         {
             _doorRoot.SetActive(false);

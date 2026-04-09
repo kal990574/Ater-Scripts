@@ -6,6 +6,14 @@ using UnityEngine.Serialization;
 [RequireComponent(typeof(Renderer))]
 public class AllInOneShaderController : MonoBehaviour
 {
+    public enum OutlineType
+    {
+        None = 0,
+        Simple = 1,
+        Constant = 2,
+        FadeWithDistance = 3
+    }
+
     private const string OUTLINE_TYPE_PROPERTY_NAME = "_OutlineType";
     private const string OUTLINE_TYPE_NONE_KEYWORD = "_OUTLINETYPE_NONE";
     private const string OUTLINE_TYPE_SIMPLE_KEYWORD = "_OUTLINETYPE_SIMPLE";
@@ -51,6 +59,11 @@ public class AllInOneShaderController : MonoBehaviour
 
     public void SetOutlineEnabled(bool enabled)
     {
+        SetOutlineType(enabled ? OutlineType.Simple : OutlineType.None);
+    }
+
+    public void SetOutlineType(OutlineType outlineType)
+    {
         EnsureInitialized();
         if (_targetRenderer == null)
         {
@@ -58,9 +71,8 @@ public class AllInOneShaderController : MonoBehaviour
         }
 
         Material[] materials = _targetRenderer.materials;
-        float outlineType = enabled ? 1.0f : 0.0f;
-        string enabledKeyword = enabled ? OUTLINE_TYPE_SIMPLE_KEYWORD : OUTLINE_TYPE_NONE_KEYWORD;
-        string disabledKeyword = enabled ? OUTLINE_TYPE_NONE_KEYWORD : OUTLINE_TYPE_SIMPLE_KEYWORD;
+        float outlineTypeValue = (float)outlineType;
+        string enabledKeyword = GetOutlineKeyword(outlineType);
 
         for (int i = 0; i < materials.Length; i++)
         {
@@ -70,12 +82,24 @@ public class AllInOneShaderController : MonoBehaviour
                 continue;
             }
 
-            material.SetFloat(OUTLINE_TYPE_PROPERTY_NAME, outlineType);
-            material.DisableKeyword(disabledKeyword);
+            material.SetFloat(OUTLINE_TYPE_PROPERTY_NAME, outlineTypeValue);
+            material.DisableKeyword(OUTLINE_TYPE_NONE_KEYWORD);
+            material.DisableKeyword(OUTLINE_TYPE_SIMPLE_KEYWORD);
             material.DisableKeyword(OUTLINE_TYPE_CONSTANT_KEYWORD);
             material.DisableKeyword(OUTLINE_TYPE_FADE_WITH_DISTANCE_KEYWORD);
             material.EnableKeyword(enabledKeyword);
         }
+    }
+
+    private static string GetOutlineKeyword(OutlineType outlineType)
+    {
+        return outlineType switch
+        {
+            OutlineType.Simple => OUTLINE_TYPE_SIMPLE_KEYWORD,
+            OutlineType.Constant => OUTLINE_TYPE_CONSTANT_KEYWORD,
+            OutlineType.FadeWithDistance => OUTLINE_TYPE_FADE_WITH_DISTANCE_KEYWORD,
+            _ => OUTLINE_TYPE_NONE_KEYWORD
+        };
     }
 
     private int GetPropertyId(string propertyName)
