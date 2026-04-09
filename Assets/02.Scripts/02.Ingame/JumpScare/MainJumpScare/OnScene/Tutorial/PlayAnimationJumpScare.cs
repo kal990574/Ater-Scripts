@@ -10,8 +10,8 @@ public class PlayAnimationJumpScare : MainJumpScareBase
     [SerializeField] private Animator _targetAnimator;
 
     [Header("Animation")]
-    [SerializeField] private string _triggerParameterName = "Open";
-    [SerializeField] private bool _resetTriggerBeforeSet = true;
+    [SerializeField] private string _animationStateName = "OpenDoor";
+    [SerializeField] private float _normalizedStartTime = 0.0f;
 
     [Header("Default State")]
     [SerializeField] private bool _playOnExecuteOnlyOnce = true;
@@ -27,7 +27,7 @@ public class PlayAnimationJumpScare : MainJumpScareBase
     [SerializeField, ReadOnly] private bool _isPlayingAnimation;
     [SerializeField, ReadOnly] private bool _hasFinishedAnimation;
 
-    private int _triggerParameterHash;
+    private int _animationStateHash;
     private Coroutine _monitorCoroutine;
 
     protected override void Awake()
@@ -35,7 +35,7 @@ public class PlayAnimationJumpScare : MainJumpScareBase
         base.Awake();
 
         ResolveAnimatorReference();
-        _triggerParameterHash = Animator.StringToHash(_triggerParameterName);
+        _animationStateHash = Animator.StringToHash(_animationStateName);
         InitializeRuntimeState();
     }
 
@@ -68,19 +68,15 @@ public class PlayAnimationJumpScare : MainJumpScareBase
 
     private void PlayAnimation()
     {
-        if (string.IsNullOrWhiteSpace(_triggerParameterName) == true)
+        if (string.IsNullOrWhiteSpace(_animationStateName) == true)
         {
-            Debug.LogError($"[{name}] 트리거 파라미터명이 비어 있습니다.", this);
+            Debug.LogError($"[{name}] 애니메이션 상태 이름이 비어 있습니다.", this);
             FinishAnimationJumpScare();
             return;
         }
 
-        if (_resetTriggerBeforeSet == true)
-        {
-            _targetAnimator.ResetTrigger(_triggerParameterHash);
-        }
-
-        _targetAnimator.SetTrigger(_triggerParameterHash);
+        _targetAnimator.Play(_animationStateHash, GetValidLayerIndex(), _normalizedStartTime);
+        _targetAnimator.Update(0.0f);
     }
 
     private void StartAnimationMonitor()
@@ -96,25 +92,15 @@ public class PlayAnimationJumpScare : MainJumpScareBase
     private IEnumerator MonitorAnimationEnd()
     {
         int layerIndex = GetValidLayerIndex();
-        AnimatorStateInfo initialState = _targetAnimator.GetCurrentAnimatorStateInfo(layerIndex);
-        int initialFullPathHash = initialState.fullPathHash;
-
         float elapsed = 0f;
-        bool hasEnteredTriggeredState = false;
-        int playingStateHash = 0;
+        bool hasEnteredTargetState = false;
 
         while (_isPlayingAnimation == true && elapsed < _animationStartTimeout)
         {
-            if (_targetAnimator.IsInTransition(layerIndex) == true)
-            {
-                hasEnteredTriggeredState = true;
-            }
-
             AnimatorStateInfo currentState = _targetAnimator.GetCurrentAnimatorStateInfo(layerIndex);
-            if (currentState.fullPathHash != initialFullPathHash)
+            if (currentState.shortNameHash == _animationStateHash || currentState.fullPathHash == _animationStateHash)
             {
-                hasEnteredTriggeredState = true;
-                playingStateHash = currentState.fullPathHash;
+                hasEnteredTargetState = true;
                 break;
             }
 
@@ -128,11 +114,11 @@ public class PlayAnimationJumpScare : MainJumpScareBase
             yield break;
         }
 
-        if (hasEnteredTriggeredState == false)
+        if (hasEnteredTargetState == false)
         {
             if (_enableLog == true)
             {
-                Debug.LogWarning($"[{name}] 트리거된 애니메이션 상태 진입을 확인하지 못해 강제로 종료합니다.", this);
+                Debug.LogWarning($"[{name}] 대상 애니메이션 상태 진입을 확인하지 못해 강제로 종료합니다.", this);
             }
 
             NotifyAnimationFinished();
@@ -140,28 +126,19 @@ public class PlayAnimationJumpScare : MainJumpScareBase
             yield break;
         }
 
-        if (playingStateHash == 0)
-        {
-            AnimatorStateInfo currentState = _targetAnimator.GetCurrentAnimatorStateInfo(layerIndex);
-            playingStateHash = currentState.fullPathHash;
-        }
-
         while (_isPlayingAnimation == true)
         {
             if (_targetAnimator.IsInTransition(layerIndex) == true)
             {
-                AnimatorStateInfo nextState = _targetAnimator.GetNextAnimatorStateInfo(layerIndex);
-                if (nextState.fullPathHash != 0 && nextState.fullPathHash != playingStateHash)
-                {
-                    break;
-                }
-
                 yield return null;
                 continue;
             }
 
             AnimatorStateInfo currentState = _targetAnimator.GetCurrentAnimatorStateInfo(layerIndex);
-            if (currentState.fullPathHash != playingStateHash)
+            bool isTargetState =
+                currentState.shortNameHash == _animationStateHash || currentState.fullPathHash == _animationStateHash;
+
+            if (isTargetState == false)
             {
                 break;
             }
@@ -257,7 +234,7 @@ public class PlayAnimationJumpScare : MainJumpScareBase
             return;
         }
 
-        _targetAnimator = gameObject.GetComponentInChildren<Animator>();
+        _targetAnimator = transform.GetComponentInChildren<Animator>();
     }
 
     private int GetValidLayerIndex()
