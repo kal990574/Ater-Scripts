@@ -92,6 +92,20 @@ public class LockedDoorInteractable : StateInteractable
         return true;
     }
 
+    public void ReactivateOpenedDoorInteraction()
+    {
+        if (!ValidateConfiguration(out string failureReason))
+        {
+            Debug.LogError($"[{nameof(LockedDoorInteractable)}] {gameObject.name} reactivation failed. reason={failureReason}", this);
+            return;
+        }
+
+        SetState(_openStateKey, false);
+        SetActivate(true);
+
+        Debug.Log($"[{nameof(LockedDoorInteractable)}] {gameObject.name} interaction was reactivated.", this);
+    }
+
     protected virtual void OpenDoor()
     {
         SetState(_openStateKey, true);
@@ -104,9 +118,7 @@ public class LockedDoorInteractable : StateInteractable
         {
             Debug.LogWarning($"[{nameof(LockedDoorInteractable)}] {gameObject.name} is missing Animator or animation state name. animationState={_openAnimationStateName}", this);
         }
-
-        // TODO: Play door open SFX via SoundManager.
-
+        
         Debug.Log($"[{nameof(LockedDoorInteractable)}] {gameObject.name} opened successfully. animationState={_openAnimationStateName}", this);
         _onOpened?.Invoke();
         SetActivate(false);
