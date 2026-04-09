@@ -17,9 +17,16 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
         [SerializeField] private LoadingUI _loadingUI;
         [SerializeField] private float _minimumLoadingDuration = 3f;
         [SerializeField] private float _modalAnimationDelay = 0.5f;
+        [SerializeField] private NarrationUI _narrationUI;
 
         private SceneDataSO _currentSceneData;
         private bool _isTransitioning;
+
+        private void Start()
+        {
+            if (!string.IsNullOrEmpty(_mainMenuSceneData.BgmKey) && SoundManager.Instance != null)
+                SoundManager.Instance.PlayBGM(_mainMenuSceneData.BgmKey);
+        }
 
         public void LoadScene(SceneDataSO sceneData)
         {
@@ -42,10 +49,25 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
         private IEnumerator TransitionCoroutine(SceneDataSO sceneData)
         {
             _isTransitioning = true;
-            _loadingUI.Setup(sceneData);
+            Time.timeScale = 0f;
+
+            // BGM 정지
+            if (SoundManager.Instance != null)
+                SoundManager.Instance.StopBGM(0.5f);
+
+            // 나레이션
+            if (sceneData.HasNarration && _narrationUI != null)
+                yield return _narrationUI.PlayNarration(sceneData);
+
+            // 나레이션 끝난 후 로딩 시작
             OnTransitionStarted?.Invoke();
+            _loadingUI.Setup(sceneData);
 
             yield return new WaitForSecondsRealtime(_modalAnimationDelay);
+
+            // 로딩 화면 애니메이션 완료 후 나레이션 배경 해제
+            if (_narrationUI != null)
+                _narrationUI.Hide();
 
             var asyncOp = SceneManager.LoadSceneAsync(sceneData.SceneName);
             asyncOp.allowSceneActivation = false;
@@ -72,10 +94,9 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
             _currentSceneData = sceneData;
 
             if (!string.IsNullOrEmpty(sceneData.BgmKey) && SoundManager.Instance != null)
-            {
                 SoundManager.Instance.PlayBGM(sceneData.BgmKey);
-            }
 
+            Time.timeScale = 1f;
             _isTransitioning = false;
             OnTransitionCompleted?.Invoke();
         }

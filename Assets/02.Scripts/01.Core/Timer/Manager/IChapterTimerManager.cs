@@ -11,8 +11,7 @@ namespace _02.Scripts.Core.Timer.Manager
         event Action<TimerState> OnTimerStateChanged;
         event Action OnTimerExpired;
 
-        void StartTimer(float totalSeconds);
+        void StartTimer();
         void StopTimer();
-        void Tick(float deltaTime);
     }
 }
