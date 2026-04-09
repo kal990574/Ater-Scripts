@@ -22,7 +22,7 @@ namespace _02.Scripts.Core.Timer.Component
         private IChapterTimerManager _timerManager;
         private int _lastDisplayedSecond = -1;
 
-        private void Start()
+        private void Awake()
         {
             _timerManager = Managers.Get<IChapterTimerManager>();
             _timerManager.OnTimerStateChanged += OnTimerStateChanged;
@@ -30,8 +30,7 @@ namespace _02.Scripts.Core.Timer.Component
 
         private void OnDestroy()
         {
-            if (_timerManager != null)
-                _timerManager.OnTimerStateChanged -= OnTimerStateChanged;
+            if (_timerManager != null) _timerManager.OnTimerStateChanged -= OnTimerStateChanged;
         }
 
         private void Update()
@@ -39,7 +38,6 @@ namespace _02.Scripts.Core.Timer.Component
             if (_timerManager == null) return;
             if (_timerManager.CurrentState == TimerState.Ready) return;
 
-            _timerManager.Tick(Time.deltaTime);
             UpdateDisplay();
             UpdateBlink();
         }
