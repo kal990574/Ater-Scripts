@@ -27,6 +27,7 @@ public class LockedDoorInteractable : StateInteractable
     {
         get
         {
+            if (IsOpen) return string.Empty;
             if (IsUnlocked)
                 return _hoverDescriptionUnlocked;
 
