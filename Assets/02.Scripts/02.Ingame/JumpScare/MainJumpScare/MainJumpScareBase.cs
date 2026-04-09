@@ -6,7 +6,6 @@ public abstract class MainJumpScareBase : MonoBehaviour
 {
     [Header("Main Jump Scare")]
     [SerializeField] private MainJumpScareKeyReference _id;
-    [SerializeField] private GameObject _targetObject;
     [SerializeField] private bool _canActive;
     [SerializeField] protected EMainJumpScareState _state = EMainJumpScareState.Waiting;
 
@@ -16,8 +15,7 @@ public abstract class MainJumpScareBase : MonoBehaviour
     private bool _initialCanActive;
     
     public string Id => _id;
-    protected GameObject TargetObject => _targetObject != null ? _targetObject : gameObject;
-    protected Transform TargetTransform => TargetObject.transform;
+    
     public bool CanActive => _canActive;
     public EMainJumpScareState State => _state;
 

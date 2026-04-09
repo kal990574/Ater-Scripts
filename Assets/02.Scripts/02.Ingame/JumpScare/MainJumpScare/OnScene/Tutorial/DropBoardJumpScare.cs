@@ -6,7 +6,8 @@ public class DropBoardJumpScare : MainJumpScareBase
 {
     [Header("References")]
     [SerializeField] private Rigidbody _rigidbody;
-
+    [SerializeField] private GameObject _targetObject;
+    
     [Header("Collision Filter")]
     [SerializeField] private LayerMask _environmentLayerMask;
     [SerializeField] private string _groundTag = "Ground";
@@ -33,6 +34,8 @@ public class DropBoardJumpScare : MainJumpScareBase
     [SerializeField] private UnityEvent _onDropCollision;
     private bool _isInitialStateCached;
 
+    protected GameObject TargetObject => _targetObject != null ? _targetObject : gameObject;
+    
     protected override void Awake()
     {
         base.Awake();
@@ -223,8 +226,8 @@ public class DropBoardJumpScare : MainJumpScareBase
             _rigidbody.Sleep();
         }
 
-        TargetTransform.position = _initialWorldPosition;
-        TargetTransform.rotation = _initialWorldRotation;
+        _targetObject.transform.position = _initialWorldPosition;
+        _targetObject.transform.rotation = _initialWorldRotation;
 
         if (_rigidbody != null)
         {
@@ -239,8 +242,8 @@ public class DropBoardJumpScare : MainJumpScareBase
 
     private void CacheInitialState()
     {
-        _initialWorldPosition = TargetTransform.position;
-        _initialWorldRotation = TargetTransform.rotation;
+        _initialWorldPosition = _targetObject.transform.position;
+        _initialWorldRotation = _targetObject.transform.rotation;
         _initialIsKinematic = _rigidbody != null && _rigidbody.isKinematic;
         _isInitialStateCached = true;
     }

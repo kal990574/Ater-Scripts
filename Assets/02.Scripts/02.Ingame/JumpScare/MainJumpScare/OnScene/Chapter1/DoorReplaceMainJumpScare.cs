@@ -8,10 +8,8 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
 {
     private const string FadeAmountPropertyName = "_FadeAmount";
 
-    [Title("Hierarchy References")] 
-    [SerializeField] private GameObject _doorWall;
+    [Title("Hierarchy References")]
     [SerializeField] private GameObject _doorRoot;
-    [SerializeField] private GameObject _blockWallRoot;
     [SerializeField] private Transform _doorTransform;
 
     [Title("Door Tween")]
@@ -20,17 +18,16 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
     [SerializeField] private Ease _doorCloseEase = Ease.InQuad;
 
     [Title("Fade")]
-    [SerializeField] private float _fadeStartDelay = 0.1f;
+    [SerializeField] private float _fadeStartDelay = 0.0f;
     [SerializeField] private float _fadeDuration = 0.6f;
     [SerializeField] private Ease _fadeEase = Ease.InOutQuad;
 
     [Title("Complete Options")]
-    [SerializeField] private bool _disableDoorWallRootOnFadeComplete = true;
+    [SerializeField] private bool _disableDoorRootOnFadeComplete = true;
 
     [Title("Runtime - Auto Collected")]
     [SerializeField, ReadOnly] private List<AllInOneShaderController> _doorShaderControllers = new List<AllInOneShaderController>();
-    [SerializeField, ReadOnly] private List<AllInOneShaderController> _blockWallShaderControllers = new List<AllInOneShaderController>();
-    
+
     [Title("Runtime State")]
     [SerializeField, ReadOnly] private bool _isInitialized;
     [SerializeField, ReadOnly] private bool _isPlaying;
@@ -49,7 +46,7 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
     {
         KillSequence();
     }
-    
+
     private void Initialize()
     {
         if (_doorTransform != null)
@@ -57,11 +54,8 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
             _cachedDoorInitialLocalEulerAngles = _doorTransform.localEulerAngles;
         }
 
-        CollectDoorWallShaderControllers();
-        CollectBlockWallShaderControllers();
-
+        CollectDoorRootShaderControllers();
         InitializeShaderControllers(_doorShaderControllers);
-        InitializeShaderControllers(_blockWallShaderControllers);
 
         _isInitialized = true;
     }
@@ -75,9 +69,17 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
 
         EnsureInitialized();
 
+        if (_doorRoot == null || _doorTransform == null)
+        {
+            _isPlaying = false;
+            NotifyFinished();
+            return;
+        }
+
         _isPlaying = true;
 
         KillSequence();
+        ApplyInitialState();
 
         _sequence = DOTween.Sequence();
         _sequence.SetUpdate(UpdateType.Normal);
@@ -87,8 +89,11 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
                 .SetEase(_doorCloseEase)
         );
 
-        _sequence.AppendInterval(_fadeStartDelay);
-        
+        if (_fadeStartDelay > 0.0f)
+        {
+            _sequence.AppendInterval(_fadeStartDelay);
+        }
+
         _sequence.Append(
             DOTween.To(
                     () => 0.0f,
@@ -120,44 +125,19 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
         }
 
         SetFadeAmount(_doorShaderControllers, 0.0f);
-        SetFadeAmount(_blockWallShaderControllers, 1.0f);
 
-        if (_doorWall != null)
-        {
-            _doorWall.SetActive(true);
-        }
-        
         if (_doorRoot != null)
         {
             _doorRoot.SetActive(true);
         }
 
-        if (_blockWallRoot != null)
-        {
-            _blockWallRoot.SetActive(true);
-        }
-
         _isPlaying = false;
-    }
-    
-    public void ForceComplete()
-    {
-        if (_isPlaying == false)
-        {
-            return;
-        }
-
-        KillSequence();
-
-        ApplyFadeProgress(1.0f);
-        HandleFadeCompleted();
     }
 
     private void HandleFadeCompleted()
     {
-        if (_disableDoorWallRootOnFadeComplete == true && _doorWall != null)
+        if (_disableDoorRootOnFadeComplete == true && _doorRoot != null)
         {
-            _doorWall.SetActive(false);
             _doorRoot.SetActive(false);
         }
 
@@ -174,9 +154,7 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
     private void ApplyFadeProgress(float progress)
     {
         float clampedProgress = Mathf.Clamp01(progress);
-
         SetFadeAmount(_doorShaderControllers, clampedProgress);
-        SetFadeAmount(_blockWallShaderControllers, 1.0f - clampedProgress);
     }
 
     private void SetFadeAmount(List<AllInOneShaderController> controllers, float value)
@@ -193,7 +171,7 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
         }
     }
 
-    private void CollectDoorWallShaderControllers()
+    private void CollectDoorRootShaderControllers()
     {
         _doorShaderControllers.Clear();
 
@@ -212,28 +190,6 @@ public class DoorReplaceMainJumpScare : MainJumpScareBase
             }
 
             _doorShaderControllers.Add(controller);
-        }
-    }
-
-    private void CollectBlockWallShaderControllers()
-    {
-        _blockWallShaderControllers.Clear();
-
-        if (_blockWallRoot == null)
-        {
-            return;
-        }
-
-        AllInOneShaderController[] controllers = _blockWallRoot.GetComponentsInChildren<AllInOneShaderController>(true);
-        for (int i = 0; i < controllers.Length; i++)
-        {
-            AllInOneShaderController controller = controllers[i];
-            if (controller == null)
-            {
-                continue;
-            }
-
-            _blockWallShaderControllers.Add(controller);
         }
     }
 

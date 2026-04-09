@@ -257,7 +257,7 @@ public class PlayAnimationJumpScare : MainJumpScareBase
             return;
         }
 
-        _targetAnimator = TargetObject.GetComponentInChildren<Animator>();
+        _targetAnimator = gameObject.GetComponentInChildren<Animator>();
     }
 
     private int GetValidLayerIndex()

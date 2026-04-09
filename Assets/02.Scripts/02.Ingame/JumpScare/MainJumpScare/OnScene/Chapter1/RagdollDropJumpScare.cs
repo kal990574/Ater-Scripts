@@ -21,6 +21,8 @@ public class RagdollDropJumpScare : MainJumpScareBase
         public bool IsKinematic;
     }
     
+    [SerializeField] private GameObject _targetObject;
+    
     [Header("Collision Filter")]
     [SerializeField] private LayerMask _environmentLayerMask;
     [SerializeField] private string _groundTag = "Ground";
@@ -57,6 +59,8 @@ public class RagdollDropJumpScare : MainJumpScareBase
     private readonly List<RagdollRigidbodyState> _cachedRigidbodyStates = new List<RagdollRigidbodyState>();
     private bool _isInitialStateCached;
 
+    protected GameObject TargetObject => _targetObject != null ? _targetObject : gameObject;
+    
     protected override void Awake()
     {
         base.Awake();
@@ -159,8 +163,8 @@ public class RagdollDropJumpScare : MainJumpScareBase
             state.Rigidbody.Sleep();
         }
 
-        TargetTransform.position = _initialRootWorldPosition;
-        TargetTransform.rotation = _initialRootWorldRotation;
+        _targetObject.transform.position = _initialRootWorldPosition;
+        _targetObject.transform.rotation = _initialRootWorldRotation;
 
         for (int i = 0; i < _cachedBoneStates.Count; i++)
         {
@@ -230,7 +234,7 @@ public class RagdollDropJumpScare : MainJumpScareBase
             }
 
             _ragdollRigidbodies.Add(rigidbody);
-            if (rigidbody.transform != TargetTransform)
+            if (rigidbody.transform != _targetObject.transform)
             {
                 _ragdollBones.Add(rigidbody.transform);
             }
@@ -254,8 +258,8 @@ public class RagdollDropJumpScare : MainJumpScareBase
     {
         InitializeReferences();
 
-        _initialRootWorldPosition = TargetTransform.position;
-        _initialRootWorldRotation = TargetTransform.rotation;
+        _initialRootWorldPosition = _targetObject.transform.position;
+        _initialRootWorldRotation = _targetObject.transform.rotation;
 
         _cachedBoneStates.Clear();
         _cachedRigidbodyStates.Clear();
