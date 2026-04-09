@@ -263,11 +263,13 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 
     public void EnterPuzzleMode()
     {
+        GetAbility<PlayerDetectAbility>()?.ForceHidePrompt();
         SetInteractMode(EPlayerInteractMode.Puzzle);
     }
 
     public void ExitPuzzleMode()
     {
+        GetAbility<PlayerDetectAbility>()?.ResumePrompt();
         SetInteractMode(_lastGameplayMode);
     }
 

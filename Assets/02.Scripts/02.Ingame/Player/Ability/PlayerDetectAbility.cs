@@ -76,6 +76,11 @@ public class PlayerDetectAbility : PlayerAbility
         _eventPublisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, isVisible, desc));
     }
 
+    public void ResumePrompt()
+    {
+        _suppressPromptUntilLookAway = false;
+    }
+
     public void ForceHidePrompt()
     {
         _suppressPromptUntilLookAway = true;
