@@ -131,20 +131,6 @@ namespace _02.Scripts._01.Core.SceneTransition.Component
             text.alpha = to;
         }
 
-        private IEnumerator FadeCanvas(float from, float to)
-        {
-            float elapsed = 0f;
-
-            while (elapsed < _fadeDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                _canvasGroup.alpha = Mathf.Lerp(from, to, elapsed / _fadeDuration);
-                yield return null;
-            }
-
-            _canvasGroup.alpha = to;
-        }
-
         private void Update()
         {
             if (_isTyping && !_skipRequested && Input.anyKeyDown)
