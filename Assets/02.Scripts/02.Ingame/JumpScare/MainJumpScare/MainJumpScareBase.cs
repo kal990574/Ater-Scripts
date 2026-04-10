@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Sirenix.OdinInspector;
+using UnityEngine;
 using UnityEngine.Events;
 
 public abstract class MainJumpScareBase : MonoBehaviour
@@ -6,17 +7,22 @@ public abstract class MainJumpScareBase : MonoBehaviour
     [Header("Main Jump Scare")]
     [SerializeField] private MainJumpScareKeyReference _id;
     [SerializeField] private bool _canActive;
-    [SerializeField] private EMainJumpScareState _state = EMainJumpScareState.Waiting;
+    [SerializeField] protected EMainJumpScareState _state = EMainJumpScareState.Waiting;
 
     [SerializeField] protected UnityEvent OnStartEvent;
     [SerializeField] protected UnityEvent OnEndEvent;
+
+    private bool _initialCanActive;
     
     public string Id => _id;
+    
     public bool CanActive => _canActive;
     public EMainJumpScareState State => _state;
 
     protected virtual void Awake()
     {
+        _initialCanActive = _canActive;
+
         if (_state == EMainJumpScareState.None)
         {
             _state = EMainJumpScareState.Waiting;
@@ -33,6 +39,7 @@ public abstract class MainJumpScareBase : MonoBehaviour
         _canActive = canActive;
     }
 
+    [Button]
     public void Execute()
     {
         if (string.IsNullOrWhiteSpace(_id) == true)
@@ -65,6 +72,18 @@ public abstract class MainJumpScareBase : MonoBehaviour
     }
 
     protected abstract void OnExecute();
+
+    [Button]
+    public void ResetJumpScare()
+    {
+        _state = EMainJumpScareState.Waiting;
+        _canActive = _initialCanActive;
+        OnResetJumpScare();
+    }
+
+    protected virtual void OnResetJumpScare()
+    {
+    }
 
     protected void NotifyFinished()
     {
