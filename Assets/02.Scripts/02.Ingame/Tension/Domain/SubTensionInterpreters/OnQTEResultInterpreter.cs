@@ -22,9 +22,16 @@ public class OnQTEResultInterpreter : SubTensionInterpreterBase
                     publisher.TryPublish(
                         context => new OnTensionChangedEvent(
                             context,
-                            TensionReasons.QTEFailed,
+                            TensionReasons.QteFailed,
                             ETensionChannel.SpikeTension,
                             FAILED_SPIKEDELTA));
+                    
+                    publisher.TryPublish(
+                        context => new OnTensionChangedEvent(
+                            context,
+                            TensionReasons.QteFailed,
+                            ETensionChannel.BaseTension,
+                            10f));
                     break;
                 }
 
@@ -33,7 +40,7 @@ public class OnQTEResultInterpreter : SubTensionInterpreterBase
                     publisher.TryPublish(
                         context => new OnTensionChangedEvent(
                             context,
-                            TensionReasons.QTEGreatSuccess,
+                            TensionReasons.QteGreatSuccess,
                             ETensionChannel.BaseTension,
                             GREAT_BASEDELTA));
                     break;
@@ -44,7 +51,7 @@ public class OnQTEResultInterpreter : SubTensionInterpreterBase
                     publisher.TryPublish(
                         context => new OnTensionChangedEvent(
                             context,
-                            TensionReasons.QTESuccess,
+                            TensionReasons.QteSuccess,
                             ETensionChannel.BaseTension,
                             0));
                     break;

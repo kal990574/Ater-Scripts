@@ -22,6 +22,22 @@ public class OnPuzzleResultInterpreter : SubTensionInterpreterBase
                     TensionReasons.PuzzleFailed,
                     ETensionChannel.SpikeTension,
                     PUZZLEFAILED_SPIKEDELTA));
+            publisher.TryPublish(
+                context => new OnTensionChangedEvent(
+                    context,
+                    TensionReasons.PuzzleFailed,
+                    ETensionChannel.BaseTension,
+                    5f));
+        }
+
+        if (data.Result == EPuzzleResult.Cancel)
+        {
+            publisher.TryPublish(
+                context => new OnTensionChangedEvent(
+                    context,
+                    TensionReasons.PuzzleFailed,
+                    ETensionChannel.BaseTension,
+                    10f));
         }
         
     }

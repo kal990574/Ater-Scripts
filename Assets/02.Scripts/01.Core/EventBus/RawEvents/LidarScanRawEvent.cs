@@ -64,3 +64,13 @@ public readonly struct LidarScanTargetCompletedRawEvent : IGameEvent
         Target = target;
     }
 }
+
+public readonly struct LidarScanEnergyDepletedRawEvent : IGameEvent
+{
+    public GameEventContext Context { get; }
+
+    public LidarScanEnergyDepletedRawEvent(GameEventContext context)
+    {
+        Context = context;
+    }
+}
