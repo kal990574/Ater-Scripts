@@ -8,13 +8,18 @@ public class UsableObject : Interactable
     public string LastFailureReason { get; private set; } = string.Empty;
     public EUseInteractResult LastInteractResult { get; protected set; } = EUseInteractResult.None;
 
+    [Header("Failure Notification")]
+    [SerializeField] private InteractionFailSO _failMessage;
+    [SerializeField] private int _failureMessageIndex = -1;
+
+
 
     [Button]
     public void UnlockForce()
     {
         Unlock();
     }
-    
+
     public virtual bool Unlock()
     {
         return true;
@@ -101,7 +106,7 @@ public class UsableObject : Interactable
         failureReason = string.Empty;
         return true;
     }
-    
+
     protected void SetFailureResult(EUseInteractResult result)
     {
         LastInteractResult = result;
@@ -113,5 +118,9 @@ public class UsableObject : Interactable
         LastFailureReason = failureReason ?? string.Empty;
         Debug.LogWarning($"[{GetType().Name}] {gameObject.name} interaction failed. result={LastInteractResult}, reason={LastFailureReason}", this);
         OnUseFailed(context, LastFailureReason);
+
+        if (_failMessage != null && _failMessage.TryGetMessage(_failureMessageIndex, out string message))
+            GameEventHub.Instance.Publish(new InteractionFailedRawEvent(default, message));
     }
 }
+
