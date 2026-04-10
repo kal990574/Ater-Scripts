@@ -6,8 +6,15 @@ public class UI_InteractPrompt : MonoBehaviour
 {
     [SerializeField] private GameObject _root;
     [SerializeField] private TextMeshProUGUI _text;
+    [SerializeField] private bool _puzzleModeOnly;
 
     private IDisposable _subscription;
+    private IPlayerModeProvider _modeProvider;
+
+    private void Start()
+    {
+        _modeProvider = FindFirstObjectByType<PlayerController>();
+    }
 
     private void OnEnable()
     {
@@ -22,11 +29,16 @@ public class UI_InteractPrompt : MonoBehaviour
 
     private void OnPromptChanged(InteractPromptRawEvent e)
     {
-        _root.SetActive(e.IsVisible);
-
-        if (e.IsVisible)
+        if (!e.IsVisible)
         {
-            _text.text = e.PromptText;
+            _root.SetActive(false);
+            return;
         }
+
+        bool isPuzzleMode = _modeProvider?.GetCurrentMode() == EPlayerInteractMode.Puzzle;
+        if (_puzzleModeOnly != isPuzzleMode) return;
+
+        _root.SetActive(true);
+        _text.text = e.PromptText;
     }
 }
