@@ -2,7 +2,7 @@ using UnityEngine;
 
 [DisallowMultipleComponent]
 //추후 공용 추상스크립트 제작
-public class PadLockPuzzleInstance : MonoBehaviour
+public class PadLockPuzzleInstance : MonoBehaviour, IPuzzleIntance
 {
     [Header("Rows")]
     [SerializeField] private int _row1 = 1;

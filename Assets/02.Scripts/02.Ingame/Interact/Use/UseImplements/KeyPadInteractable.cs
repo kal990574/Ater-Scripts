@@ -5,7 +5,7 @@ using UnityEngine.Events;
 [DisallowMultipleComponent]
 public class KeyPadInteractable : StateInteractable
 {
-    [SerializeField] private KeyPadController _keyPadController;
+    [SerializeField] private KeyPadController keyPadController;
 
     [Header("State Keys")]
     [SerializeField] private string _unlockStateKey = "is_unlocked";
@@ -18,7 +18,7 @@ public class KeyPadInteractable : StateInteractable
     protected override void OnAwake()
     {
         base.OnAwake();
-        GetComponentCached(ref _keyPadController);
+        GetComponentCached(ref keyPadController);
     }
     
     public override bool Unlock()
@@ -70,14 +70,14 @@ public class KeyPadInteractable : StateInteractable
             return false;
         }
 
-        if (_keyPadController.IsSolved)
+        if (keyPadController.IsSolved)
         {
             SetFailureResult(EUseInteractResult.AlreadyCompleted);
             failureReason = "The keypad controller is already solved.";
             return false;
         }
 
-        if (_keyPadController.HasActivePuzzle)
+        if (keyPadController.HasActivePuzzle)
         {
             SetFailureResult(EUseInteractResult.PuzzleAlreadyRunning);
             failureReason = "The keypad puzzle is already running.";
@@ -90,7 +90,7 @@ public class KeyPadInteractable : StateInteractable
 
     protected override bool OnUse(InteractionContext context, out string failureReason)
     {
-        _keyPadController.TryOpen(this);
+        keyPadController.TryOpen(this);
         Debug.Log($"[{nameof(KeyPadInteractable)}] {gameObject.name} started the keypad puzzle.", this);
         _onPuzzleStarted?.Invoke();
         failureReason = string.Empty;
@@ -105,7 +105,7 @@ public class KeyPadInteractable : StateInteractable
 
     private bool ValidateConfiguration(out string failureReason)
     {
-        if (_keyPadController == null)
+        if (keyPadController == null)
         {
             failureReason = "KeyPadController reference is missing.";
             return false;

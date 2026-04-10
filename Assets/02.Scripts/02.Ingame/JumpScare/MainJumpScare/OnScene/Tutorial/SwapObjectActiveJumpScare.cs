@@ -6,7 +6,6 @@ public class SwapObjectActiveJumpScare :  MainJumpScareBase
     [Header("References")]
     [SerializeField] private GameObject _beforeObject;
     [SerializeField] private GameObject _afterObject;
-    [SerializeField] private SoundSFXEmitter _soundEmitter;
 
     [Header("Default State")]
     [SerializeField] private bool _beforeObjectDefaultActive = true;
@@ -44,8 +43,6 @@ public class SwapObjectActiveJumpScare :  MainJumpScareBase
         {
             _afterObject.SetActive(true);
         }
-
-        PlaySound();
 
         if (_enableLog == true)
         {
@@ -113,19 +110,5 @@ public class SwapObjectActiveJumpScare :  MainJumpScareBase
             _afterObject.SetActive(_afterObjectDefaultActive);
         }
     }
-
-    private void PlaySound()
-    {
-        if (_soundEmitter == null)
-        {
-            if (_enableLog == true)
-            {
-                Debug.LogWarning($"[{name}] SoundSFXEmitter 가 없어 사운드를 재생하지 않습니다.", this);
-            }
-
-            return;
-        }
-
-        _soundEmitter.Play();
-    }
+    
 }

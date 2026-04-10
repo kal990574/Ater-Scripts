@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class KeyPadController : MonoBehaviour, IPlayerPuzzleController
+public class KeyPadController : PuzzleControllerBase
 {
     [Header("KeyPad Puzzle")]
     [SerializeField] private string _correctCode = "0000";
@@ -24,7 +24,8 @@ public class KeyPadController : MonoBehaviour, IPlayerPuzzleController
     private KeyPadPuzzleInstance _activeInstance;
     private KeyPadInteractable _activeInteractable;
     private bool _isSolved;
-    private PlayerController _playerController;
+    protected override EPuzzleType PuzzleType => EPuzzleType.KeyPad;
+    protected override IPuzzleIntance ActivePuzzleInstance => _activeInstance;
 
     public bool IsSolved => _isSolved;
     public bool HasActivePuzzle => _activeInstance != null;
@@ -49,7 +50,7 @@ public class KeyPadController : MonoBehaviour, IPlayerPuzzleController
             return;
         }
 
-        Transform spawnParent = ResolveSpawnParent();
+        Transform spawnParent = ResolveSpawnParent(_spawnParentOverride);
         GameObject instanceObject = Instantiate(_keyPadInstancePrefab, spawnParent);
         instanceObject.transform.localPosition = _localSpawnPosition;
         instanceObject.transform.localRotation = Quaternion.Euler(_localSpawnEulerAngles);
@@ -77,26 +78,6 @@ public class KeyPadController : MonoBehaviour, IPlayerPuzzleController
         _buttonEvent?.Invoke();
     }
 
-    public void ConfirmActivePuzzle()
-    {
-        if (_activeInstance == null)
-        {
-            return;
-        }
-
-        _activeInstance.TryEvaluate();
-    }
-
-    public void CancelActivePuzzle()
-    {
-        if (_activeInstance == null)
-        {
-            return;
-        }
-
-        _activeInstance.Cancel();
-    }
-
     public void HandlePuzzleSuccess(KeyPadPuzzleInstance instance)
     {
         if (_activeInstance != instance)
@@ -106,12 +87,15 @@ public class KeyPadController : MonoBehaviour, IPlayerPuzzleController
 
         _isSolved = true;
         _successEvent?.Invoke();
+        PublishPuzzleResult(EPuzzleResult.Success);
+
         _activeInteractable?.HandlePuzzleSolved();
 
         ResolvePlayerController()?.ExitPuzzleMode(this);
         _activeInteractable = null;
         _activeInstance = null;
     }
+
 
     public void HandlePuzzleFail(KeyPadPuzzleInstance instance)
     {
@@ -121,7 +105,9 @@ public class KeyPadController : MonoBehaviour, IPlayerPuzzleController
         }
 
         _failEvent?.Invoke();
+        PublishPuzzleResult(EPuzzleResult.Fail);
     }
+
 
     public void ClearActiveInstance(KeyPadPuzzleInstance instance)
     {
@@ -130,30 +116,10 @@ public class KeyPadController : MonoBehaviour, IPlayerPuzzleController
             return;
         }
 
+        PublishPuzzleResult(EPuzzleResult.Cancel);
+
         ResolvePlayerController()?.ExitPuzzleMode(this);
         _activeInteractable = null;
         _activeInstance = null;
-    }
-
-    private Transform ResolveSpawnParent()
-    {
-        if (_spawnParentOverride != null)
-        {
-            return _spawnParentOverride;
-        }
-
-        Camera mainCamera = Camera.main;
-        return mainCamera != null ? mainCamera.transform : transform;
-    }
-
-    private PlayerController ResolvePlayerController()
-    {
-        if (_playerController != null)
-        {
-            return _playerController;
-        }
-
-        _playerController = FindFirstObjectByType<PlayerController>();
-        return _playerController;
     }
 }

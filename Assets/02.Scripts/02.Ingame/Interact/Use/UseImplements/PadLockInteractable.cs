@@ -4,31 +4,31 @@ using UnityEngine.Events;
 [DisallowMultipleComponent]
 public class PadLockInteractable : UsableObject
 {
-    [SerializeField] private PadLockController _padLockController;
+    [SerializeField] private PadLockController padLockController;
 
     protected override void OnAwake()
     {
         base.OnAwake();
-        GetComponentCached(ref _padLockController);
+        GetComponentCached(ref padLockController);
     }
 
     protected override bool CanUse(InteractionContext context, out string failureReason)
     {
-        if (_padLockController == null)
+        if (padLockController == null)
         {
             SetFailureResult(EUseInteractResult.InvalidConfiguration);
             failureReason = "PadLockController reference is missing.";
             return false;
         }
 
-        if (_padLockController.IsSolved)
+        if (padLockController.IsSolved)
         {
             SetFailureResult(EUseInteractResult.AlreadyUnlocked);
             failureReason = "The padlock puzzle is already solved.";
             return false;
         }
 
-        if (_padLockController.HasActivePuzzle)
+        if (padLockController.HasActivePuzzle)
         {
             SetFailureResult(EUseInteractResult.PuzzleAlreadyRunning);
             failureReason = "The padlock puzzle is already running.";
@@ -41,7 +41,7 @@ public class PadLockInteractable : UsableObject
 
     protected override bool OnUse(InteractionContext context, out string failureReason)
     {
-        _padLockController.TryOpen();
+        padLockController.TryOpen();
         Debug.Log($"[{nameof(PadLockInteractable)}] {gameObject.name} started the padlock puzzle.", this);
         failureReason = string.Empty;
         SetFailureResult(EUseInteractResult.Success);
