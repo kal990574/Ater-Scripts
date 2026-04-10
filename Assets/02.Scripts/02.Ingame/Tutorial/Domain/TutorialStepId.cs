@@ -19,6 +19,7 @@ namespace _02.Scripts._02.Ingame.Tutorial.Domain
         OpenPadlock = 14,        // 자물쇠 열기
         OpenDoor = 15,           // 문 열기
         LidarOnDoor = 16,        // 문 스캔하기
-        UseKeyOnDoor = 17,       // 열쇠로 문 열기
+        UseKeyOnDoor = 17,       // 열쇠로 문 해제
+        OpenKeyDoor = 18         // 최종 문 열기
     }
 }
