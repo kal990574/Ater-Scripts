@@ -18,7 +18,7 @@ public class SoundData
     [SerializeField, Min(0f), ShowIf(nameof(_isSpacialClip)), FoldoutGroup("$FoldoutTitle")] private float _maxDistance = 15f;
 
     public string Key => _key;
-    public AudioClip AudioClip => _audioClip[Random.Range(0, _audioClip.Length)];
+    public AudioClip AudioClip => _audioClip.Length > 0 ? _audioClip[Random.Range(0, _audioClip.Length)] : null;
     public float BaseVolume => _baseVolume;
     public bool  IsSpacialClip => _isSpacialClip;
     public float MinDistance => _minDistance;
