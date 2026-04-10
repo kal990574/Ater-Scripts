@@ -25,9 +25,7 @@ namespace _02.Scripts._02.Ingame.Tutorial.Config
     [Serializable]
     public class TutorialStepEntry
     {
-        [field: SerializeField] public TutorialStepId Id { get; private set; }                                      
-        [field: SerializeField, TextArea(2, 5)] public string GuideText { get; private set; }                         
-        [field: SerializeField] public TutorialStepId ChainFrom { get; private set; }                          
-        [field: SerializeField] public bool IsOverlay { get; private set; }                                           
+        [field: SerializeField] public TutorialStepId Id { get; private set; }
+        [field: SerializeField, TextArea(2, 5)] public string GuideText { get; private set; }
     }               
 }

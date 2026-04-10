@@ -1,5 +1,7 @@
 using _02.Scripts._02.Ingame.Tutorial.Config;
 using _02.Scripts._02.Ingame.Tutorial.Domain;
+using _02.Scripts.Core;
+using _02.Scripts.Core.Domain;
 using _02.Scripts.Player;
 using System;
 using System.Collections;
@@ -21,15 +23,23 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
         private IPlayerInput _playerInput;
         private CompositeSubscription _subscriptions;
         private HashSet<TutorialStepId> _completedSteps = new();
+        private HashSet<TutorialStepId> _earlyCompletedActions = new();
         private TutorialStepId _currentStep = TutorialStepId.None;
+        private int _currentStepIndex = -1;
 
         public event Action<TutorialStepEntry> OnGuideShow;
         public event Action OnGuideHide;
-        public event Action<TutorialStepEntry> OnOverlayShow;
-        public event Action OnOverlayHide;
+        public event Action<TutorialStepId> OnStepCompleted;
 
         private void Start()
         {
+            if (_config == null)
+            {
+                Debug.LogError("[Tutorial] TutorialConfigSO not assigned", this);
+                enabled = false;
+                return;
+            }
+
             if (_playerController != null)
             {
                 _playerInput = _playerController.Input;
@@ -70,13 +80,13 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
                 _examineInteraction.OnScrolled += OnScrolled;
             }
 
-            StartCoroutine(ShowFirstGuide());
+            StartCoroutine(StartFirstStep());
         }
 
-        private IEnumerator ShowFirstGuide()
+        private IEnumerator StartFirstStep()
         {
             yield return null;
-            TryShow(TutorialStepId.Movement);
+            ShowNext();
         }
 
         private void OnDestroy()
@@ -106,6 +116,8 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
             }
         }
 
+        // ─── 콜백 ───
+
         private void Update()
         {
             if (_currentStep == TutorialStepId.Movement && _playerInput != null && _playerInput.MoveInput != Vector2.zero)
@@ -124,7 +136,13 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
 
         private void OnHandSlotChanged(int index)
         {
-            if (index >= 0)
+            if (index < 0 || _playerHandAbility == null) return;
+
+            var instanceId = _playerHandAbility.CurrentHandItemInstanceId;
+            if (string.IsNullOrEmpty(instanceId)) return;
+
+            var itemData = RuntimeInstanceManager.Instance?.GetItemInstance(instanceId);
+            if (itemData != null && itemData.ItemId == 1) // CH0 열쇠
             {
                 TryDismiss(TutorialStepId.EquipKey);
             }
@@ -132,7 +150,13 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
 
         private void OnSelectionChanged(int index)
         {
-            if (index >= 0)
+            if (index < 0) return;
+
+            var instanceId = InventoryManager.Instance.GetInventoryItemInstanceIdAt(index);
+            if (string.IsNullOrEmpty(instanceId)) return;
+
+            var itemData = RuntimeInstanceManager.Instance?.GetItemInstance(instanceId);
+            if (itemData != null && itemData.ItemId == 2) // CH0 쪽지
             {
                 TryDismiss(TutorialStepId.InspectNote);
             }
@@ -159,19 +183,37 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
             TryDismiss(TutorialStepId.ZoomItem);
         }
 
+        // ─── 핵심 로직 ───
+
+        private void ShowNext()
+        {
+            _currentStepIndex++;
+
+            if (_currentStepIndex >= _config.Steps.Count)
+            {
+                Debug.Log("[Tutorial] All steps completed, transitioning to next chapter");
+                var gameManager = Managers.Get<IGameManager>();
+                if (gameManager == null)
+                {
+                    Debug.LogError("[Tutorial] GameManager not found");
+                    return;
+                }
+                gameManager.CompleteChapter();
+                return;
+            }
+
+            TutorialStepEntry entry = _config.Steps[_currentStepIndex];
+            TryShow(entry.Id);
+        }
+
         public void TryShow(TutorialStepId stepId)
         {
             Debug.Log($"[Tutorial] TryShow({stepId}) called");
 
             if (_completedSteps.Contains(stepId))
             {
-                Debug.Log($"[Tutorial] {stepId} already completed");
-                return;
-            }
-
-            if (_currentStep == stepId)
-            {
-                Debug.Log($"[Tutorial] {stepId} already current");
+                Debug.Log($"[Tutorial] {stepId} already completed, skipping to next");
+                ShowNext();
                 return;
             }
 
@@ -182,67 +224,40 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
                 return;
             }
 
-            if (entry.ChainFrom != TutorialStepId.None && _completedSteps.Contains(entry.ChainFrom) == false)
+            // 선행 완료된 액션이면 자동 스킵
+            if (_earlyCompletedActions.Contains(stepId))
             {
-                Debug.Log($"[Tutorial] {stepId} chain prerequisite {entry.ChainFrom} not met");
+                Debug.Log($"[Tutorial] {stepId} already done early, auto-skipping");
+                _earlyCompletedActions.Remove(stepId);
+                _completedSteps.Add(stepId);
+                OnStepCompleted?.Invoke(stepId);
+                ShowNext();
                 return;
-            }
-
-            if (_currentStep != TutorialStepId.None)
-            {
-                HideCurrent();
             }
 
             _currentStep = stepId;
             Debug.Log($"[Tutorial] Showing {stepId}: {entry.GuideText}");
-
-            if (entry.IsOverlay)
-            {
-                OnOverlayShow?.Invoke(entry);
-            }
-            else
-            {
-                OnGuideShow?.Invoke(entry);
-            }
+            OnGuideShow?.Invoke(entry);
         }
 
         public void TryDismiss(TutorialStepId stepId)
         {
             if (_currentStep != stepId)
             {
+                _earlyCompletedActions.Add(stepId);
                 return;
             }
 
             _completedSteps.Add(stepId);
             HideCurrent();
-            TryShowChained(stepId);
-        }
-
-        private void TryShowChained(TutorialStepId completedStep)
-        {
-            foreach (TutorialStepEntry entry in _config.Steps)
-            {
-                if (entry.ChainFrom == completedStep && _completedSteps.Contains(entry.Id) == false)
-                {
-                    TryShow(entry.Id);
-                    return;
-                }
-            }
+            OnStepCompleted?.Invoke(stepId);
+            ShowNext();
         }
 
         private void HideCurrent()
         {
-            TutorialStepEntry entry = _config.GetStep(_currentStep);
             _currentStep = TutorialStepId.None;
-
-            if (entry != null && entry.IsOverlay)
-            {
-                OnOverlayHide?.Invoke();
-            }
-            else
-            {
-                OnGuideHide?.Invoke();
-            }
+            OnGuideHide?.Invoke();
         }
     }
 }

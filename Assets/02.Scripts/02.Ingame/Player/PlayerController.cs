@@ -1,3 +1,5 @@
+using _02.Scripts.Core;
+using _02.Scripts.Core.Domain;
 using _02.Scripts.Player;
 using System;
 using System.Collections.Generic;
@@ -14,6 +16,8 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     private readonly Dictionary<Type, PlayerAbility> _abilities = new();
     private IPlayerInput _input;
     private EPlayerInteractMode _lastGameplayMode = EPlayerInteractMode.Scan;
+    private IGameManager _gameManager;
+    private bool _isPausedByGame;
     private IPuzzleInputHandler _activePuzzleInputHandler;
 
     public PlayerConfigSO Config => _playerConfig;
@@ -46,6 +50,11 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         {
             InventoryManager.Instance.OnInventoryToggled += HandleInventoryToggled;
         }
+        _gameManager = Managers.Get<IGameManager>();
+        if (_gameManager != null)
+        {
+            _gameManager.OnGameStateChanged += HandleGameStateChanged;
+        }
     }
 
     private void OnDisable()
@@ -54,10 +63,19 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         {
             InventoryManager.Instance.OnInventoryToggled -= HandleInventoryToggled;
         }
+
+        if (_gameManager != null)
+        {
+            _gameManager.OnGameStateChanged -= HandleGameStateChanged;
+        }
     }
 
     private void Update()
     {
+        if (_isPausedByGame)
+        {
+            return;
+        }
         if (TryHandleBlockedModeInput())
         {
             return;
@@ -297,12 +315,30 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 
     private void ApplyModeState(EPlayerInteractMode mode)
     {
+        if (_isPausedByGame) return;
+        
         bool blocksPlayerControl = mode == EPlayerInteractMode.UI || mode == EPlayerInteractMode.Puzzle;
         _canMove = !blocksPlayerControl;
         _canRotate = !blocksPlayerControl;
 
         Cursor.lockState = blocksPlayerControl ? CursorLockMode.None : CursorLockMode.Locked;
         Cursor.visible = blocksPlayerControl;
+    }
+
+    private void HandleGameStateChanged(GameState state)
+    {
+        switch (state)
+        {
+            case GameState.Paused:
+                _isPausedByGame = true;
+                _canMove = false;
+                _canRotate = false;
+                break;
+            case GameState.Playing:
+                _isPausedByGame = false;
+                ApplyModeState(_interactMode);
+                break;
+        }
     }
 
     private static bool IsGameplayMode(EPlayerInteractMode mode)
