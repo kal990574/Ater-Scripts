@@ -330,6 +330,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         switch (state)
         {
             case GameState.Paused:
+            case GameState.GameOver:
                 _isPausedByGame = true;
                 _canMove = false;
                 _canRotate = false;

@@ -27,7 +27,8 @@ namespace _02.Scripts.Core.Manager
         public void GameOver()
         {
             CurrentState = GameState.GameOver;
-            Time.timeScale = 0;
+            Time.timeScale = 0f;
+            SoundManager.Instance?.PauseAll();
             OnGameStateChanged?.Invoke(GameState.GameOver);
         }
 
@@ -37,15 +38,17 @@ namespace _02.Scripts.Core.Manager
 
             CurrentState = GameState.Paused;
             Time.timeScale = 0f;
+            SoundManager.Instance?.PauseAll();
             OnGameStateChanged?.Invoke(GameState.Paused);
         }
 
         public void ResumeGame()
         {
             if (CurrentState != GameState.Paused) return;
-            
+
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
+            SoundManager.Instance?.ResumeAll();
             OnGameStateChanged?.Invoke(GameState.Playing);
         }
 
@@ -53,6 +56,7 @@ namespace _02.Scripts.Core.Manager
         {
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
+            SoundManager.Instance?.ResumeAll();
             _sceneTransitionManager.RestartCurrentScene();
         }
 
@@ -64,6 +68,7 @@ namespace _02.Scripts.Core.Manager
             CurrentChapter = chapter;
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
+            SoundManager.Instance?.ResumeAll();
             _sceneTransitionManager.LoadScene(sceneData);
         }
 
@@ -77,6 +82,7 @@ namespace _02.Scripts.Core.Manager
         {
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
+            SoundManager.Instance?.ResumeAll();
             _sceneTransitionManager.ReturnToMainMenu();
         }
     }

@@ -2,19 +2,14 @@ Shader "Custom/SonarScan"
 {
     Properties
     {
-        _ScanOrigin ("Scan Origin", Vector) = (0, 0, 0, 0)
-        _ScanDirection ("Scan Direction", Vector) = (0, 0, 1, 0)
-        _ScanRadius ("Scan Radius", Float) = 0
         _ScanMaxRadius ("Scan Max Radius", Float) = 15
         _ScanAngle ("Scan Angle", Float) = 40
         _RingWidth ("Ring Width", Float) = 2
         _ScanColor ("Scan Color", Color) = (1.0, 1.0, 1.0, 1.0)
         _EdgeThreshold ("Edge Threshold", Float) = 0.1
         _TrailIntensity ("Trail Intensity", Float) = 0.3
-        _TrailFadeRadius ("Trail Fade Radius", Float) = 0
         _RingFillIntensity ("Ring Fill Intensity", Range(0, 1)) = 0.4
         _RingGradientPower ("Ring Gradient Power", Float) = 2
-        _RingOpacity ("Ring Opacity", Float) = 1
     }
 
     SubShader
@@ -43,20 +38,22 @@ Shader "Custom/SonarScan"
             TEXTURE2D(_BlitTexture);
             SAMPLER(sampler_BlitTexture);
 
+            #define MAX_RINGS 4
+
             float4 _BlitTexture_TexelSize;
-            float3 _ScanOrigin;
-            float3 _ScanDirection;
-            float _ScanRadius;
             float _ScanMaxRadius;
             float _ScanAngle;
             float _RingWidth;
             float4 _ScanColor;
             float _EdgeThreshold;
             float _TrailIntensity;
-            float _TrailFadeRadius;
             float _RingFillIntensity;
             float _RingGradientPower;
-            float _RingOpacity;
+
+            float4 _RingOrigins[MAX_RINGS];      // xyz = origin
+            float4 _RingDirections[MAX_RINGS];   // xyz = direction
+            float4 _RingParams[MAX_RINGS];       // x=radius, y=trailFade, z=opacity
+            int _RingCount;
 
             struct Attributes
             {
@@ -124,33 +121,33 @@ Shader "Custom/SonarScan"
             }
 
             // 원뿔 마스크: 스캔 방향 기준 각도 내 픽셀만 통과
-            float ConeMask(float3 worldPos)
+            float ConeMask(float3 worldPos, float3 origin, float3 direction)
             {
-                float3 toPixel = normalize(worldPos - _ScanOrigin);
-                float cosAngle = dot(toPixel, normalize(_ScanDirection));
+                float3 toPixel = normalize(worldPos - origin);
+                float cosAngle = dot(toPixel, normalize(direction));
                 float cosHalfAngle = cos(radians(_ScanAngle * 0.5));
                 float cosInner = cos(radians(_ScanAngle * 0.4));
                 return smoothstep(cosHalfAngle, cosInner, cosAngle);
             }
 
             // 파동 링 마스크: 현재 반경 근처 픽셀 강조 (pow로 중심→가장자리 그라데이션)
-            float RingMask(float dist)
+            float RingMask(float dist, float radius)
             {
-                float mask = 1.0 - saturate(abs(dist - _ScanRadius) / _RingWidth);
+                float mask = 1.0 - saturate(abs(dist - radius) / _RingWidth);
                 return pow(mask, _RingGradientPower);
             }
 
-            // 잔상 마스크: _TrailFadeRadius ~ _ScanRadius 구간에만 표시
-            float TrailMask(float dist)
+            // 잔상 마스크: trailFade ~ radius 구간에만 표시
+            float TrailMask(float dist, float radius, float trailFade)
             {
-                float trailRange = _ScanRadius - _TrailFadeRadius;
+                float trailRange = radius - trailFade;
                 if (trailRange <= 0.001) return 0;
 
-                // _TrailFadeRadius 이하는 소멸, _ScanRadius 이상은 미도달
-                float inTrail = step(_TrailFadeRadius, dist) * step(dist, _ScanRadius);
+                // trailFade 이하는 소멸, radius 이상은 미도달
+                float inTrail = step(trailFade, dist) * step(dist, radius);
 
                 // 꼬리 안쪽(소멸 경계)에서 바깥(링)으로 갈수록 강해짐
-                float gradient = saturate((dist - _TrailFadeRadius) / trailRange);
+                float gradient = saturate((dist - trailFade) / trailRange);
 
                 return inTrail * gradient * _TrailIntensity;
             }
@@ -162,11 +159,9 @@ Shader "Custom/SonarScan"
 
                 half4 sceneColor = SAMPLE_TEXTURE2D(_BlitTexture, sampler_BlitTexture, uv);
 
-                // 스캔 비활성 시 원본 반환
-                if (_ScanRadius <= 0)
+                // 활성 링 없음 → 원본 반환
+                if (_RingCount <= 0)
                     return sceneColor;
-
-                float3 worldPos = GetWorldPosition(uv);
 
                 // 스카이박스/원거리 픽셀 제외
                 #if UNITY_REVERSED_Z
@@ -179,32 +174,42 @@ Shader "Custom/SonarScan"
                         return sceneColor;
                 #endif
 
-                float dist = distance(worldPos, _ScanOrigin);
-
-                // 최대 반경 밖 제외
-                if (dist > _ScanMaxRadius)
-                    return sceneColor;
-
-                float cone = ConeMask(worldPos);
-                float ring = RingMask(dist);
-                float trail = TrailMask(dist);
+                float3 worldPos = GetWorldPosition(uv);
                 float edge = SobelDepthEdge(uv);
 
-                // 거리별 감쇠: 가까울수록 밝고, 멀수록 어둡게
-                float distAtten = 1.0 - saturate(dist / _ScanMaxRadius);
-                distAtten = distAtten * distAtten;
+                float accumEffect = 0;
 
-                // 링: 영역 전체
-                float ringFill = ring * cone * _RingFillIntensity * _RingOpacity;
+                [loop]
+                for (int i = 0; i < _RingCount; i++)
+                {
+                    float3 origin    = _RingOrigins[i].xyz;
+                    float3 direction = _RingDirections[i].xyz;
+                    float  radius    = _RingParams[i].x;
+                    float  trailFade = _RingParams[i].y;
+                    float  opacity   = _RingParams[i].z;
 
-                // 윤곽선
-                float ringOutline = ring * cone * edge * _RingOpacity;
-                float trailOutline = trail * cone * edge * distAtten;
+                    if (radius <= 0) continue;
 
-                float finalEffect = saturate(ringFill + ringOutline + trailOutline);
+                    float dist = distance(worldPos, origin);
+                    if (dist > _ScanMaxRadius) continue;
 
-                half4 result = sceneColor + _ScanColor * finalEffect;
-                return result;
+                    float cone  = ConeMask(worldPos, origin, direction);
+                    float ring  = RingMask(dist, radius);
+                    float trail = TrailMask(dist, radius, trailFade);
+
+                    // 거리별 감쇠: 가까울수록 밝고, 멀수록 어둡게
+                    float distAtten = 1.0 - saturate(dist / _ScanMaxRadius);
+                    distAtten = distAtten * distAtten;
+
+                    float ringFill     = ring  * cone * _RingFillIntensity * opacity;
+                    float ringOutline  = ring  * cone * edge * opacity;
+                    float trailOutline = trail * cone * edge * distAtten;
+
+                    accumEffect += ringFill + ringOutline + trailOutline;
+                }
+
+                float finalEffect = saturate(accumEffect);
+                return sceneColor + _ScanColor * finalEffect;
             }
             ENDHLSL
         }

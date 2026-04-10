@@ -69,11 +69,6 @@ namespace _02.Scripts.Sonar
 
         public void TryScan()
         {
-            if (_effect.IsScanning)
-            {
-                return;
-            }
-            
             if (!IsCooltimeReady)
             {
                 SoundService.PlaySFX2D(_config.SonarCoolTime);
