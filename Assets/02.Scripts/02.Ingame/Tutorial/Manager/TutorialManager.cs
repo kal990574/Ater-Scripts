@@ -20,6 +20,9 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
         [SerializeField] private PlayerHandAbility _playerHandAbility;
         [SerializeField] private ExamineInteraction _examineInteraction;
 
+        [Header("Completion")]
+        [SerializeField, Min(0f)] private float _completionDelay = 1.5f;
+
         private IPlayerInput _playerInput;
         private CompositeSubscription _subscriptions;
         private HashSet<TutorialStepId> _completedSteps = new();
@@ -191,14 +194,8 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
 
             if (_currentStepIndex >= _config.Steps.Count)
             {
-                Debug.Log("[Tutorial] All steps completed, transitioning to next chapter");
-                var gameManager = Managers.Get<IGameManager>();
-                if (gameManager == null)
-                {
-                    Debug.LogError("[Tutorial] GameManager not found");
-                    return;
-                }
-                gameManager.CompleteChapter();
+                Debug.Log($"[Tutorial] All steps completed, waiting {_completionDelay}s before transition");
+                StartCoroutine(CompleteChapterAfterDelay());
                 return;
             }
 
@@ -258,6 +255,19 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
         {
             _currentStep = TutorialStepId.None;
             OnGuideHide?.Invoke();
+        }
+
+        private IEnumerator CompleteChapterAfterDelay()
+        {
+            yield return new WaitForSeconds(_completionDelay);
+
+            var gameManager = Managers.Get<IGameManager>();
+            if (gameManager == null)
+            {
+                Debug.LogError("[Tutorial] GameManager not found");
+                yield break;
+            }
+            gameManager.CompleteChapter();
         }
     }
 }
