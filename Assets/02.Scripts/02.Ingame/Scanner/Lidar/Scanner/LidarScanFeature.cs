@@ -173,6 +173,12 @@ public class LidarScanFeature : MonoBehaviour
             if (_energy <= 0f)
             {
                 _energy = 0f;
+                if (previous > 0f)
+                {
+                    _eventPublisher.TryPublish(
+                        context => new LidarScanEnergyDepletedRawEvent(context));
+                }
+
                 StopScan();
             }
         }

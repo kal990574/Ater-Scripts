@@ -1,6 +1,6 @@
 ﻿//라이더 스캔에서의 로우  이벤트
 
-/// <summary>
+using Unity.Collections;/// <summary>
 /// 라이더 스캔 시작
 /// </summary>
 public readonly struct LidarScanStartedRawEvent : IGameEvent
@@ -62,5 +62,15 @@ public readonly struct LidarScanTargetCompletedRawEvent : IGameEvent
     {
         Context = context;
         Target = target;
+    }
+}
+
+public readonly struct LidarScanEnergyDepletedRawEvent : IGameEvent
+{
+    public GameEventContext Context { get; }
+
+    public LidarScanEnergyDepletedRawEvent(GameEventContext context)
+    {
+        Context = context;
     }
 }

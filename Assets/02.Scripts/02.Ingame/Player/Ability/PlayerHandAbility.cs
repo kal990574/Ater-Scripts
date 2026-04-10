@@ -13,7 +13,6 @@ public class PlayerHandAbility : PlayerAbility
     private InventoryManager _inventoryManager;
     private RuntimeInstanceManager _runtimeInstanceManager;
     private HandViewService _handViewService;
-    private WorldViewService _worldViewService;
     private RuntimeItemFactory _itemFactory;
     private string _currentHandInstanceId;
     private bool _isChargingThrow;
@@ -44,7 +43,6 @@ public class PlayerHandAbility : PlayerAbility
 
         _itemFactory = new RuntimeItemFactory(_runtimeInstanceManager);
         _handViewService = new HandViewService(_itemFactory, _inventoryManager,  _runtimeInstanceManager, _handRoot);
-        _worldViewService = new WorldViewService(_itemFactory);
     }
 
     private void OnDestroy()
@@ -94,92 +92,6 @@ public class PlayerHandAbility : PlayerAbility
         return true;
     }
 
-    public void BeginReleaseHandItem()
-    {
-        if (_inventoryManager == null || string.IsNullOrEmpty(_currentHandInstanceId))
-        {
-            return;
-        }
-
-        _isChargingThrow = true;
-        _throwChargeTime = 0.0f;
-    }
-
-    public void ChargeReleaseHandItem(float deltaTime)
-    {
-        if (_isChargingThrow == false)
-        {
-            return;
-        }
-
-        _throwChargeTime += deltaTime;
-    }
-
-    public bool ReleaseHandItem()
-    {
-        if (_isChargingThrow == false)
-        {
-            return false;
-        }
-
-        if (_inventoryManager == null || _runtimeInstanceManager == null || _worldViewService == null)
-        {
-            ResetThrowCharge();
-            return false;
-        }
-
-        RuntimeItemData runtimeItemData = _runtimeInstanceManager.GetItemInstance(_currentHandInstanceId);
-        if (runtimeItemData == null)
-        {
-            ResetThrowCharge();
-            return false;
-        }
-
-        bool shouldThrow = _throwChargeTime >= _throwHoldThreshold;
-        GameObject worldObject = _worldViewService.Create(runtimeItemData, null);
-        if (worldObject == null)
-        {
-            ResetThrowCharge();
-            return false;
-        }
-
-        worldObject.transform.position = _owner.transform.position + (_owner.transform.forward * _throwDistance);
-        worldObject.transform.rotation = Quaternion.identity;
-
-        if (shouldThrow)
-        {
-            ApplyThrowForce(worldObject);
-        }
-
-        int nextHandIndex = GetNextHandIndexAfterThrow();
-        bool isRemoved = _inventoryManager.RemoveItem(_handIndex);
-        if (isRemoved == false)
-        {
-            Object.Destroy(worldObject);
-            ResetThrowCharge();
-            return false;
-        }
-
-        ClearHandItem();
-        ResetThrowCharge();
-
-        if (_inventoryManager.Count <= 0)
-        {
-            SwitchToScanMode();
-            return true;
-        }
-
-        int resolvedIndex = ResolveNextHandIndex(nextHandIndex);
-        if (resolvedIndex < 0)
-        {
-            SwitchToScanMode();
-            return true;
-        }
-
-        TryPickUpItem(resolvedIndex);
-        return true;
-    }
-
     public bool TryConsumeCurrentHandItem()
     {
         if (_inventoryManager == null || HasHandItem == false)
@@ -216,7 +128,6 @@ public class PlayerHandAbility : PlayerAbility
     {
         _handIndex = -1;
         _currentHandInstanceId = null;
-        ResetThrowCharge();
         _handViewService?.Hide();
         NotifyHandSlotChanged();
     }
@@ -303,36 +214,6 @@ public class PlayerHandAbility : PlayerAbility
         }
 
         return _inventoryManager.Count - 1;
-    }
-
-    private void ApplyThrowForce(GameObject worldObject)
-    {
-        Rigidbody rigidbody = worldObject.GetComponent<Rigidbody>();
-        if (rigidbody == null)
-        {
-            rigidbody = worldObject.GetComponentInChildren<Rigidbody>();
-        }
-
-        if (rigidbody == null)
-        {
-            return;
-        }
-
-        rigidbody.linearVelocity = Vector3.zero;
-        rigidbody.angularVelocity = Vector3.zero;
-
-        float chargeRatio = _maxThrowChargeTime <= 0.0f
-            ? 1.0f
-            : Mathf.Clamp01(_throwChargeTime / _maxThrowChargeTime);
-        float throwForce = _maxThrowForce * chargeRatio;
-
-        rigidbody.AddForce(_owner.transform.forward * throwForce, ForceMode.Impulse);
-    }
-
-    private void ResetThrowCharge()
-    {
-        _isChargingThrow = false;
-        _throwChargeTime = 0.0f;
     }
 
     private void SwitchToScanMode()

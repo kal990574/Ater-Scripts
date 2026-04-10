@@ -18,10 +18,12 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
     [SerializeField] private UnityEvent _onQteGreatSuccess;
     [SerializeField] private UnityEvent _onQteFail;
 
+    
     private float _elapsedTime;
     private float _nextTriggerTime;
     private bool _isQteActive;
 
+    public GameObject Owner => gameObject;
     public bool IsConfigured => scannableObject != null && _qteConfig != null && _settings != null;
 
     private void Awake()

@@ -1,4 +1,4 @@
-﻿public class OnScanCompletedInterpreter : SubTensionInterpreterBase
+public class OnScanCompletedInterpreter : SubTensionInterpreterBase
 {
     public OnScanCompletedInterpreter(UnityEngine.Object source) : base(source)
     {
@@ -12,7 +12,10 @@
     private void PublishTensionEvent(LidarScanTargetCompletedRawEvent data)
     {
         publisher.TryPublish(
-            context => new OnTensionChangedEvent( 
-                context, TensionReasons.LidarScanCompleted, ETensionChannel.BaseTension, 0));
+            context => new OnTensionChangedEvent(
+                context,
+                TensionReasons.LidarScanCompleted,
+                ETensionChannel.BaseTension,
+                5f));
     }
 }

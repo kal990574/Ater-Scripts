@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public class KeyPadPuzzleInstance : MonoBehaviour
+public class KeyPadPuzzleInstance : MonoBehaviour, IPuzzleIntance
 {
     private const int MaxDigitCount = 4;
 

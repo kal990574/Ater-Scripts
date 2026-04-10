@@ -25,3 +25,13 @@ public readonly struct SonarScanStartedRawEvent : IGameEvent
         ScanAngle = scanAngle;
     }
 }
+
+public readonly struct SonarScanEnergyDepletedRawEvent : IGameEvent
+{
+    public GameEventContext Context { get; }
+
+    public SonarScanEnergyDepletedRawEvent(GameEventContext context)
+    {
+        Context = context;
+    }
+}

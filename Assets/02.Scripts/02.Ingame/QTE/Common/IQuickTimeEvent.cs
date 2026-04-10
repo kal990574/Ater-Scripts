@@ -1,5 +1,6 @@
 ﻿public interface IQuickTimeEvent
 {
+    EQTEType QTEType { get; }
     bool IsPlaying { get; }
     bool IsFinished { get; }
     EQuickTimeEventResult Result { get; }
