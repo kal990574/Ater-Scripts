@@ -25,6 +25,7 @@ public class GettableObject : Interactable
 
         InventoryManager.Instance.TryAddItem(runtimeItemData);
         OnInteractActivate();
+        PublishItemAcquired(runtimeItemData.ItemId);
         Destroy(gameObject);
     }
 }

@@ -7,6 +7,7 @@ public class KeyDoorInteractable : LockedDoorInteractable
     [Header("Key Settings")]
     [SerializeField] private int _requiredKeyItemId = -1;
     [SerializeField] private bool _consumeRequiredItemOnUnlock = true;
+    private bool _unlockedDuringCurrentUse;
 
     protected override bool IsAdditionalInteractRequirementSatisfied()
     {
@@ -25,6 +26,8 @@ public class KeyDoorInteractable : LockedDoorInteractable
 
     protected override bool OnUse(InteractionContext context, out string failureReason)
     {
+        _unlockedDuringCurrentUse = false;
+
         if (!IsUnlocked)
         {
             return UnlockDoor(context, out failureReason);
@@ -36,6 +39,17 @@ public class KeyDoorInteractable : LockedDoorInteractable
     protected override void OnUseFailed(InteractionContext context, string failureReason)
     {
         _onInteractionFailed?.Invoke();
+    }
+
+    protected override EInteractObjectEventType GetSuccessInteractEventType(InteractionContext context)
+    {
+        if (_unlockedDuringCurrentUse)
+        {
+            _unlockedDuringCurrentUse = false;
+            return EInteractObjectEventType.Unlock;
+        }
+
+        return base.GetSuccessInteractEventType(context);
     }
 
     private bool CanUnlock(InteractionContext context, out string failureReason)
@@ -86,7 +100,8 @@ public class KeyDoorInteractable : LockedDoorInteractable
             failureReason = "Door unlock request failed.";
             return false;
         }
-        
+
+        _unlockedDuringCurrentUse = true;
         failureReason = string.Empty;
         SetFailureResult(EUseInteractResult.Success);
         return true;

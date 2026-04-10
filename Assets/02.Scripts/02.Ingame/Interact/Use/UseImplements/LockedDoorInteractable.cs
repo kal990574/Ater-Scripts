@@ -139,6 +139,11 @@ public class LockedDoorInteractable : StateInteractable
         SetActivate(false);
     }
 
+    protected override EInteractObjectEventType GetSuccessInteractEventType(InteractionContext context)
+    {
+        return EInteractObjectEventType.DoorOpen;
+    }
+
     protected virtual bool ValidateConfiguration(out string failureReason)
     {
         if (!ValidateStateKey(_unlockStateKey, "Unlock state key", out failureReason))
