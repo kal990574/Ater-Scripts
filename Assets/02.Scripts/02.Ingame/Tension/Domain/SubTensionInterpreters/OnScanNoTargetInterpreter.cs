@@ -41,7 +41,7 @@ public class OnScanNoTargetInterpreter : SubTensionInterpreterBase
             publisher.TryPublish(
                 context => new OnTensionChangedEvent(
                     context,
-                    TensionReasons.LidarScanningWithNoTarget,ETensionChannel.BaseTension, 0));
+                    TensionReasons.LidarScanningWithNoTarget,ETensionChannel.BaseTension, 3));
         }
     }
 
