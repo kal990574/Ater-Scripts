@@ -78,6 +78,12 @@ public class UsableObject : Interactable
 
     protected virtual void OnUseSucceeded(InteractionContext context)
     {
+        PublishObjectInteracted(GetSuccessInteractEventType(context));
+    }
+
+    protected virtual EInteractObjectEventType GetSuccessInteractEventType(InteractionContext context)
+    {
+        return EInteractObjectEventType.Default;
     }
 
     private bool TryCanUse(InteractionContext context, out string failureReason)

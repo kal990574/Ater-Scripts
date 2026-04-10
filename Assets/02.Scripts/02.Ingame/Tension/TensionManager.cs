@@ -16,7 +16,7 @@ public class TensionManager : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool _enableDebugLog;
 
-    private readonly CompositeSubscription _subscriptions = new CompositeSubscription();
+    private CompositeSubscription _subscriptions;
 
     public float BaseTension => _baseTension;
     public float SpikeTension => _spikeTension;
@@ -24,6 +24,9 @@ public class TensionManager : MonoBehaviour
 
     private void OnEnable()
     {
+        _subscriptions?.Dispose();
+        _subscriptions = new CompositeSubscription();
+
         GameEventHub hub = GameEventHub.Instance;
         if (hub == null)
         {
@@ -36,7 +39,8 @@ public class TensionManager : MonoBehaviour
 
     private void OnDisable()
     {
-        _subscriptions.Dispose();
+        _subscriptions?.Dispose();
+        _subscriptions = null;
     }
 
     private void Update()
@@ -95,9 +99,9 @@ public class TensionManager : MonoBehaviour
             return;
         }
 
-        _spikeTension = ClampSpikeTension(_baseTension + delta);
+        _spikeTension = ClampSpikeTension(_spikeTension + delta);
 
-        LogState($"ApplyBaseTensionDelta | Reason: User Debug | Delta: {delta:+0.00;-0.00}");
+        LogState($"ApplySpikeTensionDelta | Reason: User Debug | Delta: {delta:+0.00;-0.00}");
     }
     
     private void ApplyBaseTensionDelta(float delta, string reason)
