@@ -3,7 +3,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 
-public class UI_HUDNofication : MonoBehaviour
+public class UI_HUDNotification : MonoBehaviour
 {
     [SerializeField] private GameObject _root;
     [SerializeField] private TextMeshProUGUI _text;
