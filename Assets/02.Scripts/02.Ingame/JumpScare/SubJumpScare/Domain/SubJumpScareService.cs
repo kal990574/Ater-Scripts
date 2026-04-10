@@ -362,6 +362,11 @@ public sealed class SubJumpScareService
 
     private void PublishRawResult(SubJumpScareSelectionResult result)
     {
+        if (result.IsSuccess == false)
+        {
+            return;
+        }
+        
         _eventPublisher.TryPublish(eventContext => new SubJumpScareTriggeredRawEvent(eventContext, result));
     }
 

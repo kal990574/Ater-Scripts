@@ -17,13 +17,14 @@ public class TimingQTERunner : IQuickTimeEvent
     private float _successZoneSizeProgress;
     private float _greatZonePercent;
     
+    public EQTEType QTEType => EQTEType.Timing;
     public bool IsPlaying { get; private set; }
     public bool IsFinished { get; private set; }
     public EQuickTimeEventResult Result { get; private set; }
 
     public event Action<EQuickTimeEventResult> OnEnded;
 
-    public TimingQTERunner(QTEManager owner,TimingQuickTimeEventConfig config, ITimingQuickTimeEventView view)
+    public TimingQTERunner(QTEManager owner, TimingQuickTimeEventConfig config, ITimingQuickTimeEventView view)
     {
         _owner = owner;
         _config = config;
@@ -171,6 +172,7 @@ public class TimingQTERunner : IQuickTimeEvent
             EQuickTimeEventResult.Success => _config.SuccessClip,
             EQuickTimeEventResult.GreatSuccess => _config.GreatSuccessClip,
             EQuickTimeEventResult.Fail => _config.FailClip,
+            _ => default
         };
 
         _sound.PlaySFX2D(clip);

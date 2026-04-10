@@ -85,6 +85,16 @@ public class SoundKey
     public const string JumpScare_Tutorial2 =  "JumpScare_Tutorial2";
     public const string JumpScare_Tutorial3 =  "JumpScare_Tutorial3";
     
+
+    public const string JumpScare_Chapter1_DoorClosed = "JumpScare_Chapter1_DoorClosed";
+    public const string JumpScare_Chapter1_DoorFading = "JumpScare_Chapter1_DoorFading";
+    public const string JumpScare_Chapter1_DollFalled = "JumpScare_Chapter1_DollFalled";
+    public const string JumpScare_Chapter1_DollMoved = "JumpScare_Chapter1_DollMoved"; //다수
+    public const string JumpScare_Chapter1_DollAnimation = "JumpScare_Chapter1_DollAnimation";
+    public const string JumpScare_Chapter1_SwitchOff = "JumpScare_Chapter1_SwitchOff";
+    public const string JumpScare_Chapter1_SwitchOn = "JumpScare_Chapter1_SwitchOn";
+    
+    
     public const string JumpScare_SubFakeEnemy_Terror =  "JumpScare_SubFakeEnemy_Terror";
     
     public const string JumpScare_SubPost_Dark =  "JumpScare_SubPost_Dark";

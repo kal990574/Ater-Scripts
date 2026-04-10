@@ -90,6 +90,12 @@ namespace _02.Scripts.Sonar
             _currentCharges--;
             _recoveryTimer = 0f;
             OnChargesChanged?.Invoke(_currentCharges, _config.MaxCharges);
+            if (_currentCharges == 0)
+            {
+                _eventPublisher.TryPublish(
+                    context => new SonarScanEnergyDepletedRawEvent(context));
+            }
+
             _effect.Play(transform.position, _cameraTarget.forward);
             _cameraFeedback.Play();
             SoundService.PlaySFX2D(_config.SonarActive);
