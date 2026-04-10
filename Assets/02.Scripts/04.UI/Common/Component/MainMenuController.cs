@@ -55,14 +55,14 @@ namespace _02.Scripts.UI.Component
         {
             try
             {
+                _newGameCard.SetActive(true);
+
                 var hasSave = await _saveManager.HasSave();
                 if (!hasSave)
                 {
                     ShowNewGameOnly();
                     return;
                 }
-
-                _newGameCard.SetActive(false);
 
                 var data = await _saveManager.LoadGame();
 
@@ -75,7 +75,7 @@ namespace _02.Scripts.UI.Component
                     _chapterCards[i].SetActive(unlocked);
                 }
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogError($"세이브 로드 실패: {e.Message}");
                 ShowNewGameOnly();
