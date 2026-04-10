@@ -16,7 +16,6 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     private readonly Dictionary<Type, PlayerAbility> _abilities = new();
     private IPlayerInput _input;
     private EPlayerInteractMode _lastGameplayMode = EPlayerInteractMode.Scan;
-    private IPlayerPuzzleController _activePuzzleController;
     private IGameManager _gameManager;
     private bool _isPausedByGame;
     private IPuzzleInputHandler _activePuzzleInputHandler;
