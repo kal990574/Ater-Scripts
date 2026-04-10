@@ -6,6 +6,8 @@ public class UI_InventoryItemViewer : MonoBehaviour
 {
     [SerializeField] private Transform _examineRoot;
     [SerializeField] private Camera _itemViewerCamera;
+
+    [SerializeField] private TextMeshProUGUI _itemNameText;
     [SerializeField] private TextMeshProUGUI _descriptionText;
 
     [SerializeField] private float _rotateSpeed = 0.5f;
@@ -68,12 +70,14 @@ public class UI_InventoryItemViewer : MonoBehaviour
         RuntimeItemData runtimeItemData = _runtimeInstanceManager.GetItemInstance(instanceId);
         if (runtimeItemData == null)
         {
+            _itemNameText.text = string.Empty;
             _descriptionText.text = string.Empty;
             _examineViewService.Hide();
             return;
         }
 
         _examineViewService.Show(runtimeItemData);
+        _itemNameText.text = runtimeItemData.ItemName;
         _descriptionText.text = runtimeItemData.Description;
     }
 
