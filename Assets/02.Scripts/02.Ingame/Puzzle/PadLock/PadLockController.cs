@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class PadLockController : MonoBehaviour, IPlayerPuzzleController
+public class PadLockController : PuzzleControllerBase
 {
     [Header("Padlock Code")]
     [SerializeField] private string _correctCode = "1111";
@@ -24,7 +24,9 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
 
     private PadLockPuzzleInstance _activeInstance;
     private bool _isSolved;
-    private PlayerController _playerController;
+    
+    protected override EPuzzleType PuzzleType => EPuzzleType.KeyPad;
+    protected override IPuzzleIntance ActivePuzzleInstance => _activeInstance;
 
     public bool IsSolved => _isSolved;
     public bool HasActivePuzzle => _activeInstance != null;
@@ -48,7 +50,7 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
             return;
         }
 
-        Transform spawnParent = ResolveSpawnParent();
+        Transform spawnParent = ResolveSpawnParent(_spawnParentOverride);
         GameObject instanceObject = Instantiate(_padlockInstancePrefab, spawnParent);
         instanceObject.transform.localPosition = _localSpawnPosition;
         instanceObject.transform.localRotation = Quaternion.Euler(_localSpawnEulerAngles);
@@ -65,26 +67,7 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
         ResolvePlayerController()?.EnterPuzzleMode(this);
     }
 
-    public void ConfirmActivePuzzle()
-    {
-        if (_activeInstance == null)
-        {
-            return;
-        }
-
-        _activeInstance.TryEvaluate();
-    }
-
-    public void CancelActivePuzzle()
-    {
-        if (_activeInstance == null)
-        {
-            return;
-        }
-
-        _activeInstance.Cancel();
-    }
-
+    
     public void HandlePuzzleSuccess(PadLockPuzzleInstance instance)
     {
         if (_activeInstance != instance)
@@ -94,7 +77,8 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
 
         _isSolved = true;
         _successEvent?.Invoke();
-        
+        PublishPuzzleResult(EPuzzleResult.Success);
+
         if (_lockVisualToDisable != null)
         {
             _lockVisualToDisable.SetActive(false);
@@ -112,41 +96,22 @@ public class PadLockController : MonoBehaviour, IPlayerPuzzleController
         }
 
         _failEvent?.Invoke();
+        PublishPuzzleResult(EPuzzleResult.Fail);
     }
 
     public void ClearActiveInstance(PadLockPuzzleInstance instance)
     {
         if (_activeInstance == instance)
         {
+            PublishPuzzleResult(EPuzzleResult.Cancel);
+
             ResolvePlayerController()?.ExitPuzzleMode(this);
             _activeInstance = null;
         }
     }
-
+    
     public void OnSpin()
     {
         _spinEvnet?.Invoke();
-    }
-
-    private Transform ResolveSpawnParent()
-    {
-        if (_spawnParentOverride != null)
-        {
-            return _spawnParentOverride;
-        }
-
-        Camera mainCamera = Camera.main;
-        return mainCamera != null ? mainCamera.transform : transform;
-    }
-
-    private PlayerController ResolvePlayerController()
-    {
-        if (_playerController != null)
-        {
-            return _playerController;
-        }
-
-        _playerController = FindFirstObjectByType<PlayerController>();
-        return _playerController;
     }
 }

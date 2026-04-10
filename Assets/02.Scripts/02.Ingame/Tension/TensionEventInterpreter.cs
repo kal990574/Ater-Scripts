@@ -10,6 +10,8 @@ public class TensionEventInterpreter : MonoBehaviour
         interpreters.Add(new OnScanNoTargetInterpreter(this, 1f));
         interpreters.Add(new OnScanCompletedInterpreter(this));
         interpreters.Add(new OnSubJumpScareActiveInterpreter(this));
+        interpreters.Add(new OnQTEResultInterpreter(this));
+        interpreters.Add(new OnPuzzleResultInterpreter(this));
     }
 
     private void OnEnable()

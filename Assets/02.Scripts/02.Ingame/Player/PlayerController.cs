@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     private readonly Dictionary<Type, PlayerAbility> _abilities = new();
     private IPlayerInput _input;
     private EPlayerInteractMode _lastGameplayMode = EPlayerInteractMode.Scan;
-    private IPlayerPuzzleController _activePuzzleController;
+    private IPuzzleInputHandler _activePuzzleInputHandler;
 
     public PlayerConfigSO Config => _playerConfig;
     public IPlayerInput Input => _input;
@@ -128,7 +128,6 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
                 ScanModeInput();
                 break;
             case EPlayerInteractMode.Item:
-                HandleItemModeInput();
                 break;
         }
 
@@ -140,26 +139,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
             GetAbility<PlayerHandAbility>().CycleHandItem(direction);
         }
     }
-
-    private void HandleItemModeInput()
-    {
-        PlayerHandAbility handAbility = GetAbility<PlayerHandAbility>();
-        if (_input.LmbPressInput)
-        {
-            handAbility.BeginReleaseHandItem();
-        }
-
-        if (_input.LmbHoldInput)
-        {
-            handAbility.ChargeReleaseHandItem(Time.deltaTime);
-        }
-
-        if (_input.LmbReleaseInput)
-        {
-            handAbility.ReleaseHandItem();
-        }
-    }
-
+    
     private void SwitchToScanMode()
     {
         GetAbility<PlayerHandAbility>().ClearHandItem();
@@ -271,20 +251,20 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         SetInteractMode(_lastGameplayMode);
     }
 
-    public void EnterPuzzleMode(IPlayerPuzzleController puzzleController)
+    public void EnterPuzzleMode(IPuzzleInputHandler puzzleInputHandler)
     {
-        _activePuzzleController = puzzleController;
+        _activePuzzleInputHandler = puzzleInputHandler;
         EnterPuzzleMode();
     }
 
-    public void ExitPuzzleMode(IPlayerPuzzleController puzzleController)
+    public void ExitPuzzleMode(IPuzzleInputHandler puzzleInputHandler)
     {
-        if (_activePuzzleController != null && _activePuzzleController != puzzleController)
+        if (_activePuzzleInputHandler != null && _activePuzzleInputHandler != puzzleInputHandler)
         {
             return;
         }
 
-        _activePuzzleController = null;
+        _activePuzzleInputHandler = null;
         ExitPuzzleMode();
     }
 
@@ -306,12 +286,12 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     {
         if (_input.ConfirmInput)
         {
-            _activePuzzleController?.ConfirmActivePuzzle();
+            _activePuzzleInputHandler?.ConfirmActivePuzzle();
         }
 
         if (_input.CancelInput)
         {
-            _activePuzzleController?.CancelActivePuzzle();
+            _activePuzzleInputHandler?.CancelActivePuzzle();
         }
     }
 

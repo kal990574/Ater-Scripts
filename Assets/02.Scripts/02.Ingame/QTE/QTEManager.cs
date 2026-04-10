@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
 public class QTEManager : MonoBehaviour
@@ -8,16 +7,14 @@ public class QTEManager : MonoBehaviour
     public static QTEManager Instance { get; private set; }
 
     [Header("Required References")]
-    [SerializeField] private UI_CircleTimingQTE uiCircleTimingQteUi;
-    [FormerlySerializedAs("QteConfig")]
-    [SerializeField] private TimingQuickTimeEventConfig _qteConfig;
+    [SerializeField] private UI_CircleTimingQTE _uiCircleTimingQteUi;
 
     private IQuickTimeEvent _currentEvent;
     private IQTEInvoker _currentOwner;
-    
+    private GameEventPublisher _eventPublisher;
     private Action<EQuickTimeEventResult> _onEnded;
 
-    public ITimingQuickTimeEventView TimingQuickTimeEventView => uiCircleTimingQteUi;
+    public ITimingQuickTimeEventView TimingQuickTimeEventView => _uiCircleTimingQteUi;
     public bool IsPlaying => _currentEvent != null && _currentEvent.IsPlaying;
     public IQTEInvoker CurrentOwner => _currentOwner;
     public IQuickTimeEvent CurrentEvent => _currentEvent;
@@ -33,14 +30,17 @@ public class QTEManager : MonoBehaviour
 
         Instance = this;
 
-        if (uiCircleTimingQteUi == null || _qteConfig == null)
+        if (_uiCircleTimingQteUi == null)
         {
             Debug.LogError($"[{nameof(QTEManager)}] Required references are missing.", this);
             enabled = false;
             return;
         }
 
-        uiCircleTimingQteUi.Hide();
+        _eventPublisher = new GameEventPublisher();
+        _eventPublisher.SetSource(this);
+
+        _uiCircleTimingQteUi.Hide();
     }
 
     private void Update()
@@ -57,24 +57,20 @@ public class QTEManager : MonoBehaviour
 
         if (_currentEvent.IsFinished)
         {
-            EndCurrent(_currentEvent.Result);
+            EndCurrent(_currentEvent.QTEType, _currentEvent.Result);
         }
-    }
-
-    public bool TryPlay(IQTEInvoker owner, Action<EQuickTimeEventResult> onEnded)
-    {
-        return TryPlay(owner, _qteConfig, onEnded);
     }
 
     public bool TryPlay(IQTEInvoker owner, QTEConfigSOBase config, Action<EQuickTimeEventResult> onEnded)
     {
-        if (owner == null || IsPlaying)
+        if (owner == null || config == null || IsPlaying)
         {
             return false;
         }
 
         _currentOwner = owner;
         _currentEvent = CreateEvent(config);
+
         if (_currentEvent == null)
         {
             _currentOwner = null;
@@ -82,7 +78,6 @@ public class QTEManager : MonoBehaviour
         }
 
         _onEnded = onEnded;
-
         _currentEvent.Begin();
         return true;
     }
@@ -105,9 +100,10 @@ public class QTEManager : MonoBehaviour
         }
 
         _currentEvent.Cancel();
+
         if (_currentEvent.IsFinished)
         {
-            EndCurrent(_currentEvent.Result);
+            EndCurrent(_currentEvent.QTEType, _currentEvent.Result);
         }
     }
 
@@ -118,12 +114,14 @@ public class QTEManager : MonoBehaviour
             return;
         }
 
+        EQTEType qteType = _currentEvent.QTEType;
+
         if (_currentEvent.IsPlaying)
         {
             _currentEvent.Cancel();
         }
 
-        EndCurrent(EQuickTimeEventResult.Fail);
+        EndCurrent(qteType, EQuickTimeEventResult.Fail);
     }
 
     public void CancelByOwner(IQTEInvoker owner)
@@ -136,30 +134,47 @@ public class QTEManager : MonoBehaviour
         CancelCurrent();
     }
 
-    private void EndCurrent(EQuickTimeEventResult result)
+    private void EndCurrent(EQTEType qteType, EQuickTimeEventResult result)
     {
         Action<EQuickTimeEventResult> callback = _onEnded;
+
+        _eventPublisher.TryPublish(context => new QteRawEvent(
+            context,
+            _currentOwner.Owner,
+                qteType,
+                result));
 
         _currentEvent = null;
         _currentOwner = null;
         _onEnded = null;
+
         callback?.Invoke(result);
     }
 
     private IQuickTimeEvent CreateEvent(QTEConfigSOBase config)
     {
-        if (config == null)
+        switch (config.QTEType)
         {
-            Debug.LogError($"[{nameof(QTEManager)}] QTE config is missing.", this);
-            return null;
-        }
+            case EQTEType.Timing:
+            {
+                if (config is TimingQuickTimeEventConfig timingConfig == false)
+                {
+                    Debug.LogError(
+                        $"[{nameof(QTEManager)}] Config type mismatch. QTEType={config.QTEType}, Config={config.GetType().Name}",
+                        this);
+                    return null;
+                }
 
-        if (config is TimingQuickTimeEventConfig timingConfig)
-        {
-            return new TimingQTERunner(this, timingConfig, TimingQuickTimeEventView);
-        }
+                return new TimingQTERunner(this, timingConfig, TimingQuickTimeEventView);
+            }
 
-        Debug.LogError($"[{nameof(QTEManager)}] Unsupported QTE config type: {config.GetType().Name}", this);
-        return null;
+            default:
+            {
+                Debug.LogError(
+                    $"[{nameof(QTEManager)}] Unsupported QTE type: {config.QTEType}",
+                    this);
+                return null;
+            }
+        }
     }
 }
