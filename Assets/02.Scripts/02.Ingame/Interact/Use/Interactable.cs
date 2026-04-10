@@ -8,6 +8,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     [SerializeField] protected bool _isInteractActive;
     private IRuntimeView _instance;
     protected ScannableObject _scannableObject;
+    private GameEventPublisher _eventPublisher;
 
     [SerializeField] private string _hoverDescriptionBeforeScan = "";
 
@@ -34,6 +35,9 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     [SerializeField] protected UnityEvent _onInteractionFailed;
     private void Awake()
     {
+        _eventPublisher = new GameEventPublisher();
+        _eventPublisher.SetSource(this);
+
         if (TryGetComponent(out IRuntimeView instance))
         {
             _instance = instance;
@@ -86,6 +90,16 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     {
         OnInteract?.Invoke();
         _onInteractionSuccess?.Invoke();
+    }
+
+    protected void PublishObjectInteracted(EInteractObjectEventType type)
+    {
+        _eventPublisher?.TryPublish(context => new ObjectInteractedRawEvent(context, type));
+    }
+
+    protected void PublishItemAcquired(int itemId)
+    {
+        _eventPublisher?.TryPublish(context => new ItemAcquiredRawEvent(context, itemId));
     }
 
     protected void RefreshRuntimeView()

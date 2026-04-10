@@ -76,7 +76,6 @@ public class JumpScareManager : MonoBehaviour
         }
 
         _instance = this;
-        DontDestroyOnLoad(gameObject);
 
         _mainJumpScareService = new MainJumpScareService(this);
         _subJumpScareService = new SubJumpScareService(
