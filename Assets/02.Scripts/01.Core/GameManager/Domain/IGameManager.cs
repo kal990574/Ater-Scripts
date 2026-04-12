@@ -15,7 +15,9 @@ namespace _02.Scripts.Core.Domain
         void CompleteChapter();
         void PauseGame();
         void ResumeGame();
+        void MarkChapterCleared();
         void ReturnToMainMenu();
-
+        void EnterTransition();
+        void ExitTransition();
     }
 }

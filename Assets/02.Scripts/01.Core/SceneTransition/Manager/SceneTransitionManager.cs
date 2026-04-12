@@ -1,5 +1,7 @@
 using _02.Scripts._01.Core.SceneTransition.Component;
 using _02.Scripts._01.Core.SceneTransition.Domain;
+using _02.Scripts.Core;
+using _02.Scripts.Core.Domain;
 using System;
 using System.Collections;
 using UnityEngine;
@@ -21,9 +23,12 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
 
         private SceneDataSO _currentSceneData;
         private bool _isTransitioning;
+        private IGameManager _gameManager;
 
         private void Start()
         {
+            _gameManager = Managers.Get<IGameManager>();
+
             if (!string.IsNullOrEmpty(_mainMenuSceneData.BgmKey) && SoundManager.Instance != null)
                 SoundManager.Instance.PlayBGM(_mainMenuSceneData.BgmKey);
         }
@@ -49,7 +54,9 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
         private IEnumerator TransitionCoroutine(SceneDataSO sceneData)
         {
             _isTransitioning = true;
-            Time.timeScale = 0f;
+
+            // GameState → Transitioning (timeScale=0, PauseAll, 이벤트 발행)
+            _gameManager.EnterTransition();
 
             // BGM 정지
             if (SoundManager.Instance != null)
@@ -96,7 +103,8 @@ namespace _02.Scripts._01.Core.SceneTransition.Manager
             if (!string.IsNullOrEmpty(sceneData.BgmKey) && SoundManager.Instance != null)
                 SoundManager.Instance.PlayBGM(sceneData.BgmKey);
 
-            Time.timeScale = 1f;
+            // GameState → Playing (timeScale=1, ResumeAll, 이벤트 발행)
+            _gameManager.ExitTransition();
             _isTransitioning = false;
             OnTransitionCompleted?.Invoke();
         }

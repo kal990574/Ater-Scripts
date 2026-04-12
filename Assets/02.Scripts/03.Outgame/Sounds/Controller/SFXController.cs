@@ -157,6 +157,7 @@ public class SFXController : MonoBehaviour
     public void PauseSFX()
     {
         _isPaused = true;
+        CleanupDestroyed();
         foreach (var entry in _activeSFX)
         {
             entry.Source.Pause();
@@ -166,10 +167,16 @@ public class SFXController : MonoBehaviour
     public void ResumeSFX()
     {
         _isPaused = false;
+        CleanupDestroyed();
         foreach (var entry in _activeSFX)
         {
             entry.Source.UnPause();
         }
+    }
+
+    private void CleanupDestroyed()
+    {
+        _activeSFX.RemoveAll(e => e.Source == null);
     }
 
     private void OnDestroy()

@@ -54,9 +54,6 @@ namespace _02.Scripts.Core.Manager
 
         public void RestartCurrentChapter()
         {
-            CurrentState = GameState.Playing;
-            Time.timeScale = 1f;
-            SoundManager.Instance?.ResumeAll();
             _sceneTransitionManager.RestartCurrentScene();
         }
 
@@ -66,24 +63,39 @@ namespace _02.Scripts.Core.Manager
             if (sceneData == null) return;
 
             CurrentChapter = chapter;
-            CurrentState = GameState.Playing;
-            Time.timeScale = 1f;
-            SoundManager.Instance?.ResumeAll();
             _sceneTransitionManager.LoadScene(sceneData);
+        }
+
+        public void MarkChapterCleared()
+        {
+            OnChapterCleared?.Invoke(CurrentChapter);
         }
 
         public void CompleteChapter()
         {
-            OnChapterCleared?.Invoke(CurrentChapter);
+            MarkChapterCleared();
             LoadChapter(CurrentChapter + 1);
         }
 
         public void ReturnToMainMenu()
         {
+            _sceneTransitionManager.ReturnToMainMenu();
+        }
+
+        public void EnterTransition()
+        {
+            CurrentState = GameState.Transitioning;
+            Time.timeScale = 0f;
+            SoundManager.Instance?.PauseAll();
+            OnGameStateChanged?.Invoke(GameState.Transitioning);
+        }
+
+        public void ExitTransition()
+        {
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
             SoundManager.Instance?.ResumeAll();
-            _sceneTransitionManager.ReturnToMainMenu();
+            OnGameStateChanged?.Invoke(GameState.Playing);
         }
     }
 }

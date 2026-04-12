@@ -42,9 +42,11 @@ namespace _02.Scripts.Sonar
             _eventPublisher.SetSource(this);
             
             _cooldownTimer = 0;
-            
+
             _currentCharges = _config.MaxCharges;
             _recoveryTimer = 0f;
+
+            OnChargesChanged?.Invoke(_currentCharges, _config.MaxCharges);
         }
         
         

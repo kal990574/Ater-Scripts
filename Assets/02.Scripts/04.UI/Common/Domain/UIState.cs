@@ -4,6 +4,7 @@ namespace _02.Scripts.UI.Domain
     {
         InGame,
         Paused,
-        GameOver
+        GameOver,
+        Transitioning
     }
 }

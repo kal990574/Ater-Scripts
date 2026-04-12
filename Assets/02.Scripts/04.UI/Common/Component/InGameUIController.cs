@@ -72,6 +72,7 @@ namespace _02.Scripts.UI.Component
             }
 
             if (_uiManager.CurrentState == UIState.GameOver) return;
+            if (_uiManager.CurrentState == UIState.Transitioning) return;
 
             if (_uiManager.CurrentState == UIState.Paused && _settingsPanel.activeInHierarchy)
             {
@@ -113,6 +114,9 @@ namespace _02.Scripts.UI.Component
                 case UIState.GameOver:
                     ShowGameOver();
                     break;
+                case UIState.Transitioning:
+                    HideAll();
+                    break;
             }
         }
 
@@ -132,6 +136,12 @@ namespace _02.Scripts.UI.Component
         {
             _gameOverModal.ModalWindowIn();
             SetCursor(true);
+        }
+
+        private void HideAll()
+        {
+            _hudPanel.SetActive(false);
+            _pausePanel.SetActive(false);
         }
 
         private void SetCursor(bool visible)

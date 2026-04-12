@@ -11,6 +11,7 @@ public class BGMController : MonoBehaviour
     private Coroutine _bgmFadeCoroutine;
 
     private bool _isPaused;
+    private float _targetVolume = 1f;
 
     private const float MinFadeTime = 0.01f;
 
@@ -21,12 +22,13 @@ public class BGMController : MonoBehaviour
         _inActiveBGM.volume = 0f;
     }
 
-    public void Play(AudioClip clip, float fadeTime)
+    public void Play(AudioClip clip, float fadeTime, float volume = 1f)
     {
         if (clip == null) return;
 
         if (_activeBGM.clip == clip && _activeBGM.isPlaying) return;
 
+        _targetVolume = volume;
         fadeTime = Mathf.Max(fadeTime, MinFadeTime); //fadetime이 0일 때의 예외처리
 
         if (_bgmFadeCoroutine != null)
@@ -67,7 +69,7 @@ public class BGMController : MonoBehaviour
             float t = elapsed / fadeTime;
 
             _activeBGM.volume = Mathf.Lerp(startVolume, 0f, t);
-            _inActiveBGM.volume = Mathf.Lerp(0f, 1f, t);
+            _inActiveBGM.volume = Mathf.Lerp(0f, _targetVolume, t);
 
             yield return null;
         }

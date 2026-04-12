@@ -49,6 +49,7 @@ namespace _02.Scripts.Core.Component
                     gameManager.CompleteChapter();
                     break;
                 case EEndAction.ReturnToMainMenu:
+                    gameManager.MarkChapterCleared();
                     gameManager.ReturnToMainMenu();
                     break;
             }
