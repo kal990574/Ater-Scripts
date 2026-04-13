@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+//업적의 진행상태 데이터. id와 현재 값. 달성여부를 가진다.
 [Serializable]
 public class AchievementState
 {
