@@ -9,9 +9,6 @@ public class PadLockController : PuzzleControllerBase
 
     [Header("Padlock Instance")]
     [SerializeField] private GameObject _padlockInstancePrefab;
-    [SerializeField] private Transform _spawnParentOverride;
-    [SerializeField] private Vector3 _localSpawnPosition = new(0f, 0f, 0.5f);
-    [SerializeField] private Vector3 _localSpawnEulerAngles = Vector3.zero;
 
     [Header("State")]
     [SerializeField] private bool _blockOpenAfterSuccess = true;
@@ -49,8 +46,8 @@ public class PadLockController : PuzzleControllerBase
             Debug.LogWarning($"{gameObject.name} : padlock instance prefab is not assigned", this);
             return;
         }
-
-        Transform spawnParent = ResolveSpawnParent(_spawnParentOverride);
+        _puzzleCamera.gameObject.SetActive(true);
+        Transform spawnParent = ResolveSpawnParent(_puzzleCamera);
         GameObject instanceObject = Instantiate(_padlockInstancePrefab, spawnParent);
         instanceObject.transform.localPosition = _localSpawnPosition;
         instanceObject.transform.localRotation = Quaternion.Euler(_localSpawnEulerAngles);
@@ -106,6 +103,7 @@ public class PadLockController : PuzzleControllerBase
             PublishPuzzleResult(EPuzzleResult.Cancel);
 
             ResolvePlayerController()?.ExitPuzzleMode(this);
+            _puzzleCamera.gameObject.SetActive(false);
             _activeInstance = null;
         }
     }
