@@ -14,6 +14,7 @@ public class SonarHighlightConfigSO : ScriptableObject
     [Header("Outline")]
     [ColorUsage(true, true)]
     public Color SonarOutlineColor = new(0f, 0.5f, 1f, 1f);
+    public float OutlineThickness = 1.5f;
 
     [Header("Hit Blend")]
     public float HitBlendPeak = 0.6f;

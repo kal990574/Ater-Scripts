@@ -6,6 +6,7 @@ namespace _02.Scripts.Sonar
     public class SonarHighlightShaderModifier : MonoBehaviour
     {
         private const string OUTLINE_COLOR_NAME = "_OutlineColor";
+        private const string OUTLINE_THICKNESS_NAME = "_OutlineThickness";
         private const string HIT_BLEND_NAME = "_HitBlend";
 
         [Header("Required References")]
@@ -16,7 +17,7 @@ namespace _02.Scripts.Sonar
         private Sequence _activeSequence;
 
         private float _currentHitBlend;
-        private float _currentOutlineAlpha;
+        private float _currentOutlineThickness;
 
         #region Lifecycle
 
@@ -107,7 +108,8 @@ namespace _02.Scripts.Sonar
             // 아웃라인 활성화 + HitBlend 플래시
             seq.AppendCallback(() =>
             {
-                _currentOutlineAlpha = 1f;
+                _currentOutlineThickness = _config.OutlineThickness;
+                SetOutlineThickness(_config.OutlineThickness);
                 SetOutlineColor(_config.SonarOutlineColor);
                 _shaderController.SetOutlineType(AllInOneShaderController.OutlineType.Simple);
             });
@@ -119,14 +121,15 @@ namespace _02.Scripts.Sonar
             // 아웃라인 유지
             seq.AppendInterval(_config.HighlightDuration);
 
-            // 아웃라인 페이드아웃
-            seq.Append(CreateOutlineAlphaFadeTween(0f, _config.FadeOutDuration)
+            // 아웃라인 두께 페이드아웃
+            seq.Append(CreateOutlineThicknessFadeTween(0f, _config.FadeOutDuration)
                 .SetEase(Ease.InQuad));
 
             // 프로퍼티 리셋
             seq.AppendCallback(() =>
             {
                 _shaderController.SetOutlineType(AllInOneShaderController.OutlineType.None);
+                SetOutlineThickness(0f);
                 SetHitBlend(0f);
             });
 
@@ -138,8 +141,9 @@ namespace _02.Scripts.Sonar
         private void ResetState()
         {
             _currentHitBlend = 0f;
-            _currentOutlineAlpha = 0f;
+            _currentOutlineThickness = 0f;
             SetHitBlend(0f);
+            SetOutlineThickness(0f);
             _shaderController.SetOutlineType(AllInOneShaderController.OutlineType.None);
         }
 
@@ -175,16 +179,14 @@ namespace _02.Scripts.Sonar
                 duration);
         }
 
-        private Tween CreateOutlineAlphaFadeTween(float target, float duration)
+        private Tween CreateOutlineThicknessFadeTween(float target, float duration)
         {
             return DOTween.To(
-                () => _currentOutlineAlpha,
+                () => _currentOutlineThickness,
                 value =>
                 {
-                    _currentOutlineAlpha = value;
-                    Color color = _config.SonarOutlineColor;
-                    color.a = value;
-                    SetOutlineColor(color);
+                    _currentOutlineThickness = value;
+                    SetOutlineThickness(value);
                 },
                 target,
                 duration);
@@ -202,6 +204,11 @@ namespace _02.Scripts.Sonar
         private void SetHitBlend(float value)
         {
             _shaderController.SetFloat(HIT_BLEND_NAME, value);
+        }
+
+        private void SetOutlineThickness(float value)
+        {
+            _shaderController.SetFloat(OUTLINE_THICKNESS_NAME, value);
         }
 
         #endregion
