@@ -18,7 +18,7 @@ public class AchievementManager : MonoBehaviour
     private IAchievementRunStatisticsRepository _runStatisticsRepository;
 
     private readonly List<AchievementState> _states = new List<AchievementState>();
-    private readonly Dictionary<AchievementId, AchievementState> _stateMap = new Dictionary<AchievementId, AchievementState>();
+    private readonly Dictionary<string, AchievementState> _stateMap = new Dictionary<string, AchievementState>();
 
     private AchievementRunStatistics _runStatistics;
 
@@ -87,7 +87,7 @@ public class AchievementManager : MonoBehaviour
         _runStatistics.IncrementSonarUseCount();
         _runStatisticsRepository.Save(_runStatistics);
 
-        AddProgressAndTryUnlock(AchievementId.Mechanic_FirstSignal, 1);
+        AddProgressAndTryUnlock(AchievementKey.Mechanic_FirstSignal, 1);
     }
 
     public void HandleEvent(AchievementLidarTargetCompletedEvent achievementEvent)
@@ -95,7 +95,7 @@ public class AchievementManager : MonoBehaviour
         _runStatistics.IncrementLidarRestoreCount();
         _runStatisticsRepository.Save(_runStatistics);
 
-        AddProgressAndTryUnlock(AchievementId.Mechanic_RestorationExpert, 1);
+        AddProgressAndTryUnlock(AchievementKey.Mechanic_RestorationExpert, 1);
     }
 
     public void HandleEvent(AchievementAiQuestionUsedEvent achievementEvent)
@@ -103,23 +103,23 @@ public class AchievementManager : MonoBehaviour
         _runStatistics.IncrementAiQuestionCount();
         _runStatisticsRepository.Save(_runStatistics);
 
-        AddProgressAndTryUnlock(AchievementId.Mechanic_Chatterbox, 1);
+        AddProgressAndTryUnlock(AchievementKey.Mechanic_Chatterbox, 1);
     }
 
     public void HandleEvent(AchievementEndingReachedEvent achievementEvent)
     {
         if (_runStatistics.SonarUseCount <= 15)
         {
-            ForceUnlock(AchievementId.Mechanic_AdaptedToDarkness);
+            ForceUnlock(AchievementKey.Mechanic_AdaptedToDarkness);
         }
     }
 
-    public bool TryGetDefinition(AchievementId achievementId, out AchievementDefinition definition)
+    public bool TryGetDefinition(string achievementId, out AchievementDefinition definition)
     {
         return _definitionRepository.TryGetDefinition(achievementId, out definition);
     }
 
-    public bool TryGetState(AchievementId achievementId, out AchievementState state)
+    public bool TryGetState(string achievementId, out AchievementState state)
     {
         return _stateMap.TryGetValue(achievementId, out state);
     }
@@ -160,7 +160,7 @@ public class AchievementManager : MonoBehaviour
         _runStatisticsRepository.Save(_runStatistics);
     }
 
-    private void AddProgressAndTryUnlock(AchievementId achievementId, int amount)
+    private void AddProgressAndTryUnlock(string achievementId, int amount)
     {
         if (_definitionRepository.TryGetDefinition(achievementId, out AchievementDefinition definition) == false)
         {
@@ -196,7 +196,7 @@ public class AchievementManager : MonoBehaviour
         }
     }
 
-    private void ForceUnlock(AchievementId achievementId)
+    private void ForceUnlock(string achievementId)
     {
         if (_definitionRepository.TryGetDefinition(achievementId, out AchievementDefinition definition) == false)
         {

@@ -75,7 +75,7 @@ public class UI_AchievementListPage : MonoBehaviour
     private UI_AchievementViewData CreateViewData(AchievementDefinition definition, AchievementState state)
     {
         bool isHiddenAndLocked =
-            definition.VisibilityType == AchievementVisibilityType.Hidden &&
+            definition.VisibilityType == EAchievementVisibilityType.Hidden &&
             state.IsUnlocked == false;
 
         if (isHiddenAndLocked == true)

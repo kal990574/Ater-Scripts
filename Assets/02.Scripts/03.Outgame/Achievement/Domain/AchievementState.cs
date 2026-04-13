@@ -4,17 +4,17 @@ using UnityEngine;
 [Serializable]
 public class AchievementState
 {
-    [SerializeField] private AchievementId _id = AchievementId.None;
+    [SerializeField] private string _id = AchievementKey.None;
     [SerializeField] private int _currentValue = 0;
     [SerializeField] private bool _isUnlocked = false;
 
-    public AchievementId Id => _id;
+    public string Id => _id;
     public int CurrentValue => _currentValue;
     public bool IsUnlocked => _isUnlocked;
 
-    public AchievementState(AchievementId id)
+    public AchievementState(string id)
     {
-        _id = id;
+        _id = string.IsNullOrWhiteSpace(id) ? AchievementKey.None : id;
         _currentValue = 0;
         _isUnlocked = false;
     }
