@@ -27,7 +27,8 @@ namespace _02.Scripts.Core.Manager
         public void GameOver()
         {
             CurrentState = GameState.GameOver;
-            Time.timeScale = 0;
+            Time.timeScale = 0f;
+            SoundManager.Instance?.PauseAll();
             OnGameStateChanged?.Invoke(GameState.GameOver);
         }
 
@@ -37,22 +38,22 @@ namespace _02.Scripts.Core.Manager
 
             CurrentState = GameState.Paused;
             Time.timeScale = 0f;
+            SoundManager.Instance?.PauseAll();
             OnGameStateChanged?.Invoke(GameState.Paused);
         }
 
         public void ResumeGame()
         {
             if (CurrentState != GameState.Paused) return;
-            
+
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
+            SoundManager.Instance?.ResumeAll();
             OnGameStateChanged?.Invoke(GameState.Playing);
         }
 
         public void RestartCurrentChapter()
         {
-            CurrentState = GameState.Playing;
-            Time.timeScale = 1f;
             _sceneTransitionManager.RestartCurrentScene();
         }
 
@@ -62,22 +63,39 @@ namespace _02.Scripts.Core.Manager
             if (sceneData == null) return;
 
             CurrentChapter = chapter;
-            CurrentState = GameState.Playing;
-            Time.timeScale = 1f;
             _sceneTransitionManager.LoadScene(sceneData);
+        }
+
+        public void MarkChapterCleared()
+        {
+            OnChapterCleared?.Invoke(CurrentChapter);
         }
 
         public void CompleteChapter()
         {
-            OnChapterCleared?.Invoke(CurrentChapter);
+            MarkChapterCleared();
             LoadChapter(CurrentChapter + 1);
         }
 
         public void ReturnToMainMenu()
         {
+            _sceneTransitionManager.ReturnToMainMenu();
+        }
+
+        public void EnterTransition()
+        {
+            CurrentState = GameState.Transitioning;
+            Time.timeScale = 0f;
+            SoundManager.Instance?.PauseAll();
+            OnGameStateChanged?.Invoke(GameState.Transitioning);
+        }
+
+        public void ExitTransition()
+        {
             CurrentState = GameState.Playing;
             Time.timeScale = 1f;
-            _sceneTransitionManager.ReturnToMainMenu();
+            SoundManager.Instance?.ResumeAll();
+            OnGameStateChanged?.Invoke(GameState.Playing);
         }
     }
 }

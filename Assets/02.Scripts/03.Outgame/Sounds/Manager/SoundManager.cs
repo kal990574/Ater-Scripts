@@ -38,7 +38,7 @@ public class SoundManager : MonoBehaviour, ISoundService
     {
         SoundData soundData = GetSoundData(key);
         if (soundData == null || soundData.AudioClip == null) return;
-        _bgmController.Play(soundData.AudioClip, fadeTime);
+        _bgmController.Play(soundData.AudioClip, fadeTime, soundData.BaseVolume);
     }
 
     public void StopBGM(float fadeTime = 1f)

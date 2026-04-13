@@ -4,6 +4,7 @@ namespace _02.Scripts.Core.Domain
     {
         Playing,
         Paused,
-        GameOver
+        GameOver,
+        Transitioning
     }
 }

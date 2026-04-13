@@ -114,7 +114,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         if (Target != null && _input.InteractInput)
         {
             GetAbility<PlayerInteractAbility>().Interact(Target);
-            GetAbility<PlayerDetectAbility>().ForceHidePrompt();
+            //GetAbility<PlayerDetectAbility>().ForceHidePrompt();
 
         }
     }
@@ -261,11 +261,13 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 
     public void EnterPuzzleMode()
     {
+        GetAbility<PlayerDetectAbility>()?.ForceHidePrompt();
         SetInteractMode(EPlayerInteractMode.Puzzle);
     }
 
     public void ExitPuzzleMode()
     {
+        GetAbility<PlayerDetectAbility>()?.ResumePrompt();
         SetInteractMode(_lastGameplayMode);
     }
 
@@ -330,6 +332,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         switch (state)
         {
             case GameState.Paused:
+            case GameState.GameOver:
                 _isPausedByGame = true;
                 _canMove = false;
                 _canRotate = false;

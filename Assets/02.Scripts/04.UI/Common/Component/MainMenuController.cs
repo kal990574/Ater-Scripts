@@ -20,6 +20,9 @@ namespace _02.Scripts.UI.Component
 
         private async void Start()
         {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
             _gameManager = Managers.Get<IGameManager>();
             _saveManager = Managers.Get<SaveManager>();
             await RefreshChapterUI();

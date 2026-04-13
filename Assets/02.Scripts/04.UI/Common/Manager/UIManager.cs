@@ -42,6 +42,9 @@ namespace _02.Scripts.UI.Manager
                 case GameState.GameOver:
                     SetState(UIState.GameOver);
                     break;
+                case GameState.Transitioning:
+                    SetState(UIState.Transitioning);
+                    break;
             }
         }
     }
