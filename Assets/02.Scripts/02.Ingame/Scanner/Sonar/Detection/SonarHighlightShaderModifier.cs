@@ -14,10 +14,13 @@ namespace _02.Scripts.Sonar
         [SerializeField] private SonarHighlightConfigSO _config;
 
         private SonarDetectableObject _detectable;
+        private InteractTargetShaderModifier _lidarModifier;
         private Sequence _activeSequence;
 
         private float _currentHitBlend;
         private float _currentOutlineThickness;
+
+        public bool IsHighlighting { get; private set; }
 
         #region Lifecycle
 
@@ -49,6 +52,11 @@ namespace _02.Scripts.Sonar
             if (_detectable == null)
             {
                 _detectable = GetComponentInParent<SonarDetectableObject>();
+            }
+
+            if (_lidarModifier == null)
+            {
+                _lidarModifier = GetComponent<InteractTargetShaderModifier>();
             }
         }
 
@@ -108,6 +116,7 @@ namespace _02.Scripts.Sonar
             // 아웃라인 활성화 + HitBlend 플래시
             seq.AppendCallback(() =>
             {
+                IsHighlighting = true;
                 _currentOutlineThickness = _config.OutlineThickness;
                 SetOutlineThickness(_config.OutlineThickness);
                 SetOutlineColor(_config.SonarOutlineColor);
@@ -125,12 +134,18 @@ namespace _02.Scripts.Sonar
             seq.Append(CreateOutlineThicknessFadeTween(0f, _config.FadeOutDuration)
                 .SetEase(Ease.InQuad));
 
-            // 프로퍼티 리셋
+            // 프로퍼티 리셋 + 라이다 상태 복원
             seq.AppendCallback(() =>
             {
+                IsHighlighting = false;
                 _shaderController.SetOutlineType(AllInOneShaderController.OutlineType.None);
                 SetOutlineThickness(0f);
                 SetHitBlend(0f);
+
+                if (_lidarModifier != null)
+                {
+                    _lidarModifier.SynchronizeCurrentState();
+                }
             });
 
             seq.SetLink(gameObject, LinkBehaviour.KillOnDisable);
@@ -140,6 +155,7 @@ namespace _02.Scripts.Sonar
 
         private void ResetState()
         {
+            IsHighlighting = false;
             _currentHitBlend = 0f;
             _currentOutlineThickness = 0f;
             SetHitBlend(0f);

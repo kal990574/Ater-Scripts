@@ -1,3 +1,4 @@
+using _02.Scripts.Sonar;
 using DG.Tweening;
 using UnityEngine;
 
@@ -16,7 +17,8 @@ public class InteractTargetShaderModifier : MonoBehaviour
     
     private IScannable scannable;
     private IDetectable detectable;
-    
+    private SonarHighlightShaderModifier _sonarModifier;
+
     private Tween _hitBlendTween;
     private float _currentHitBlend;
     private bool _isDetected;
@@ -52,6 +54,11 @@ public class InteractTargetShaderModifier : MonoBehaviour
         if (detectable == null)
         {
             detectable = GetComponentInParent<IDetectable>();
+        }
+
+        if (_sonarModifier == null)
+        {
+            _sonarModifier = GetComponent<SonarHighlightShaderModifier>();
         }
     }
 
@@ -131,7 +138,7 @@ public class InteractTargetShaderModifier : MonoBehaviour
         PlayHitBlendEffect();
     }
 
-    private void SynchronizeCurrentState()
+    public void SynchronizeCurrentState()
     {
         if (scannable != null)
         {
@@ -141,11 +148,19 @@ public class InteractTargetShaderModifier : MonoBehaviour
         RefreshOutlineState();
     }
 
+    private bool IsSonarHighlighting()
+    {
+        return _sonarModifier != null && _sonarModifier.IsHighlighting;
+    }
+
     private void ApplyProgressState(float ratio)
     {
         _currentScanRatio = ratio;
         SetBlendCutOffRatio(ratio);
         UpdateOptionalEffects(1.0f - ratio);
+
+        if (IsSonarHighlighting()) return;
+
         UpdateOutlineColor(ratio);
         RefreshOutlineState();
     }
@@ -173,6 +188,8 @@ public class InteractTargetShaderModifier : MonoBehaviour
 
     private void PlayHitBlendEffect()
     {
+        if (IsSonarHighlighting()) return;
+
         KillHitBlendTween();
 
         Sequence sequence = DOTween.Sequence();
@@ -252,6 +269,9 @@ public class InteractTargetShaderModifier : MonoBehaviour
     private void ShowOutline(bool show)
     {
         _isDetected = show;
+
+        if (IsSonarHighlighting()) return;
+
         RefreshOutlineState();
     }
 
