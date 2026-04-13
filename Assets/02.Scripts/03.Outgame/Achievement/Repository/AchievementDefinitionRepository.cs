@@ -4,12 +4,12 @@ using System.Collections.Generic;
 public class AchievementDefinitionRepository : IAchievementDefinitionRepository
 {
     private readonly AchievementDefinitionDatabaseSO _database;
-    private readonly Dictionary<AchievementId, AchievementDefinition> _cachedDefinitions;
+    private readonly Dictionary<string, AchievementDefinition> _cachedDefinitions;
 
     public AchievementDefinitionRepository(AchievementDefinitionDatabaseSO database)
     {
         _database = database;
-        _cachedDefinitions = new Dictionary<AchievementId, AchievementDefinition>();
+        _cachedDefinitions = new Dictionary<string, AchievementDefinition>();
 
         if (_database == null)
         {
@@ -22,6 +22,11 @@ public class AchievementDefinitionRepository : IAchievementDefinitionRepository
             AchievementDefinition definition = definitions[index];
 
             if (definition == null)
+            {
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(definition.Id) == true)
             {
                 continue;
             }
@@ -45,8 +50,14 @@ public class AchievementDefinitionRepository : IAchievementDefinitionRepository
         return _database.Definitions;
     }
 
-    public bool TryGetDefinition(AchievementId id, out AchievementDefinition definition)
+    public bool TryGetDefinition(string id, out AchievementDefinition definition)
     {
+        if (string.IsNullOrWhiteSpace(id) == true)
+        {
+            definition = null;
+            return false;
+        }
+
         return _cachedDefinitions.TryGetValue(id, out definition);
     }
 }

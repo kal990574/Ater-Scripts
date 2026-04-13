@@ -1,4 +1,4 @@
-public enum AchievementCategory
+public enum EAchievementCategory
 {
     Story = 0,
     Collection = 1,
