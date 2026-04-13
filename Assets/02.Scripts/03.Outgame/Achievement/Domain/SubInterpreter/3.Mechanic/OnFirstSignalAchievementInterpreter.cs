@@ -1,5 +1,4 @@
-﻿// OnFirstSignalAchievementInterpreter.cs
-using UnityEngine;
+﻿using UnityEngine;
 
 public class OnFirstSignalAchievementInterpreter : AchievementSubInterpreterBase
 {
@@ -15,12 +14,6 @@ public class OnFirstSignalAchievementInterpreter : AchievementSubInterpreterBase
 
     private void OnSonarScanStarted(SonarScanStartedRawEvent rawEvent)
     {
-        AchievementManager manager = AchievementManager.Instance;
-        if (manager != null)
-        {
-            manager.CurrentRun.IncrementSonarUseCount();
-        }
-
         PublishAchievement();
     }
 }

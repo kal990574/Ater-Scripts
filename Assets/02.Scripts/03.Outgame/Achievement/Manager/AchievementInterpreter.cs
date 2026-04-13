@@ -1,4 +1,3 @@
-// AchievementInterpreter.cs
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -37,14 +36,11 @@ public class AchievementInterpreter : MonoBehaviour
         _interpreters.Add(new OnAct3ClearedAchievementInterpreter(this));
         _interpreters.Add(new OnEndingReachedAchievementInterpreter(this));
 
-        _interpreters.Add(new OnFirstLogAchievementInterpreter(this));
-        _interpreters.Add(new OnAllTextLogsCollectedAchievementInterpreter(this));
-
         _interpreters.Add(new OnFirstSignalAchievementInterpreter(this));
         _interpreters.Add(new OnRestorationExpertAchievementInterpreter(this));
         _interpreters.Add(new OnChatterboxAchievementInterpreter(this));
         _interpreters.Add(new OnAdaptedToDarknessAchievementInterpreter(this));
-
         _interpreters.Add(new OnNoAiClearAchievementInterpreter(this));
+        _interpreters.Add(new OnAllLogsCollectedAchievementInterpreter(this));
     }
 }

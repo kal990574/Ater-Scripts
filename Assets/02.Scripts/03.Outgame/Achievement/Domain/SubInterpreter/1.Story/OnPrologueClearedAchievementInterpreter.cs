@@ -1,5 +1,4 @@
-﻿// OnPrologueClearedAchievementInterpreter.cs
-using UnityEngine;
+﻿using UnityEngine;
 
 public class OnPrologueClearedAchievementInterpreter : AchievementSubInterpreterBase
 {

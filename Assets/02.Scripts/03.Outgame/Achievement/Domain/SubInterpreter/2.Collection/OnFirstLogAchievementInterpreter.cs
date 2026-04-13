@@ -1,5 +1,4 @@
-﻿// OnFirstLogAchievementInterpreter.cs
-using UnityEngine;
+﻿using UnityEngine;
 
 public class OnFirstLogAchievementInterpreter : AchievementSubInterpreterBase
 {
@@ -10,23 +9,32 @@ public class OnFirstLogAchievementInterpreter : AchievementSubInterpreterBase
 
     protected override void Subscribe(GameEventHub hub, CompositeSubscription subscriptions)
     {
-        subscriptions.Add(hub.Subscribe<LogCollectedRawEvent>(OnLogCollected));
+        subscriptions.Add(hub.Subscribe<ItemAcquiredRawEvent>(OnItemAcquired));
     }
 
-    private void OnLogCollected(LogCollectedRawEvent rawEvent)
+    private void OnItemAcquired(ItemAcquiredRawEvent rawEvent)
     {
+        if (rawEvent.ItemType != EItemType.Log)
+        {
+            return;
+        }
+
         AchievementManager manager = AchievementManager.Instance;
         if (manager == null)
         {
             return;
         }
 
-        bool alreadyCollected = manager.HasCollectedLog(rawEvent.LogId);
-        int predictedCount = manager.GetCollectedLogCount() + (alreadyCollected == true ? 0 : 1);
-
-        if (predictedCount == 1)
+        if (manager.TryGetState(AchievementKey.Collection_FirstRecord, out AchievementState state) == false)
         {
-            PublishAchievement();
+            return;
         }
+
+        if (state.IsUnlocked == true)
+        {
+            return;
+        }
+
+        PublishAchievement();
     }
 }

@@ -1,5 +1,4 @@
-﻿// OnChatterboxAchievementInterpreter.cs
-using UnityEngine;
+﻿using UnityEngine;
 
 public class OnChatterboxAchievementInterpreter : AchievementSubInterpreterBase
 {
@@ -15,20 +14,22 @@ public class OnChatterboxAchievementInterpreter : AchievementSubInterpreterBase
 
     private void OnAiHintAnswered(AiHintAnsweredRawEvent rawEvent)
     {
-        AchievementManager manager = AchievementManager.Instance;
-        if (manager == null)
+        StatisticsManager statisticsManager = StatisticsManager.Instance;
+        AchievementManager achievementManager = AchievementManager.Instance;
+
+        if (statisticsManager == null || achievementManager == null)
         {
             return;
         }
 
-        manager.CurrentRun.IncrementAiQuestionCount();
-
-        if (manager.TryGetDefinition(AchievementKey.Mechanic_Chatterbox, out AchievementDefinition definition) == false)
+        if (achievementManager.TryGetDefinition(AchievementKey.Mechanic_Chatterbox, out AchievementDefinition definition) == false)
         {
             return;
         }
 
-        int total = manager.RunStatistics.AiQuestionCount + manager.CurrentRun.AiQuestionCount;
+        int total =
+            statisticsManager.Persistent.AiQuestionCount +
+            statisticsManager.CurrentRun.AiQuestionCount + 1;
 
         if (total >= definition.TargetValue)
         {

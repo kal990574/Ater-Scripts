@@ -1,5 +1,4 @@
-﻿// OnNoAiClearAchievementInterpreter.cs
-using UnityEngine;
+﻿using UnityEngine;
 
 public class OnNoAiClearAchievementInterpreter : AchievementSubInterpreterBase
 {
@@ -10,12 +9,12 @@ public class OnNoAiClearAchievementInterpreter : AchievementSubInterpreterBase
 
     protected override void Subscribe(GameEventHub hub, CompositeSubscription subscriptions)
     {
-        subscriptions.Add(hub.Subscribe<AchievementRunEndedRawEvent>(OnRunEnded));
+        subscriptions.Add(hub.Subscribe<StatisticsRunEndedRawEvent>(OnRunEnded));
     }
 
-    private void OnRunEnded(AchievementRunEndedRawEvent rawEvent)
+    private void OnRunEnded(StatisticsRunEndedRawEvent rawEvent)
     {
-        if (rawEvent.EndReason != EAchievementRunEndReason.Clear)
+        if (rawEvent.EndReason != EStatisticsRunEndReason.Clear)
         {
             return;
         }

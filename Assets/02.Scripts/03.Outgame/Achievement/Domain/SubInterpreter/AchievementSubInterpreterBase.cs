@@ -1,5 +1,4 @@
-﻿// AchievementSubInterpreterBase.cs
-using UnityEngine;
+﻿using UnityEngine;
 
 public abstract class AchievementSubInterpreterBase : IAchievementSubInterpreter
 {

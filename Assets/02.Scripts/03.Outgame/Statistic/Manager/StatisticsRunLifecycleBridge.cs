@@ -1,10 +1,9 @@
-﻿// AchievementRunLifecycleBridge.cs
+using Sirenix.OdinInspector;
 using UnityEngine;
 
-public class AchievementRunLifecycleBridge : MonoBehaviour
+public class StatisticsRunLifecycleBridge : MonoBehaviour
 {
     private readonly GameEventPublisher _publisher = new GameEventPublisher();
-
     private bool _isEnded;
 
     private void Awake()
@@ -14,7 +13,7 @@ public class AchievementRunLifecycleBridge : MonoBehaviour
 
     private void Start()
     {
-        AchievementManager manager = AchievementManager.Instance;
+        StatisticsManager manager = StatisticsManager.Instance;
         if (manager != null)
         {
             manager.BeginRun();
@@ -23,39 +22,39 @@ public class AchievementRunLifecycleBridge : MonoBehaviour
         _isEnded = false;
     }
 
+    [Button]
     public void NotifyClear()
     {
-        PublishRunEnded(EAchievementRunEndReason.Clear);
+        PublishRunEnded(EStatisticsRunEndReason.Clear);
     }
-
+    [Button]
     public void NotifyGameOver()
     {
-        PublishRunEnded(EAchievementRunEndReason.GameOver);
+        PublishRunEnded(EStatisticsRunEndReason.GameOver);
     }
-
+    [Button]
     public void NotifyQuitToMenu()
     {
-        PublishRunEnded(EAchievementRunEndReason.QuitToMenu);
+        PublishRunEnded(EStatisticsRunEndReason.QuitToMenu);
     }
 
-    private void PublishRunEnded(EAchievementRunEndReason endReason)
+    private void PublishRunEnded(EStatisticsRunEndReason endReason)
     {
         if (_isEnded == true)
         {
             return;
         }
 
-        AchievementManager manager = AchievementManager.Instance;
+        StatisticsManager manager = StatisticsManager.Instance;
         if (manager == null || manager.CurrentRun == null)
         {
             return;
         }
 
         manager.CurrentRun.MarkEnded();
+        StatisticsRunSummary summary = new StatisticsRunSummary(manager.CurrentRun);
 
-        AchievementRunSummary summary = new AchievementRunSummary(manager.CurrentRun);
-
-        _publisher.TryPublish(context => new AchievementRunEndedRawEvent(context, summary, endReason));
+        _publisher.TryPublish(context => new StatisticsRunEndedRawEvent(context, summary, endReason));
         _isEnded = true;
     }
 }

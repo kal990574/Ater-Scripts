@@ -1,5 +1,4 @@
-﻿// OnAdaptedToDarknessAchievementInterpreter.cs
-using UnityEngine;
+﻿using UnityEngine;
 
 public class OnAdaptedToDarknessAchievementInterpreter : AchievementSubInterpreterBase
 {
@@ -10,12 +9,12 @@ public class OnAdaptedToDarknessAchievementInterpreter : AchievementSubInterpret
 
     protected override void Subscribe(GameEventHub hub, CompositeSubscription subscriptions)
     {
-        subscriptions.Add(hub.Subscribe<AchievementRunEndedRawEvent>(OnRunEnded));
+        subscriptions.Add(hub.Subscribe<StatisticsRunEndedRawEvent>(OnRunEnded));
     }
 
-    private void OnRunEnded(AchievementRunEndedRawEvent rawEvent)
+    private void OnRunEnded(StatisticsRunEndedRawEvent rawEvent)
     {
-        if (rawEvent.EndReason != EAchievementRunEndReason.Clear)
+        if (rawEvent.EndReason != EStatisticsRunEndReason.Clear)
         {
             return;
         }

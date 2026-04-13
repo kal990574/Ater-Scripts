@@ -1,5 +1,4 @@
-﻿// AchievementRunSummary.cs
-public readonly struct AchievementRunSummary
+public readonly struct StatisticsRunSummary
 {
     public int SonarUseCount { get; }
     public int LidarRestoreCount { get; }
@@ -8,7 +7,7 @@ public readonly struct AchievementRunSummary
     public float EndTime { get; }
     public float PlayTime { get; }
 
-    public AchievementRunSummary(AchievementCurrentRunStatistics currentRun)
+    public StatisticsRunSummary(CurrentRunStatistics currentRun)
     {
         if (currentRun == null)
         {

@@ -9,7 +9,7 @@ public class ItemData
     [SerializeField] private int _itemId;
     [SerializeField] private string _itemName;
     [SerializeField] private string _description;
-
+    [SerializeField] private EItemType _itemType;
     [Header("표시")]
     [SerializeField] private Sprite _icon;
     [SerializeField] private GameObject _worldPrefab;
@@ -22,6 +22,7 @@ public class ItemData
     public int ItemId => _itemId;
     public string ItemName => _itemName;
     public string Description => _description;
+    public EItemType ItemType => _itemType;
     public Sprite Icon => _icon;
     public GameObject WorldPrefab => _worldPrefab;
     public GameObject ExaminePrefab => _examinePrefab;

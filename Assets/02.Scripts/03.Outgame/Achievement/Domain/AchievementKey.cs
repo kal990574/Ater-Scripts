@@ -9,7 +9,7 @@ public class AchievementKey
     public const string Story_EndingReached = "Story_EndingReached";
 
     public const string Collection_FirstRecord = "Collection_FirstRecord";
-    public const string Collection_TextLogsComplete = "Collection_TextLogsComplete";
+    public const string Collection_AllLogsComplete = "Collection_AllLogsComplete";
 
     public const string Mechanic_FirstSignal = "Mechanic_FirstSignal";
     public const string Mechanic_RestorationExpert = "Mechanic_RestorationExpert";

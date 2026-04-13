@@ -16,21 +16,16 @@ public class AchievementManager : MonoBehaviour
 
     private IAchievementDefinitionRepository _definitionRepository;
     private IAchievementStateRepository _stateRepository;
-    private IAchievementRunStatisticsRepository _runStatisticsRepository;
-    private IAchievementCollectedLogRepository _collectedLogRepository;
 
     private readonly List<AchievementState> _states = new List<AchievementState>();
     private readonly Dictionary<string, AchievementState> _stateMap = new Dictionary<string, AchievementState>();
 
-    private AchievementRunStatistics _runStatistics;
-    private AchievementCurrentRunStatistics _currentRun;
-    private AchievementCollectedLogState _collectedLogState;
     private CompositeSubscription _subscriptions;
 
-    [Title("Runtime Debug")]
+    [Title("Debug Command")]
     [FoldoutGroup("Command")]
     [LabelText("대상 업적 ID")]
-    [SerializeField] private AchievementKeyReference _debugAchievementId ;
+    [SerializeField] private string _debugAchievementId = AchievementKey.None;
 
     [FoldoutGroup("Command")]
     [LabelText("진행도 증가량")]
@@ -42,9 +37,6 @@ public class AchievementManager : MonoBehaviour
     public event Action AchievementListChanged;
 
     public IReadOnlyList<AchievementState> States => _states;
-    public AchievementRunStatistics RunStatistics => _runStatistics;
-    public AchievementCurrentRunStatistics CurrentRun => _currentRun;
-    public AchievementCollectedLogState CollectedLogState => _collectedLogState;
 
     private void Awake()
     {
@@ -60,7 +52,6 @@ public class AchievementManager : MonoBehaviour
 
         InitializeRepositories();
         LoadAllData();
-        BeginRun();
     }
 
     private void OnEnable()
@@ -87,12 +78,34 @@ public class AchievementManager : MonoBehaviour
     {
         _definitionRepository = new AchievementDefinitionRepository(_definitionDatabase);
         _stateRepository = new AchievementStateRepository();
-        _runStatisticsRepository = new AchievementRunStatisticsRepository();
-        _collectedLogRepository = new AchievementCollectedLogRepository();
+    }
+
+    private void EnsureRepositories()
+    {
+        if (_definitionRepository != null && _stateRepository != null)
+        {
+            return;
+        }
+
+        if (_definitionDatabase == null)
+        {
+            return;
+        }
+
+        InitializeRepositories();
     }
 
     private void LoadAllData()
     {
+        EnsureRepositories();
+
+        if (_definitionRepository == null || _stateRepository == null)
+        {
+            _states.Clear();
+            _stateMap.Clear();
+            return;
+        }
+
         IReadOnlyList<AchievementDefinition> definitions = _definitionRepository.GetAllDefinitions();
 
         _states.Clear();
@@ -116,9 +129,6 @@ public class AchievementManager : MonoBehaviour
                 _stateMap.Add(state.Id, state);
             }
         }
-
-        _runStatistics = _runStatisticsRepository.Load();
-        _collectedLogState = _collectedLogRepository.Load();
     }
 
     private void SubscribeEvents()
@@ -133,8 +143,6 @@ public class AchievementManager : MonoBehaviour
 
         _subscriptions = new CompositeSubscription();
         _subscriptions.Add(hub.Subscribe<AchievementEvent>(HandleAchievementEvent));
-        _subscriptions.Add(hub.Subscribe<AchievementRunEndedRawEvent>(HandleRunEnded));
-        _subscriptions.Add(hub.Subscribe<LogCollectedRawEvent>(HandleLogCollected));
     }
 
     private void DisposeSubscriptions()
@@ -148,49 +156,15 @@ public class AchievementManager : MonoBehaviour
         _subscriptions = null;
     }
 
-    public void BeginRun()
-    {
-        if (_currentRun == null)
-        {
-            _currentRun = new AchievementCurrentRunStatistics();
-        }
-
-        _currentRun.Begin();
-    }
-
     private void HandleAchievementEvent(AchievementEvent achievementEvent)
     {
         AddProgressAndTryUnlock(achievementEvent.AchievementId, 1);
     }
 
-    private void HandleRunEnded(AchievementRunEndedRawEvent rawEvent)
-    {
-        _runStatistics.AddSonarUseCount(rawEvent.Summary.SonarUseCount);
-        _runStatistics.AddLidarRestoreCount(rawEvent.Summary.LidarRestoreCount);
-        _runStatistics.AddAiQuestionCount(rawEvent.Summary.AiQuestionCount);
-
-        _runStatisticsRepository.Save(_runStatistics);
-
-        BeginRun();
-    }
-
-    private void HandleLogCollected(LogCollectedRawEvent rawEvent)
-    {
-        if (_collectedLogState == null)
-        {
-            _collectedLogState = new AchievementCollectedLogState();
-        }
-
-        bool added = _collectedLogState.TryCollect(rawEvent.LogId, rawEvent.IsTextLog);
-
-        if (added == true)
-        {
-            _collectedLogRepository.Save(_collectedLogState);
-        }
-    }
-
     public bool TryGetDefinition(string achievementId, out AchievementDefinition definition)
     {
+        EnsureRepositories();
+
         definition = null;
 
         if (_definitionRepository == null)
@@ -208,49 +182,15 @@ public class AchievementManager : MonoBehaviour
 
     public IReadOnlyList<AchievementDefinition> GetAllDefinitions()
     {
+        EnsureRepositories();
+
         if (_definitionRepository == null)
         {
             return Array.Empty<AchievementDefinition>();
         }
 
         IReadOnlyList<AchievementDefinition> definitions = _definitionRepository.GetAllDefinitions();
-
-        if (definitions == null)
-        {
-            return Array.Empty<AchievementDefinition>();
-        }
-
-        return definitions;
-    }
-
-    public bool HasCollectedLog(string logId)
-    {
-        if (_collectedLogState == null)
-        {
-            return false;
-        }
-
-        return _collectedLogState.HasCollected(logId);
-    }
-
-    public int GetCollectedLogCount()
-    {
-        if (_collectedLogState == null)
-        {
-            return 0;
-        }
-
-        return _collectedLogState.AllCollectedCount;
-    }
-
-    public int GetCollectedTextLogCount()
-    {
-        if (_collectedLogState == null)
-        {
-            return 0;
-        }
-
-        return _collectedLogState.TextCollectedCount;
+        return definitions ?? Array.Empty<AchievementDefinition>();
     }
 
     public int GetUnlockedCount()
@@ -270,30 +210,7 @@ public class AchievementManager : MonoBehaviour
 
     public int GetTotalCount()
     {
-        if (_definitionRepository == null)
-        {
-            return 0;
-        }
-
-        IReadOnlyList<AchievementDefinition> definitions = _definitionRepository.GetAllDefinitions();
-
-        if (definitions == null)
-        {
-            return 0;
-        }
-
-        return definitions.Count;
-    }
-
-    public void ResetPersistentStatistics()
-    {
-        if (_runStatistics == null)
-        {
-            _runStatistics = new AchievementRunStatistics();
-        }
-
-        _runStatistics.ResetAll();
-        _runStatisticsRepository.Save(_runStatistics);
+        return GetAllDefinitions().Count;
     }
 
     private void AddProgressAndTryUnlock(string achievementId, int amount)
@@ -497,54 +414,6 @@ public class AchievementManager : MonoBehaviour
     [FoldoutGroup("View")]
     [ShowInInspector]
     [ReadOnly]
-    [LabelText("소나 누적 횟수")]
-    public int DebugPersistentSonarCount => _runStatistics != null ? _runStatistics.SonarUseCount : 0;
-
-    [FoldoutGroup("View")]
-    [ShowInInspector]
-    [ReadOnly]
-    [LabelText("라이더 누적 횟수")]
-    public int DebugPersistentLidarCount => _runStatistics != null ? _runStatistics.LidarRestoreCount : 0;
-
-    [FoldoutGroup("View")]
-    [ShowInInspector]
-    [ReadOnly]
-    [LabelText("AI 누적 횟수")]
-    public int DebugPersistentAiCount => _runStatistics != null ? _runStatistics.AiQuestionCount : 0;
-
-    [FoldoutGroup("View")]
-    [ShowInInspector]
-    [ReadOnly]
-    [LabelText("현재 런 소나 횟수")]
-    public int DebugCurrentRunSonarCount => _currentRun != null ? _currentRun.SonarUseCount : 0;
-
-    [FoldoutGroup("View")]
-    [ShowInInspector]
-    [ReadOnly]
-    [LabelText("현재 런 라이더 횟수")]
-    public int DebugCurrentRunLidarCount => _currentRun != null ? _currentRun.LidarRestoreCount : 0;
-
-    [FoldoutGroup("View")]
-    [ShowInInspector]
-    [ReadOnly]
-    [LabelText("현재 런 AI 횟수")]
-    public int DebugCurrentRunAiCount => _currentRun != null ? _currentRun.AiQuestionCount : 0;
-
-    [FoldoutGroup("View")]
-    [ShowInInspector]
-    [ReadOnly]
-    [LabelText("수집 로그 총 개수")]
-    public int DebugCollectedLogCount => GetCollectedLogCount();
-
-    [FoldoutGroup("View")]
-    [ShowInInspector]
-    [ReadOnly]
-    [LabelText("수집 텍스트 로그 개수")]
-    public int DebugCollectedTextLogCount => GetCollectedTextLogCount();
-
-    [FoldoutGroup("View")]
-    [ShowInInspector]
-    [ReadOnly]
     [TableList(AlwaysExpanded = true)]
     [LabelText("업적 상태 목록")]
     public List<AchievementDebugStateView> DebugStateViews
@@ -553,17 +422,7 @@ public class AchievementManager : MonoBehaviour
         {
             List<AchievementDebugStateView> views = new List<AchievementDebugStateView>();
 
-            if (_definitionRepository == null)
-            {
-                return views;
-            }
-
-            IReadOnlyList<AchievementDefinition> definitions = _definitionRepository.GetAllDefinitions();
-
-            if (definitions == null)
-            {
-                return views;
-            }
+            IReadOnlyList<AchievementDefinition> definitions = GetAllDefinitions();
 
             for (int index = 0; index < definitions.Count; index++)
             {
@@ -589,42 +448,14 @@ public class AchievementManager : MonoBehaviour
         }
     }
 
-    [Title("Debug Command")]
     [FoldoutGroup("Command")]
     [Button("데이터 리로드", ButtonSizes.Medium)]
     private void DebugReloadAllData()
     {
         LoadAllData();
-        BeginRun();
         AchievementListChanged?.Invoke();
 
         Debug.Log("[AchievementManager] Reload All Data");
-    }
-
-    [FoldoutGroup("Command")]
-    [Button("현재 런 초기화", ButtonSizes.Medium)]
-    private void DebugResetCurrentRun()
-    {
-        BeginRun();
-        Debug.Log("[AchievementManager] Reset Current Run");
-    }
-
-    [FoldoutGroup("Command")]
-    [Button("누적 통계 초기화", ButtonSizes.Medium)]
-    private void DebugResetPersistentStatistics()
-    {
-        ResetPersistentStatistics();
-        Debug.Log("[AchievementManager] Reset Persistent Statistics");
-    }
-
-    [FoldoutGroup("Command")]
-    [Button("수집 로그 초기화", ButtonSizes.Medium)]
-    private void DebugResetCollectedLogs()
-    {
-        _collectedLogRepository.Reset();
-        _collectedLogState = new AchievementCollectedLogState();
-
-        Debug.Log("[AchievementManager] Reset Collected Logs");
     }
 
     [FoldoutGroup("Command")]
@@ -642,33 +473,6 @@ public class AchievementManager : MonoBehaviour
         Debug.Log("[AchievementManager] Reset All Achievement States");
     }
 
-    [FoldoutGroup("Command")]
-    [Button("모든 업적 초기화", ButtonSizes.Large)]
-    private void DebugResetEverything()
-    {
-        for (int index = 0; index < _states.Count; index++)
-        {
-            _states[index].Reset();
-        }
-
-        SaveStates();
-
-        if (_runStatistics == null)
-        {
-            _runStatistics = new AchievementRunStatistics();
-        }
-
-        _runStatistics.ResetAll();
-        _runStatisticsRepository.Save(_runStatistics);
-
-        _collectedLogRepository.Reset();
-        _collectedLogState = new AchievementCollectedLogState();
-
-        BeginRun();
-        AchievementListChanged?.Invoke();
-
-        Debug.Log("[AchievementManager] Reset Everything");
-    }
     [FoldoutGroup("Command")]
     [Button("대상 업적 진행도 증가", ButtonSizes.Medium)]
     private void DebugAddProgressToTargetAchievement()

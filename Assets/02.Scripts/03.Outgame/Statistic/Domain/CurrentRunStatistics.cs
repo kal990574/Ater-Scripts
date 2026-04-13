@@ -1,9 +1,8 @@
-﻿// AchievementCurrentRunStatistics.cs
 using System;
 using UnityEngine;
 
 [Serializable]
-public class AchievementCurrentRunStatistics
+public class CurrentRunStatistics
 {
     [SerializeField] private int _sonarUseCount;
     [SerializeField] private int _lidarRestoreCount;
@@ -44,5 +43,12 @@ public class AchievementCurrentRunStatistics
     public void IncrementAiQuestionCount()
     {
         _aiQuestionCount++;
+    }
+
+    public void SetCounts(int sonarUseCount, int lidarRestoreCount, int aiQuestionCount)
+    {
+        _sonarUseCount = Mathf.Max(0, sonarUseCount);
+        _lidarRestoreCount = Mathf.Max(0, lidarRestoreCount);
+        _aiQuestionCount = Mathf.Max(0, aiQuestionCount);
     }
 }
