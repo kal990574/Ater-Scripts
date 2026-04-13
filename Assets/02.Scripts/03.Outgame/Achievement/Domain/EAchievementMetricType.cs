@@ -1,4 +1,4 @@
-public enum AchievementMetricType
+public enum EAchievementMetricType
 {
     None = 0,
 

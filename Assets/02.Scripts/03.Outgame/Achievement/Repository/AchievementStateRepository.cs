@@ -19,7 +19,7 @@ public class AchievementStateRepository : IAchievementStateRepository
             }
         }
 
-        Dictionary<AchievementId, AchievementState> loadedMap = new Dictionary<AchievementId, AchievementState>();
+        Dictionary<string, AchievementState> loadedMap = new Dictionary<string, AchievementState>();
 
         if (loadedCollection != null && loadedCollection.States != null)
         {
@@ -32,7 +32,7 @@ public class AchievementStateRepository : IAchievementStateRepository
                     continue;
                 }
 
-                if (loadedMap.ContainsKey(state.Id) == true)
+                if (string.IsNullOrWhiteSpace(state.Id) == true || loadedMap.ContainsKey(state.Id) == true)
                 {
                     continue;
                 }

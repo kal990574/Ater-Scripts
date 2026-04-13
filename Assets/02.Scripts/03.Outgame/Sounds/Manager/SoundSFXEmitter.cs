@@ -28,6 +28,7 @@ public class SoundSFXEmitter : MonoBehaviour
     private bool UsesWorldPosition => _emitPointType == EmitPointType.WorldPosition;
     private bool UsesLocalPositionOnSelf => _emitPointType == EmitPointType.LocalPositionOnSelf;
 
+    [Button]
     public void Play()
     {
         if (TryValidateSoundKey() == false) return;
