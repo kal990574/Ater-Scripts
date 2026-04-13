@@ -34,8 +34,7 @@ public class AchievementInterpreter : MonoBehaviour
 
         _subscriptions = new CompositeSubscription();
 
-        _subscriptions.Add(hub.Subscribe<SonarScanStartedRawEvent>(OnSonarScanStarted));
-        _subscriptions.Add(hub.Subscribe<LidarScanTargetCompletedRawEvent>(OnLidarScanTargetCompleted));
+        
     }
 
     private void DisposeSubscriptions()
@@ -49,37 +48,5 @@ public class AchievementInterpreter : MonoBehaviour
         _subscriptions = null;
     }
 
-    private void OnSonarScanStarted(SonarScanStartedRawEvent rawEvent)
-    {
-        AchievementSonarUsedEvent achievementEvent = new AchievementSonarUsedEvent(rawEvent.Context);
-        _achievementManager.HandleEvent(achievementEvent);
-    }
-
-    private void OnLidarScanTargetCompleted(LidarScanTargetCompletedRawEvent rawEvent)
-    {
-        AchievementLidarTargetCompletedEvent achievementEvent = new AchievementLidarTargetCompletedEvent(rawEvent.Context);
-        _achievementManager.HandleEvent(achievementEvent);
-    }
-
-    public void NotifyAiQuestionUsed(GameEventContext context)
-    {
-        if (_achievementManager == null)
-        {
-            return;
-        }
-
-        AchievementAiQuestionUsedEvent achievementEvent = new AchievementAiQuestionUsedEvent(context);
-        _achievementManager.HandleEvent(achievementEvent);
-    }
-
-    public void NotifyEndingReached(GameEventContext context)
-    {
-        if (_achievementManager == null)
-        {
-            return;
-        }
-
-        AchievementEndingReachedEvent achievementEvent = new AchievementEndingReachedEvent(context);
-        _achievementManager.HandleEvent(achievementEvent);
-    }
+    
 }
