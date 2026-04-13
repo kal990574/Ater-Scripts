@@ -82,6 +82,7 @@ public class PadLockController : PuzzleControllerBase
         }
 
         ResolvePlayerController()?.ExitPuzzleMode(this);
+        _puzzleCamera.gameObject.SetActive(false);
         _activeInstance = null;
     }
 
