@@ -54,12 +54,12 @@ public class PlayerDetectAbility : PlayerAbility
 
         if (_suppressPromptUntilLookAway)
         {
-            if (promptTarget == null)
-            {
-                _suppressPromptUntilLookAway = false;
-                _currentPromptTarget = null;
-                _lastPublishedDescription = string.Empty;
-            }
+            //if (promptTarget == null)
+            //{
+            //    _suppressPromptUntilLookAway = false;
+            //    _currentPromptTarget = null;
+            //    _lastPublishedDescription = string.Empty;
+            //}
             return;
         }
 

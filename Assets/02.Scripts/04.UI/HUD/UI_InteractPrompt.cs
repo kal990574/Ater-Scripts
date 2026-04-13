@@ -9,11 +9,15 @@ public class UI_InteractPrompt : MonoBehaviour
     [SerializeField] private bool _puzzleModeOnly;
 
     private IDisposable _subscription;
-    private IPlayerModeProvider _modeProvider;
+    private PlayerController _playerController;
 
-    private void Start()
+    private void Awake()
     {
-        _modeProvider = FindFirstObjectByType<PlayerController>();
+        _playerController = FindFirstObjectByType<PlayerController>();
+        if (_puzzleModeOnly && _playerController != null)
+        {
+            _playerController.OnModeChanged += OnModeChanged;
+        }
     }
 
     private void OnEnable()
@@ -27,6 +31,14 @@ public class UI_InteractPrompt : MonoBehaviour
         _subscription = null;
     }
 
+    private void OnDestroy()
+    {
+        if (_playerController != null)
+        {
+            _playerController.OnModeChanged -= OnModeChanged;
+        }
+    }
+
     private void OnPromptChanged(InteractPromptRawEvent e)
     {
         if (!e.IsVisible)
@@ -35,10 +47,18 @@ public class UI_InteractPrompt : MonoBehaviour
             return;
         }
 
-        bool isPuzzleMode = _modeProvider?.GetCurrentMode() == EPlayerInteractMode.Puzzle;
+        bool isPuzzleMode = _playerController?.GetCurrentMode() == EPlayerInteractMode.Puzzle;
         if (_puzzleModeOnly != isPuzzleMode) return;
 
         _root.SetActive(true);
         _text.text = e.PromptText;
+    }
+
+    private void OnModeChanged(EPlayerInteractMode mode)
+    {
+        if (mode != EPlayerInteractMode.Puzzle)
+        {
+            _root.SetActive(false);
+        }
     }
 }
