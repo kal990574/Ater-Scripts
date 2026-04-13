@@ -9,7 +9,6 @@ public class AchievementDefinition
     [SerializeField] [TextArea(2, 4)] private string _description = string.Empty;
     [SerializeField] private EAchievementCategory _category = EAchievementCategory.Mechanic;
     [SerializeField] private EAchievementVisibilityType _visibilityType = EAchievementVisibilityType.Normal;
-    [SerializeField] private EAchievementMetricType _metricType = EAchievementMetricType.None;
     [SerializeField] private int _targetValue = 1;
 
     public string Id => _id;
@@ -17,6 +16,5 @@ public class AchievementDefinition
     public string Description => _description;
     public EAchievementCategory Category => _category;
     public EAchievementVisibilityType VisibilityType => _visibilityType;
-    public EAchievementMetricType MetricType => _metricType;
     public int TargetValue => Mathf.Max(1, _targetValue);
 }

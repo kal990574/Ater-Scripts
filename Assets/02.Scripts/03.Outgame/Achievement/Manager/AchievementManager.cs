@@ -82,38 +82,14 @@ public class AchievementManager : MonoBehaviour
         _runStatistics = _runStatisticsRepository.Load();
     }
 
-    public void HandleEvent(AchievementSonarUsedEvent achievementEvent)
+    public void HandleEvent(AchievementEvent achievementEvent)
     {
-        _runStatistics.IncrementSonarUseCount();
-        _runStatisticsRepository.Save(_runStatistics);
+        /*_runStatistics.IncrementSonarUseCount();
+        _runStatisticsRepository.Save(_runStatistics);*/
 
-        AddProgressAndTryUnlock(AchievementKey.Mechanic_FirstSignal, 1);
+        AddProgressAndTryUnlock(achievementEvent.Key, 1);
     }
-
-    public void HandleEvent(AchievementLidarTargetCompletedEvent achievementEvent)
-    {
-        _runStatistics.IncrementLidarRestoreCount();
-        _runStatisticsRepository.Save(_runStatistics);
-
-        AddProgressAndTryUnlock(AchievementKey.Mechanic_RestorationExpert, 1);
-    }
-
-    public void HandleEvent(AchievementAiQuestionUsedEvent achievementEvent)
-    {
-        _runStatistics.IncrementAiQuestionCount();
-        _runStatisticsRepository.Save(_runStatistics);
-
-        AddProgressAndTryUnlock(AchievementKey.Mechanic_Chatterbox, 1);
-    }
-
-    public void HandleEvent(AchievementEndingReachedEvent achievementEvent)
-    {
-        if (_runStatistics.SonarUseCount <= 15)
-        {
-            ForceUnlock(AchievementKey.Mechanic_AdaptedToDarkness);
-        }
-    }
-
+    
     public bool TryGetDefinition(string achievementId, out AchievementDefinition definition)
     {
         return _definitionRepository.TryGetDefinition(achievementId, out definition);
