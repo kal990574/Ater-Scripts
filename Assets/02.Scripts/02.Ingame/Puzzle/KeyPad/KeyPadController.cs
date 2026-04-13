@@ -9,9 +9,7 @@ public class KeyPadController : PuzzleControllerBase
 
     [Header("KeyPad Instance")]
     [SerializeField] private GameObject _keyPadInstancePrefab;
-    [SerializeField] private Transform _spawnParentOverride;
-    [SerializeField] private Vector3 _localSpawnPosition = new(0f, 0f, 0.5f);
-    [SerializeField] private Vector3 _localSpawnEulerAngles = Vector3.zero;
+   
 
     [Header("State")]
     [SerializeField] private bool _blockOpenAfterSuccess = true;
@@ -49,8 +47,9 @@ public class KeyPadController : PuzzleControllerBase
             Debug.LogWarning($"[{nameof(KeyPadController)}] {gameObject.name} keyPad instance prefab is not assigned.", this);
             return;
         }
-
-        Transform spawnParent = ResolveSpawnParent(_spawnParentOverride);
+        
+        _puzzleCamera.gameObject.SetActive(true);
+        Transform spawnParent = ResolveSpawnParent(_puzzleCamera);
         GameObject instanceObject = Instantiate(_keyPadInstancePrefab, spawnParent);
         instanceObject.transform.localPosition = _localSpawnPosition;
         instanceObject.transform.localRotation = Quaternion.Euler(_localSpawnEulerAngles);
@@ -119,6 +118,7 @@ public class KeyPadController : PuzzleControllerBase
         PublishPuzzleResult(EPuzzleResult.Cancel);
 
         ResolvePlayerController()?.ExitPuzzleMode(this);
+        _puzzleCamera.gameObject.SetActive(false);
         _activeInteractable = null;
         _activeInstance = null;
     }
