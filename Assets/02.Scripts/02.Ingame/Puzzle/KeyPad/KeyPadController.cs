@@ -91,6 +91,7 @@ public class KeyPadController : PuzzleControllerBase
         _activeInteractable?.HandlePuzzleSolved();
 
         ResolvePlayerController()?.ExitPuzzleMode(this);
+        _puzzleCamera.gameObject.SetActive(false);
         _activeInteractable = null;
         _activeInstance = null;
     }
