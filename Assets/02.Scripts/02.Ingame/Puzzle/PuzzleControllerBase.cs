@@ -3,9 +3,11 @@ using UnityEngine;
 public abstract class PuzzleControllerBase : MonoBehaviour, IPuzzleInputHandler
 {
     [SerializeField] private PlayerController _playerController;
-
+    [SerializeField] protected Transform _puzzleCamera;
+    [SerializeField] protected Vector3 _localSpawnPosition = new(0f, 0f, 0.5f);
+    [SerializeField] protected Vector3 _localSpawnEulerAngles = Vector3.zero;
+    
     private GameEventPublisher _eventPublisher;
-
     protected abstract IPuzzleIntance ActivePuzzleInstance { get; }
     protected abstract EPuzzleType PuzzleType { get; }
 
@@ -44,13 +46,13 @@ public abstract class PuzzleControllerBase : MonoBehaviour, IPuzzleInputHandler
                 result));
     }
 
-    protected Transform ResolveSpawnParent(Transform spawnParentOverride)
+    protected Transform ResolveSpawnParent(Transform puzzleCamera)
     {
-        if (spawnParentOverride != null)
+        if (puzzleCamera != null)
         {
-            return spawnParentOverride;
+            return puzzleCamera;
         }
-
+        Debug.LogError("퍼즐 카메라가 없습니다");
         Camera mainCamera = Camera.main;
         return mainCamera != null ? mainCamera.transform : transform;
     }
