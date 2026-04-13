@@ -18,8 +18,4 @@ public class PuzzleHoverTarget : MonoBehaviour
         _publisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, true, _hoverText));
     }
 
-    //private void OnDisable()
-    //{
-    //    _publisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, false, string.Empty));
-    //}
 }
