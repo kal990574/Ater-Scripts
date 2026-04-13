@@ -10,6 +10,8 @@ public class InteractTargetShaderModifier : MonoBehaviour
     public const string GLITCH_AMOUNT_NAME = "_GlitchAmount";
     public const string DISTORTION_AMOUNT_NAME = "_VertexDistortionAmount";
     public const string HIT_BLEND_NAME = "_HitBlend";
+    public const string HIT_COLOR_NAME = "_HitColor";
+    public const string HIT_GLOW_NAME = "_HitGlow";
     [Header("Required References")]
     [SerializeField] private AllInOneShaderController _shaderPropertyController;
     [SerializeField] private ScanShaderConfigSO _scanConfig;
@@ -191,6 +193,9 @@ public class InteractTargetShaderModifier : MonoBehaviour
         if (IsSonarHighlighting()) return;
 
         KillHitBlendTween();
+
+        _shaderPropertyController.SetColor(HIT_COLOR_NAME, _scanConfig.HitColor);
+        _shaderPropertyController.SetFloat(HIT_GLOW_NAME, _scanConfig.HitGlow);
 
         Sequence sequence = DOTween.Sequence();
         sequence.Append(CreateHitBlendTween(_scanConfig.HitBlendPeak, _scanConfig.HitBlendDuration).SetEase(_scanConfig.HitBlendUpEase));

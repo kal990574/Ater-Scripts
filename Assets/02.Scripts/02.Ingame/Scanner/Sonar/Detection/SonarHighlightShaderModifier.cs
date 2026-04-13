@@ -5,9 +5,9 @@ namespace _02.Scripts.Sonar
 {
     public class SonarHighlightShaderModifier : MonoBehaviour
     {
-        private const string OUTLINE_COLOR_NAME = "_OutlineColor";
-        private const string OUTLINE_THICKNESS_NAME = "_OutlineThickness";
         private const string HIT_BLEND_NAME = "_HitBlend";
+        private const string HIT_COLOR_NAME = "_HitColor";
+        private const string HIT_GLOW_NAME = "_HitGlow";
 
         [Header("Required References")]
         [SerializeField] private AllInOneShaderController _shaderController;
@@ -18,7 +18,6 @@ namespace _02.Scripts.Sonar
         private Sequence _activeSequence;
 
         private float _currentHitBlend;
-        private float _currentOutlineThickness;
 
         public bool IsHighlighting { get; private set; }
 
@@ -46,7 +45,7 @@ namespace _02.Scripts.Sonar
         {
             if (_shaderController == null)
             {
-                _shaderController = GetComponentInChildren<AllInOneShaderController>();
+                _shaderController = GetComponent<AllInOneShaderController>();
             }
 
             if (_detectable == null)
@@ -113,33 +112,26 @@ namespace _02.Scripts.Sonar
             // 소나 파동 도달 대기
             seq.AppendInterval(delay);
 
-            // 아웃라인 활성화 + HitBlend 플래시
+            // HitBlend 색상 세팅
             seq.AppendCallback(() =>
             {
                 IsHighlighting = true;
-                _currentOutlineThickness = _config.OutlineThickness;
-                SetOutlineThickness(_config.OutlineThickness);
-                SetOutlineColor(_config.SonarOutlineColor);
-                _shaderController.SetOutlineType(AllInOneShaderController.OutlineType.Simple);
+                _shaderController.SetColor(HIT_COLOR_NAME, _config.HitColor);
+                _shaderController.SetFloat(HIT_GLOW_NAME, _config.HitGlow);
             });
+
+            // Attack: 0 → Peak
             seq.Append(CreateHitBlendTween(_config.HitBlendPeak, _config.HitBlendAttackDuration)
                 .SetEase(_config.HitBlendAttackEase));
+
+            // Decay: Peak → 0
             seq.Append(CreateHitBlendTween(0f, _config.HitBlendAttackDuration * 2f)
                 .SetEase(Ease.InQuad));
 
-            // 아웃라인 유지
-            seq.AppendInterval(_config.HighlightDuration);
-
-            // 아웃라인 두께 페이드아웃
-            seq.Append(CreateOutlineThicknessFadeTween(0f, _config.FadeOutDuration)
-                .SetEase(Ease.InQuad));
-
-            // 프로퍼티 리셋 + 라이다 상태 복원
+            // Cleanup
             seq.AppendCallback(() =>
             {
                 IsHighlighting = false;
-                _shaderController.SetOutlineType(AllInOneShaderController.OutlineType.None);
-                SetOutlineThickness(0f);
                 SetHitBlend(0f);
 
                 if (_lidarModifier != null)
@@ -157,10 +149,7 @@ namespace _02.Scripts.Sonar
         {
             IsHighlighting = false;
             _currentHitBlend = 0f;
-            _currentOutlineThickness = 0f;
             SetHitBlend(0f);
-            SetOutlineThickness(0f);
-            _shaderController.SetOutlineType(AllInOneShaderController.OutlineType.None);
         }
 
         private void KillActiveSequence()
@@ -195,36 +184,13 @@ namespace _02.Scripts.Sonar
                 duration);
         }
 
-        private Tween CreateOutlineThicknessFadeTween(float target, float duration)
-        {
-            return DOTween.To(
-                () => _currentOutlineThickness,
-                value =>
-                {
-                    _currentOutlineThickness = value;
-                    SetOutlineThickness(value);
-                },
-                target,
-                duration);
-        }
-
         #endregion
 
         #region Shader Property Helpers
 
-        private void SetOutlineColor(Color value)
-        {
-            _shaderController.SetColor(OUTLINE_COLOR_NAME, value);
-        }
-
         private void SetHitBlend(float value)
         {
             _shaderController.SetFloat(HIT_BLEND_NAME, value);
-        }
-
-        private void SetOutlineThickness(float value)
-        {
-            _shaderController.SetFloat(OUTLINE_THICKNESS_NAME, value);
         }
 
         #endregion

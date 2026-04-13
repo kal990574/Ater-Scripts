@@ -14,6 +14,9 @@ public class ScanShaderConfigSO : ScriptableObject
     [Min(0f)] public float DistortionAmountPower = 0.1f;
 
     [Header("Hit Blend")]
+    [ColorUsage(true, true)]
+    public Color HitColor = new(1f, 1f, 1f, 1f);
+    public float HitGlow = 1f;
     [Min(0f)] public float HitBlendPower = 0.5f;
     public float HitBlendPeak = 1.0f;
     [Min(0f)] public float HitBlendDuration = 0.08f;
