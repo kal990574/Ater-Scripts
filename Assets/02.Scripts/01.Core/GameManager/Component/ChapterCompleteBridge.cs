@@ -18,7 +18,13 @@ namespace _02.Scripts.Core.Component
         [Tooltip("트리거 후 씬 전환까지 지연 시간(초)")]
         [SerializeField, Min(0f)] private float _delay = 1.5f;
 
+        private readonly GameEventPublisher _gameEventPublisher = new GameEventPublisher();
         private bool _triggered;
+
+        private void Awake()
+        {
+            _gameEventPublisher.SetSource(this);
+        }
 
         public void Trigger()
         {
@@ -53,6 +59,11 @@ namespace _02.Scripts.Core.Component
                     gameManager.ReturnToMainMenu();
                     break;
             }
+        }
+        
+        private void PublishChapterCleared(int chapterId)
+        {
+            _gameEventPublisher.TryPublish(context => new ChapterClearedRawEvent(context, chapterId));
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+//현재까지의 영구 히스토리 데이터
 [Serializable]
 public class AchievementRunStatistics
 {
@@ -25,6 +26,36 @@ public class AchievementRunStatistics
     public void IncrementAiQuestionCount()
     {
         _aiQuestionCount++;
+    }
+
+    public void AddSonarUseCount(int value)
+    {
+        if (value <= 0)
+        {
+            return;
+        }
+
+        _sonarUseCount += value;
+    }
+
+    public void AddLidarRestoreCount(int value)
+    {
+        if (value <= 0)
+        {
+            return;
+        }
+
+        _lidarRestoreCount += value;
+    }
+
+    public void AddAiQuestionCount(int value)
+    {
+        if (value <= 0)
+        {
+            return;
+        }
+
+        _aiQuestionCount += value;
     }
 
     public void ResetAll()

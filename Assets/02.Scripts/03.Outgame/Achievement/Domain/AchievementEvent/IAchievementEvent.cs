@@ -1,4 +1,5 @@
 public interface IAchievementEvent
 {
-    GameEventContext SourceContext { get; }
+    GameEventContext Context { get; }
+    string AchievementId { get; }
 }

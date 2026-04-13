@@ -1,11 +1,12 @@
-﻿public readonly struct AchievementEvent : IGameEvent
+﻿// AchievementEvent.cs
+public readonly struct AchievementEvent : IGameEvent
 {
     public GameEventContext Context { get; }
-    public string Key { get; }
+    public string AchievementId { get; }
 
-    public AchievementEvent(GameEventContext sourceContext,  string key)
+    public AchievementEvent(GameEventContext context, string achievementId)
     {
-        Context = sourceContext;
-        Key = key;
+        Context = context;
+        AchievementId = string.IsNullOrWhiteSpace(achievementId) ? AchievementKey.None : achievementId;
     }
 }

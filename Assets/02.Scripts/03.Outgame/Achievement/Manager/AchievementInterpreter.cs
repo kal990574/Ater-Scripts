@@ -1,52 +1,50 @@
+// AchievementInterpreter.cs
+using System.Collections.Generic;
 using UnityEngine;
 
 public class AchievementInterpreter : MonoBehaviour
 {
-    [SerializeField] private AchievementManager _achievementManager;
+    private readonly List<IAchievementSubInterpreter> _interpreters = new List<IAchievementSubInterpreter>();
 
-    private CompositeSubscription _subscriptions;
+    private void Awake()
+    {
+        RegisterInterpreters();
+    }
 
     private void OnEnable()
     {
-        SubscribeEvents();
+        for (int index = 0; index < _interpreters.Count; index++)
+        {
+            _interpreters[index].Enable();
+        }
     }
 
     private void OnDisable()
     {
-        DisposeSubscriptions();
+        for (int index = 0; index < _interpreters.Count; index++)
+        {
+            _interpreters[index].Disable();
+        }
     }
 
-    private void SubscribeEvents()
+    private void RegisterInterpreters()
     {
-        DisposeSubscriptions();
+        _interpreters.Clear();
 
-        GameEventHub hub = GameEventHub.Instance;
-        if (hub == null)
-        {
-            return;
-        }
+        _interpreters.Add(new OnPrologueClearedAchievementInterpreter(this));
+        _interpreters.Add(new OnAct1ClearedAchievementInterpreter(this));
+        _interpreters.Add(new OnAct2ClearedAchievementInterpreter(this));
+        _interpreters.Add(new OnAct3ClearedAchievementInterpreter(this));
+        _interpreters.Add(new OnEndingReachedAchievementInterpreter(this));
 
-        if (_achievementManager == null)
-        {
-            Debug.LogWarning("[AchievementInterpreter] AchievementManager reference is null.");
-            return;
-        }
+        _interpreters.Add(new OnFirstLogAchievementInterpreter(this));
+        _interpreters.Add(new OnAllTextLogsCollectedAchievementInterpreter(this));
 
-        _subscriptions = new CompositeSubscription();
+        _interpreters.Add(new OnFirstSignalAchievementInterpreter(this));
+        _interpreters.Add(new OnRestorationExpertAchievementInterpreter(this));
+        _interpreters.Add(new OnChatterboxAchievementInterpreter(this));
+        _interpreters.Add(new OnAdaptedToDarknessAchievementInterpreter(this));
 
-        
+        _interpreters.Add(new OnNoAiClearAchievementInterpreter(this));
     }
-
-    private void DisposeSubscriptions()
-    {
-        if (_subscriptions == null)
-        {
-            return;
-        }
-
-        _subscriptions.Dispose();
-        _subscriptions = null;
-    }
-
-    
 }

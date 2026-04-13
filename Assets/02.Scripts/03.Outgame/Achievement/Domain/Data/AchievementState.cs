@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-//업적의 진행상태 데이터. id와 현재 값. 달성여부를 가진다.
+//업적데이터의 진행상황
 [Serializable]
 public class AchievementState
 {
@@ -44,5 +44,11 @@ public class AchievementState
 
         _isUnlocked = true;
         return true;
+    }
+    
+    public void Reset()
+    {
+        _currentValue = 0;
+        _isUnlocked = false;
     }
 }
