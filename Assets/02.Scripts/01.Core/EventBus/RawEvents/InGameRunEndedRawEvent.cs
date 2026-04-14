@@ -1,10 +1,10 @@
-public readonly struct StatisticsRunEndedRawEvent : IGameEvent
+public readonly struct InGameRunEndedRawEvent : IGameEvent
 {
     public GameEventContext Context { get; }
     public StatisticsRunSummary Summary { get; }
     public EStatisticsRunEndReason EndReason { get; }
 
-    public StatisticsRunEndedRawEvent(
+    public InGameRunEndedRawEvent(
         GameEventContext context,
         StatisticsRunSummary summary,
         EStatisticsRunEndReason endReason)

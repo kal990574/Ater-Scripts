@@ -7,6 +7,7 @@ public abstract class AchievementSubInterpreterBase : IAchievementSubInterpreter
     private readonly string _achievementId;
     private CompositeSubscription _subscriptions;
     private bool _isEnabled;
+    private AchievementManager _achievementManager;
 
     protected AchievementSubInterpreterBase(Object source, string achievementId)
     {
@@ -21,9 +22,26 @@ public abstract class AchievementSubInterpreterBase : IAchievementSubInterpreter
             return;
         }
 
+        _achievementManager = AchievementManager.Instance;
+        if (IsAchievementUnlocked() == true)
+        {
+            return;
+        }
+
+        if (_achievementManager != null)
+        {
+            _achievementManager.AchievementUnlocked += OnAchievementUnlocked;
+        }
+
         GameEventHub hub = GameEventHub.Instance;
         if (hub == null)
         {
+            if (_achievementManager != null)
+            {
+                _achievementManager.AchievementUnlocked -= OnAchievementUnlocked;
+                _achievementManager = null;
+            }
+
             return;
         }
 
@@ -39,7 +57,13 @@ public abstract class AchievementSubInterpreterBase : IAchievementSubInterpreter
             return;
         }
 
-        _subscriptions.Dispose();
+        if (_achievementManager != null)
+        {
+            _achievementManager.AchievementUnlocked -= OnAchievementUnlocked;
+            _achievementManager = null;
+        }
+
+        _subscriptions?.Dispose();
         _subscriptions = null;
         _isEnabled = false;
         Reset();
@@ -52,7 +76,39 @@ public abstract class AchievementSubInterpreterBase : IAchievementSubInterpreter
             return;
         }
 
+        if (IsAchievementUnlocked() == true)
+        {
+            Disable();
+            return;
+        }
+
         Publisher.TryPublish(context => new AchievementEvent(context, _achievementId));
+    }
+
+    private void OnAchievementUnlocked(AchievementDefinition definition, AchievementState state)
+    {
+        if (definition == null || definition.Id != _achievementId)
+        {
+            return;
+        }
+
+        Disable();
+    }
+
+    private bool IsAchievementUnlocked()
+    {
+        if (string.IsNullOrWhiteSpace(_achievementId) == true)
+        {
+            return false;
+        }
+
+        AchievementManager manager = _achievementManager ?? AchievementManager.Instance;
+        if (manager == null)
+        {
+            return false;
+        }
+
+        return manager.TryGetState(_achievementId, out AchievementState state) && state.IsUnlocked == true;
     }
 
     protected abstract void Subscribe(GameEventHub hub, CompositeSubscription subscriptions);

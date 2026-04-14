@@ -9,10 +9,10 @@ public class OnEndingReachedAchievementInterpreter : AchievementSubInterpreterBa
 
     protected override void Subscribe(GameEventHub hub, CompositeSubscription subscriptions)
     {
-        subscriptions.Add(hub.Subscribe<StatisticsRunEndedRawEvent>(OnRunEnded));
+        subscriptions.Add(hub.Subscribe<InGameRunEndedRawEvent>(OnRunEnded));
     }
 
-    private void OnRunEnded(StatisticsRunEndedRawEvent rawEvent)
+    private void OnRunEnded(InGameRunEndedRawEvent rawEvent)
     {
         if (rawEvent.EndReason != EStatisticsRunEndReason.Clear)
         {

@@ -141,10 +141,10 @@ public class AchievementManager : MonoBehaviour
 
         _subscriptions = new CompositeSubscription();
         _subscriptions.Add(hub.Subscribe<AchievementEvent>(HandleAchievementEvent));
-        _subscriptions.Add(hub.Subscribe<StatisticsSonarUsedRawEvent>(_ => AchievementListChanged?.Invoke()));
-        _subscriptions.Add(hub.Subscribe<StatisticsLidarRestoredRawEvent>(_ => AchievementListChanged?.Invoke()));
-        _subscriptions.Add(hub.Subscribe<StatisticsAiQuestionRawEvent>(_ => AchievementListChanged?.Invoke()));
-        _subscriptions.Add(hub.Subscribe<StatisticsLogCollectedRawEvent>(_ => AchievementListChanged?.Invoke()));
+        _subscriptions.Add(hub.Subscribe<StatisticsSonarUsedEvent>(_ => AchievementListChanged?.Invoke()));
+        _subscriptions.Add(hub.Subscribe<StatisticsLidarRestoredEvent>(_ => AchievementListChanged?.Invoke()));
+        _subscriptions.Add(hub.Subscribe<StatisticsAiQuestionEvent>(_ => AchievementListChanged?.Invoke()));
+        _subscriptions.Add(hub.Subscribe<StatisticsLogCollectedEvent>(_ => AchievementListChanged?.Invoke()));
     }
 
     private void DisposeSubscriptions()
@@ -488,21 +488,15 @@ public class AchievementManager : MonoBehaviour
                 return true;
 
             case AchievementKey.Mechanic_FirstSignal:
-                progressValue =
-                    statisticsManager.Persistent.SonarUseCount +
-                    statisticsManager.CurrentRun.SonarUseCount;
+                progressValue = statisticsManager.GetTotalSonarUseCount();
                 return true;
 
             case AchievementKey.Mechanic_RestorationExpert:
-                progressValue =
-                    statisticsManager.Persistent.LidarRestoreCount +
-                    statisticsManager.CurrentRun.LidarRestoreCount;
+                progressValue = statisticsManager.GetTotalLidarRestoreCount();
                 return true;
 
             case AchievementKey.Mechanic_Chatterbox:
-                progressValue =
-                    statisticsManager.Persistent.AiQuestionCount +
-                    statisticsManager.CurrentRun.AiQuestionCount;
+                progressValue = statisticsManager.GetTotalAiQuestionCount();
                 return true;
 
             default:

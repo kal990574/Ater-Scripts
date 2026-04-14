@@ -38,7 +38,6 @@ public class StatisticsInterpreter : MonoBehaviour, IStatisticsInterpreter
         _subscriptions.Add(hub.Subscribe<LidarScanTargetCompletedRawEvent>(OnLidarCompleted));
         _subscriptions.Add(hub.Subscribe<AiHintAnsweredRawEvent>(OnAiHintAnswered));
         _subscriptions.Add(hub.Subscribe<ItemAcquiredRawEvent>(OnItemAcquired));
-        _subscriptions.Add(hub.Subscribe<StatisticsRunEndedRawEvent>(OnRunEnded));
     }
 
     public void Disable()
@@ -61,7 +60,7 @@ public class StatisticsInterpreter : MonoBehaviour, IStatisticsInterpreter
         }
 
         manager.RecordSonarUsed();
-        _publisher.TryPublish(context => new StatisticsSonarUsedRawEvent(context));
+        _publisher.TryPublish(context => new StatisticsSonarUsedEvent(context));
     }
 
     private void OnLidarCompleted(LidarScanTargetCompletedRawEvent rawEvent)
@@ -73,7 +72,7 @@ public class StatisticsInterpreter : MonoBehaviour, IStatisticsInterpreter
         }
 
         manager.RecordLidarRestored();
-        _publisher.TryPublish(context => new StatisticsLidarRestoredRawEvent(context));
+        _publisher.TryPublish(context => new StatisticsLidarRestoredEvent(context));
     }
 
     private void OnAiHintAnswered(AiHintAnsweredRawEvent rawEvent)
@@ -85,7 +84,7 @@ public class StatisticsInterpreter : MonoBehaviour, IStatisticsInterpreter
         }
 
         manager.RecordAiQuestionUsed();
-        _publisher.TryPublish(context => new StatisticsAiQuestionRawEvent(context));
+        _publisher.TryPublish(context => new StatisticsAiQuestionEvent(context));
     }
 
     private void OnItemAcquired(ItemAcquiredRawEvent rawEvent)
@@ -102,18 +101,6 @@ public class StatisticsInterpreter : MonoBehaviour, IStatisticsInterpreter
         }
 
         manager.RecordLogCollected(rawEvent.ItemId);
-        _publisher.TryPublish(context => new StatisticsLogCollectedRawEvent(context, rawEvent.ItemId));
-    }
-
-    private void OnRunEnded(StatisticsRunEndedRawEvent rawEvent)
-    {
-        StatisticsManager manager = StatisticsManager.Instance;
-        if (manager == null)
-        {
-            return;
-        }
-
-        manager.FinalizeRunAndAccumulate();
-        manager.BeginRun();
+        _publisher.TryPublish(context => new StatisticsLogCollectedEvent(context, rawEvent.ItemId));
     }
 }

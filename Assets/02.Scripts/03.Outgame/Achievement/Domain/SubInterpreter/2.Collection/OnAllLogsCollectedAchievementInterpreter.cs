@@ -9,10 +9,10 @@ public class OnAllLogsCollectedAchievementInterpreter : AchievementSubInterprete
 
     protected override void Subscribe(GameEventHub hub, CompositeSubscription subscriptions)
     {
-        subscriptions.Add(hub.Subscribe<StatisticsLogCollectedRawEvent>(OnLogCollected));
+        subscriptions.Add(hub.Subscribe<StatisticsLogCollectedEvent>(OnLogCollected));
     }
 
-    private void OnLogCollected(StatisticsLogCollectedRawEvent rawEvent)
+    private void OnLogCollected(StatisticsLogCollectedEvent @event)
     {
         StatisticsManager statisticsManager = StatisticsManager.Instance;
         AchievementManager achievementManager = AchievementManager.Instance;

@@ -1,8 +1,8 @@
-﻿public struct StatisticsRunStartedRawEvent : IGameEvent
+﻿public struct InGameRunStartedRawEvent : IGameEvent
 {
     public GameEventContext Context { get; }
 
-    public StatisticsRunStartedRawEvent(
+    public InGameRunStartedRawEvent(
         GameEventContext context)
     {
         Context = context;

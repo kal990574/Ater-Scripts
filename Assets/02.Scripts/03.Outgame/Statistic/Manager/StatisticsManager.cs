@@ -19,41 +19,7 @@ public class StatisticsManager : MonoBehaviour
     [ReadOnly]
     private PersistentStatistics _persistent;
 
-    [Title("Debug Command")]
-    [FoldoutGroup("Command", expanded: false)]
-    [LabelText("Current Sonar")]
-    [MinValue(0)]
-    [SerializeField] private int _debugCurrentRunSonarCount;
-
-    [FoldoutGroup("Command")]
-    [LabelText("Current Lidar")]
-    [MinValue(0)]
-    [SerializeField] private int _debugCurrentRunLidarCount;
-
-    [FoldoutGroup("Command")]
-    [LabelText("Current AI")]
-    [MinValue(0)]
-    [SerializeField] private int _debugCurrentRunAiQuestionCount;
-
-    [FoldoutGroup("Command")]
-    [LabelText("Persistent Sonar")]
-    [MinValue(0)]
-    [SerializeField] private int _debugPersistentSonarCount;
-
-    [FoldoutGroup("Command")]
-    [LabelText("Persistent Lidar")]
-    [MinValue(0)]
-    [SerializeField] private int _debugPersistentLidarCount;
-
-    [FoldoutGroup("Command")]
-    [LabelText("Persistent AI")]
-    [MinValue(0)]
-    [SerializeField] private int _debugPersistentAiQuestionCount;
-
-    [FoldoutGroup("Command")]
-    [LabelText("Log Item ID")]
-    [MinValue(1)]
-    [SerializeField] private int _debugLogItemId = 1;
+    
 
     private IStatisticsRepository _repository;
     private bool _isRunEnded;
@@ -63,6 +29,9 @@ public class StatisticsManager : MonoBehaviour
 
     public CurrentRunStatistics CurrentRun => _currentRun;
     public PersistentStatistics Persistent => _persistent;
+    public int TotalSonarUseCount => GetTotalSonarUseCount();
+    public int TotalLidarRestoreCount => GetTotalLidarRestoreCount();
+    public int TotalAiQuestionCount => GetTotalAiQuestionCount();
 
     private void Awake()
     {
@@ -101,7 +70,8 @@ public class StatisticsManager : MonoBehaviour
         }
     }
 
-    [Button]
+    [FoldoutGroup("EventCommand")]
+    [Button("BeginRun", ButtonSizes.Medium)]
     public void BeginRun()
     {
         if (_currentRun == null)
@@ -115,7 +85,7 @@ public class StatisticsManager : MonoBehaviour
         _committedRunLidarCount = 0;
         _committedRunAiQuestionCount = 0;
         SyncDebugFields();
-        _publisher.TryPublish(context => new StatisticsRunStartedRawEvent(context));
+        _publisher.TryPublish(context => new InGameRunStartedRawEvent(context));
     }
 
     public void RecordSonarUsed()
@@ -196,6 +166,33 @@ public class StatisticsManager : MonoBehaviour
         return _persistent.GetCollectedLogCount();
     }
 
+    public int GetTotalSonarUseCount()
+    {
+        int persistentValue = _persistent != null ? _persistent.SonarUseCount : 0;
+        int currentRunDelta = _currentRun != null
+            ? Mathf.Max(0, _currentRun.SonarUseCount - _committedRunSonarCount)
+            : 0;
+        return persistentValue + currentRunDelta;
+    }
+
+    public int GetTotalLidarRestoreCount()
+    {
+        int persistentValue = _persistent != null ? _persistent.LidarRestoreCount : 0;
+        int currentRunDelta = _currentRun != null
+            ? Mathf.Max(0, _currentRun.LidarRestoreCount - _committedRunLidarCount)
+            : 0;
+        return persistentValue + currentRunDelta;
+    }
+
+    public int GetTotalAiQuestionCount()
+    {
+        int persistentValue = _persistent != null ? _persistent.AiQuestionCount : 0;
+        int currentRunDelta = _currentRun != null
+            ? Mathf.Max(0, _currentRun.AiQuestionCount - _committedRunAiQuestionCount)
+            : 0;
+        return persistentValue + currentRunDelta;
+    }
+
     public void FinalizeRunAndAccumulate()
     {
         if (_currentRun == null)
@@ -208,7 +205,8 @@ public class StatisticsManager : MonoBehaviour
         SyncDebugFields();
     }
 
-    [Button("Commit Current Run To Persistent", ButtonSizes.Medium)]
+    [FoldoutGroup("CurrentCommand")]
+    [Button("CommitCurrentRunToPersistent", ButtonSizes.Medium)]
     public void CommitCurrentRunToPersistent()
     {
         if (_currentRun == null)
@@ -242,19 +240,29 @@ public class StatisticsManager : MonoBehaviour
         SyncDebugFields();
     }
 
-    [Button]
+    [FoldoutGroup("EventCommand")]
+    [Button("Chapter Clear event", ButtonSizes.Medium)]
+    public void PublishChapterClear(int clearedChapter)
+    {
+        _publisher.TryPublish(context => new ChapterClearedRawEvent(context, clearedChapter));
+    }
+    
+    [FoldoutGroup("EventCommand")]
+    [Button("clear event", ButtonSizes.Medium)]
     public void NotifyClear()
     {
         EndRun(EStatisticsRunEndReason.Clear);
     }
 
-    [Button]
+    [FoldoutGroup("EventCommand")]
+    [Button("gameover event", ButtonSizes.Medium)]
     public void NotifyGameOver()
     {
         EndRun(EStatisticsRunEndReason.GameOver);
     }
-
-    [Button]
+    
+    [FoldoutGroup("EventCommand")]
+    [Button("quit event", ButtonSizes.Medium)]
     public void NotifyQuitToMenu()
     {
         EndRun(EStatisticsRunEndReason.QuitToMenu);
@@ -274,8 +282,10 @@ public class StatisticsManager : MonoBehaviour
 
         _currentRun.MarkEnded();
         StatisticsRunSummary summary = new StatisticsRunSummary(_currentRun);
-        _publisher.TryPublish(context => new StatisticsRunEndedRawEvent(context, summary, endReason));
+        _publisher.TryPublish(context => new InGameRunEndedRawEvent(context, summary, endReason));
+        FinalizeRunAndAccumulate();
         _isRunEnded = true;
+        BeginRun();
     }
 
     public void SavePersistent()
@@ -331,15 +341,23 @@ public class StatisticsManager : MonoBehaviour
             return values;
         }
     }
+    
+    [FoldoutGroup("CurrentCommand", expanded: false)]
+    [LabelText("Current Sonar")]
+    [MinValue(0)]
+    [SerializeField] private int _debugCurrentRunSonarCount;
 
-    [FoldoutGroup("Command")]
-    [Button("Sync Debug Fields", ButtonSizes.Medium)]
-    private void DebugSyncFields()
-    {
-        SyncDebugFields();
-    }
+    [FoldoutGroup("CurrentCommand")]
+    [LabelText("Current Lidar")]
+    [MinValue(0)]
+    [SerializeField] private int _debugCurrentRunLidarCount;
 
-    [FoldoutGroup("Command")]
+    [FoldoutGroup("CurrentCommand")]
+    [LabelText("Current AI")]
+    [MinValue(0)]
+    [SerializeField] private int _debugCurrentRunAiQuestionCount;
+    
+    [FoldoutGroup("CurrentCommand")]
     [Button("Apply Current Run Counts", ButtonSizes.Medium)]
     private void DebugApplyCurrentRunCounts()
     {
@@ -357,7 +375,22 @@ public class StatisticsManager : MonoBehaviour
         SyncDebugFields();
     }
 
-    [FoldoutGroup("Command")]
+    
+    [FoldoutGroup("PersistentCommand")]
+    [LabelText("Persistent Sonar")]
+    [MinValue(0)]
+    [SerializeField] private int _debugPersistentSonarCount;
+
+    [FoldoutGroup("PersistentCommand")]
+    [LabelText("Persistent Lidar")]
+    [MinValue(0)]
+    [SerializeField] private int _debugPersistentLidarCount;
+
+    [FoldoutGroup("PersistentCommand")]
+    [LabelText("Persistent AI")]
+    [MinValue(0)]
+    [SerializeField] private int _debugPersistentAiQuestionCount;
+    [FoldoutGroup("PersistentCommand")]
     [Button("Apply Persistent Counts", ButtonSizes.Medium)]
     private void DebugApplyPersistentCounts()
     {
@@ -374,15 +407,45 @@ public class StatisticsManager : MonoBehaviour
         SavePersistent();
         SyncDebugFields();
     }
+    
+    [FoldoutGroup("PersistentCommand")]
+    [Button("Reload Persistent From Save", ButtonSizes.Medium)]
+    private void DebugReloadPersistent()
+    {
+        if (_repository == null)
+        {
+            _repository = new StatisticsPlayerPrefsRepository();
+        }
 
-    [FoldoutGroup("Command")]
+        _persistent = _repository.Load();
+        SyncDebugFields();
+    }
+
+    [FoldoutGroup("PersistentCommand")]
+    public void ResetPersistent()
+    {
+        if (_repository == null)
+        {
+            return;
+        }
+
+        _repository.Reset();
+        _persistent = new PersistentStatistics();
+        SyncDebugFields();
+    }
+
+
+    [FoldoutGroup("LogCommand")]
+    [LabelText("Log Item ID")]
+    [MinValue(1)]
+    [SerializeField] private int _debugLogItemId = 1;
+    [FoldoutGroup("LogCommand")]
     [Button("Add Test Log", ButtonSizes.Medium)]
     private void DebugAddCollectedLog()
     {
         RecordLogCollected(_debugLogItemId);
     }
-
-    [FoldoutGroup("Command")]
+    [FoldoutGroup("LogCommand")]
     [Button("Remove Test Log", ButtonSizes.Medium)]
     private void DebugRemoveCollectedLog()
     {
@@ -399,8 +462,8 @@ public class StatisticsManager : MonoBehaviour
         SavePersistent();
         SyncDebugFields();
     }
-
-    [FoldoutGroup("Command")]
+    
+    [FoldoutGroup("LogCommand")]
     [Button("Clear Collected Logs", ButtonSizes.Medium)]
     private void DebugClearCollectedLogs()
     {
@@ -415,39 +478,19 @@ public class StatisticsManager : MonoBehaviour
     }
 
     [FoldoutGroup("Command")]
+    [Button("Sync Debug Fields", ButtonSizes.Medium)]
+    private void DebugSyncFields()
+    {
+        SyncDebugFields();
+    }
+    
+    [FoldoutGroup("Command")]
     [Button("Finalize Run And Save", ButtonSizes.Medium)]
     private void DebugFinalizeRunAndAccumulate()
     {
         FinalizeRunAndAccumulate();
     }
-
-    [FoldoutGroup("Command")]
-    [Button("Reload Persistent From Save", ButtonSizes.Medium)]
-    private void DebugReloadPersistent()
-    {
-        if (_repository == null)
-        {
-            _repository = new StatisticsPlayerPrefsRepository();
-        }
-
-        _persistent = _repository.Load();
-        SyncDebugFields();
-    }
-
-    [Button("Reset Persistent Statistics")]
-    [FoldoutGroup("Command")]
-    public void ResetPersistent()
-    {
-        if (_repository == null)
-        {
-            return;
-        }
-
-        _repository.Reset();
-        _persistent = new PersistentStatistics();
-        SyncDebugFields();
-    }
-
+    
     [Button("Reset Current Run")]
     [FoldoutGroup("Command")]
     public void ResetCurrentRun()
