@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+//튜토리얼 클리어
 public class OnPrologueClearedAchievementInterpreter : AchievementSubInterpreterBase
 {
     public OnPrologueClearedAchievementInterpreter(Object source)

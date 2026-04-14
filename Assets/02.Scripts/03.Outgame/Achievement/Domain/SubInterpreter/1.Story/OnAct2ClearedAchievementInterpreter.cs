@@ -1,5 +1,4 @@
-﻿// OnAct2ClearedAchievementInterpreter.cs
-using UnityEngine;
+﻿using UnityEngine;
 
 public class OnAct2ClearedAchievementInterpreter : AchievementSubInterpreterBase
 {
