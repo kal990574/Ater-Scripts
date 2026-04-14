@@ -22,10 +22,10 @@ public class AchievementManager : MonoBehaviour
 
     private CompositeSubscription _subscriptions;
 
-    [Title("Debug Command")]
-    [FoldoutGroup("Command")]
-    [LabelText("대상 업적 ID")]
-    [SerializeField] private string _debugAchievementId = AchievementKey.None;
+    [Title("Debug Command")] 
+    [FoldoutGroup("Command")] 
+    [LabelText("대상 업적 ID")] 
+    [SerializeField] private AchievementKeyReference _debugAchievementId;
 
     [FoldoutGroup("Command")]
     [LabelText("진행도 증가량")]

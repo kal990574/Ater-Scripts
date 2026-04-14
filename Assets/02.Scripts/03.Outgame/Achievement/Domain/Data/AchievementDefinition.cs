@@ -10,6 +10,11 @@ public class AchievementDefinition
     [LabelText("ID")]
     [SerializeField]
     private AchievementKeyReference _id;
+    
+    [FoldoutGroup("$FoldoutTitle")]
+    [LabelText("아이콘")]
+    [SerializeField]
+    private Sprite _icon;
 
     [FoldoutGroup("$FoldoutTitle")]
     [LabelText("제목")]
@@ -39,6 +44,7 @@ public class AchievementDefinition
     private EAchievementVisibilityType _visibilityType = EAchievementVisibilityType.Normal;
 
     public string Id => _id.Value;
+    public Sprite Icon => _icon;
     public string Title => _title;
     public string Description => _description;
     public EAchievementCategory Category => _category;
