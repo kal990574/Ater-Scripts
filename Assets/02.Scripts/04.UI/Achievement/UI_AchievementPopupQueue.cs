@@ -72,7 +72,8 @@ public class UI_AchievementPopupQueue : MonoBehaviour
                 popupRect.anchoredPosition = hiddenPosition;
 
                 KillActiveSequence();
-                _activeSequence = DOTween.Sequence();
+                _activeSequence = DOTween.Sequence()
+                    .SetUpdate(true);
                 _activeSequence.Append(
                     popupRect.DOAnchorPos(shownPosition, _enterDuration)
                         .SetEase(_enterEase)
@@ -88,7 +89,7 @@ public class UI_AchievementPopupQueue : MonoBehaviour
             }
             else
             {
-                yield return new WaitForSeconds(_showDuration);
+                yield return new WaitForSecondsRealtime(_showDuration);
             }
 
             if (popupInstance != null)
