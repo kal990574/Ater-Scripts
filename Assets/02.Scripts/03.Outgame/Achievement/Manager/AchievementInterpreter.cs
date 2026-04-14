@@ -1,52 +1,38 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class AchievementInterpreter : MonoBehaviour
 {
-    [SerializeField] private AchievementManager _achievementManager;
+    private readonly List<IAchievementSubInterpreter> _interpreters = new List<IAchievementSubInterpreter>();
 
-    private CompositeSubscription _subscriptions;
+    private void Awake()
+    {
+        RegisterInterpreters();
+    }
 
     private void OnEnable()
     {
-        SubscribeEvents();
+        for (int index = 0; index < _interpreters.Count; index++)
+        {
+            _interpreters[index].Enable();
+        }
     }
 
     private void OnDisable()
     {
-        DisposeSubscriptions();
+        for (int index = 0; index < _interpreters.Count; index++)
+        {
+            _interpreters[index].Disable();
+        }
     }
 
-    private void SubscribeEvents()
+    private void RegisterInterpreters()
     {
-        DisposeSubscriptions();
+        _interpreters.Clear();
 
-        GameEventHub hub = GameEventHub.Instance;
-        if (hub == null)
-        {
-            return;
-        }
-
-        if (_achievementManager == null)
-        {
-            Debug.LogWarning("[AchievementInterpreter] AchievementManager reference is null.");
-            return;
-        }
-
-        _subscriptions = new CompositeSubscription();
-
-        
+        _interpreters.Add(new StoryProgressAchievementInterpreter(this));
+        _interpreters.Add(new CollectAchievementInterpreter(this));
+        _interpreters.Add(new MechanicAchievementInterpreter(this));
+        _interpreters.Add(new ChallengeAchievementInterpreter(this));
     }
-
-    private void DisposeSubscriptions()
-    {
-        if (_subscriptions == null)
-        {
-            return;
-        }
-
-        _subscriptions.Dispose();
-        _subscriptions = null;
-    }
-
-    
 }

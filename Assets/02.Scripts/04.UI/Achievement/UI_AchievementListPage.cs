@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 
@@ -74,6 +76,10 @@ public class UI_AchievementListPage : MonoBehaviour
 
     private UI_AchievementViewData CreateViewData(AchievementDefinition definition, AchievementState state)
     {
+        int displayCurrentValue = _achievementManager != null
+            ? _achievementManager.GetDisplayCurrentValue(definition, state)
+            : state != null ? state.CurrentValue : 0;
+
         bool isHiddenAndLocked =
             definition.VisibilityType == EAchievementVisibilityType.Hidden &&
             state.IsUnlocked == false;
@@ -84,9 +90,10 @@ public class UI_AchievementListPage : MonoBehaviour
                 definition.Id,
                 string.Empty,
                 string.Empty,
+                "미달성",
                 state.IsUnlocked,
                 false,
-                state.CurrentValue,
+                displayCurrentValue,
                 definition.TargetValue,
                 definition.Category);
         }
@@ -97,11 +104,27 @@ public class UI_AchievementListPage : MonoBehaviour
             definition.Id,
             displayTitle,
             definition.Description,
+            GetUnlockStatusText(state),
             state.IsUnlocked,
             true,
-            state.CurrentValue,
+            displayCurrentValue,
             definition.TargetValue,
             definition.Category);
+    }
+
+    private static string GetUnlockStatusText(AchievementState state)
+    {
+        if (state == null || state.IsUnlocked == false || state.UnlockedAtUnixSeconds <= 0)
+        {
+            return "미달성";
+        }
+
+        string formattedTime = DateTimeOffset
+            .FromUnixTimeSeconds(state.UnlockedAtUnixSeconds)
+            .ToLocalTime()
+            .ToString("MMMMd,yyyy 'at' h:mm tt", CultureInfo.InvariantCulture);
+
+        return $"달성시간 : {formattedTime}";
     }
 
     private void ClearCards()

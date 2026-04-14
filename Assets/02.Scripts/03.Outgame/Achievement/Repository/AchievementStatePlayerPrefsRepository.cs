@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AchievementStateRepository : IAchievementStateRepository
+public class AchievementStatePlayerPrefsRepository : IAchievementStateRepository
 {
     private const string SaveKey = "Achievement.StateCollection";
 

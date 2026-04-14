@@ -11,14 +11,15 @@ public readonly struct ItemAcquiredRawEvent : IGameEvent
 {
     public GameEventContext Context { get; }
     public int ItemId { get; }
+    public EItemType ItemType { get; }
 
-    public ItemAcquiredRawEvent(GameEventContext context, int itemId)
+    public ItemAcquiredRawEvent(GameEventContext context, int itemId, EItemType itemType)
     {
         Context = context;
         ItemId = itemId;
+        ItemType = itemType;
     }
 }
-
 public readonly struct ObjectInteractedRawEvent : IGameEvent
 {
     public GameEventContext Context { get; }

@@ -6,6 +6,7 @@ public class UI_AchievementCard : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _titleText;
     [SerializeField] private TextMeshProUGUI _descriptionText;
     [SerializeField] private TextMeshProUGUI _progressText;
+    [SerializeField] private TextMeshProUGUI _unlockTime;
     [SerializeField] private GameObject _unlockedMarkObject;
 
     public void Bind(UI_AchievementViewData viewData)
@@ -30,6 +31,11 @@ public class UI_AchievementCard : MonoBehaviour
             {
                 _progressText.text = $"{viewData.CurrentValue} / {viewData.TargetValue}";
             }
+        }
+
+        if (_unlockTime != null)
+        {
+            _unlockTime.text = viewData.UnlockStatusText;
         }
 
         if (_unlockedMarkObject != null)

@@ -9,6 +9,7 @@ public class RuntimeItemData : RuntimeData
     public ItemData Data => data;
     public int ItemId => data != null ? data.ItemId : -1;
     public string ItemName => data != null ? data.ItemName : string.Empty;
+    public EItemType ItemType => data != null ? data.ItemType : EItemType.None;
     public string Description => data != null ? data.Description : string.Empty;
     public Sprite Icon => data != null ? data.Icon : null;
     public GameObject WorldPrefab => data != null ? data.WorldPrefab : null;

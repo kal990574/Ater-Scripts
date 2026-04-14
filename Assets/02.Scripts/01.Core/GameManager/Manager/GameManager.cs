@@ -11,7 +11,9 @@ namespace _02.Scripts.Core.Manager
     {
         private readonly List<SceneDataSO> _chapterSceneList;
         private readonly ISceneTransitionManager _sceneTransitionManager;
-
+        
+        private GameEventPublisher _publisher;
+        
         public GameState CurrentState { get; private set; } = GameState.Playing;
         public int CurrentChapter { get; private set; } = 0;
         
@@ -20,6 +22,7 @@ namespace _02.Scripts.Core.Manager
 
         public GameManager(List<SceneDataSO> chapterSceneList, ISceneTransitionManager sceneTransitionManager)
         {
+            _publisher = new  GameEventPublisher();
             _chapterSceneList = chapterSceneList;
             _sceneTransitionManager = sceneTransitionManager;
         }
@@ -29,6 +32,7 @@ namespace _02.Scripts.Core.Manager
             CurrentState = GameState.GameOver;
             Time.timeScale = 0f;
             SoundManager.Instance?.PauseAll();
+            StatisticsManager.Instance?.EndRun(EStatisticsRunEndReason.GameOver);
             OnGameStateChanged?.Invoke(GameState.GameOver);
         }
 
@@ -68,6 +72,7 @@ namespace _02.Scripts.Core.Manager
 
         public void MarkChapterCleared()
         {
+            _publisher.TryPublish(context => new ChapterClearedRawEvent(context,CurrentChapter), "GameManager");
             OnChapterCleared?.Invoke(CurrentChapter);
         }
 
@@ -79,6 +84,7 @@ namespace _02.Scripts.Core.Manager
 
         public void ReturnToMainMenu()
         {
+            StatisticsManager.Instance?.EndRun(EStatisticsRunEndReason.QuitToMenu);
             _sceneTransitionManager.ReturnToMainMenu();
         }
 

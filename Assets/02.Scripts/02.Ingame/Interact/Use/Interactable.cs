@@ -99,7 +99,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
 
     protected void PublishItemAcquired(int itemId)
     {
-        _eventPublisher?.TryPublish(context => new ItemAcquiredRawEvent(context, itemId));
+        _eventPublisher?.TryPublish(context => new ItemAcquiredRawEvent(context, itemId,RuntimeItemData.ItemType ));
     }
 
     protected void RefreshRuntimeView()

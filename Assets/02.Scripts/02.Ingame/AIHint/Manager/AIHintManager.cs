@@ -11,6 +11,8 @@ namespace _02.Scripts.AIHint.Manager
         private readonly ILanguageModel _llm;
         private readonly ITextToSpeech _tts;
 
+        private GameEventPublisher _publisher;
+        
         // test
         public ILanguageModel Llm => _llm;
         public ITextToSpeech Tts => _tts;
@@ -20,6 +22,10 @@ namespace _02.Scripts.AIHint.Manager
             _stt = stt;
             _llm = llm;
             _tts = tts;
+            
+            _publisher = new  GameEventPublisher();
+            //현재 Mono가 아니어서 인스턴스 아이디가 없는데 안써도 상관은 없음.
+            //혹시 Mono와 연결되면 SetSource추가할것
         }
 
         public async UniTask<HintResult> ProcessHintAsync(
@@ -40,6 +46,8 @@ namespace _02.Scripts.AIHint.Manager
                 return HintResult.Fail(response.HintText);
             }
             Debug.Log($"[AIHint] 힌트: {response.HintText}");
+            //힌트 성공시 이벤트 발행
+            _publisher.TryPublish(context => new AiHintAnsweredRawEvent(context), "HintManager");
             
             // tts
             try
