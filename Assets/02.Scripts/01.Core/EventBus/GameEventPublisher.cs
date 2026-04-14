@@ -11,7 +11,7 @@ public class GameEventPublisher
         sourceObject = source;
     }
 
-    public bool TryPublish<T>(Func<GameEventContext, T> factory) where T : struct, IGameEvent
+    public bool TryPublish<T>(Func<GameEventContext, T> factory, string defaultName = "Unknown") where T : struct, IGameEvent
     {
         if (factory == null)
         {
@@ -24,7 +24,7 @@ public class GameEventPublisher
             return false;
         }
 
-        string sourceName = sourceObject != null ? sourceObject.name : "Unknown";
+        string sourceName = sourceObject != null ? sourceObject.name : defaultName;
         int sourceId = sourceObject != null ? sourceObject.GetInstanceID() : 0;
 
         GameEventContext context = new GameEventContext(

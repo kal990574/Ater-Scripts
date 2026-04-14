@@ -4,20 +4,23 @@ using UnityEngine;
 [Serializable]
 public class CurrentRunStatistics
 {
+    [SerializeField] private int _startchapter;
     [SerializeField] private int _sonarUseCount;
     [SerializeField] private int _lidarRestoreCount;
     [SerializeField] private int _aiQuestionCount;
     [SerializeField] private float _startTime;
     [SerializeField] private float _endTime;
 
+    public int StartChapter => _startchapter;
     public int SonarUseCount => _sonarUseCount;
     public int LidarRestoreCount => _lidarRestoreCount;
     public int AiQuestionCount => _aiQuestionCount;
     public float StartTime => _startTime;
     public float EndTime => _endTime;
 
-    public void Begin()
+    public void Begin(int startChapter)
     {
+        _startchapter = startChapter;
         _sonarUseCount = 0;
         _lidarRestoreCount = 0;
         _aiQuestionCount = 0;

@@ -57,11 +57,6 @@ public class StatisticsManager : MonoBehaviour
         SyncDebugFields();
     }
 
-    private void Start()
-    {
-        BeginRun();
-    }
-
     private void OnDestroy()
     {
         if (_instance == this)
@@ -72,20 +67,19 @@ public class StatisticsManager : MonoBehaviour
 
     [FoldoutGroup("EventCommand")]
     [Button("BeginRun", ButtonSizes.Medium)]
-    public void BeginRun()
+    public void BeginRun(int startChapter)
     {
         if (_currentRun == null)
         {
             _currentRun = new CurrentRunStatistics();
         }
-
-        _currentRun.Begin();
+        _currentRun.Begin(startChapter);
         _isRunEnded = false;
         _committedRunSonarCount = 0;
         _committedRunLidarCount = 0;
         _committedRunAiQuestionCount = 0;
         SyncDebugFields();
-        _publisher.TryPublish(context => new InGameRunStartedRawEvent(context));
+        _publisher.TryPublish(context => new InGameRunStartedRawEvent(context , startChapter));
     }
 
     public void RecordSonarUsed()
@@ -285,7 +279,6 @@ public class StatisticsManager : MonoBehaviour
         _publisher.TryPublish(context => new InGameRunEndedRawEvent(context, summary, endReason));
         FinalizeRunAndAccumulate();
         _isRunEnded = true;
-        BeginRun();
     }
 
     public void SavePersistent()
@@ -363,8 +356,7 @@ public class StatisticsManager : MonoBehaviour
     {
         if (_currentRun == null)
         {
-            _currentRun = new CurrentRunStatistics();
-            _currentRun.Begin();
+            return;
         }
 
         _currentRun.SetCounts(
@@ -495,7 +487,13 @@ public class StatisticsManager : MonoBehaviour
     [FoldoutGroup("Command")]
     public void ResetCurrentRun()
     {
-        BeginRun();
+        _currentRun = null;
+        
+        _isRunEnded = false;
+        _committedRunSonarCount = 0;
+        _committedRunLidarCount = 0;
+        _committedRunAiQuestionCount = 0;
+        SyncDebugFields();
     }
 
     private void SyncDebugFields()

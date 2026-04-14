@@ -21,11 +21,19 @@ public class ChallengeAchievementInterpreter : GroupedAchievementSubInterpreterB
 
     private void OnRunStarted(InGameRunStartedRawEvent rawEvent)
     {
+        if (rawEvent.StartChapter != 0)
+        {
+            return;
+        }
         _isRunning = true;
     }
 
     private void OnRunEnded(InGameRunEndedRawEvent rawEvent)
     {
+        if (!_isRunning)
+        {
+            return;
+        }
         if (rawEvent.EndReason != EStatisticsRunEndReason.Clear)
         {
             _isRunning = false;

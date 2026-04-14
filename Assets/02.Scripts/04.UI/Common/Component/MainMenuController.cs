@@ -51,6 +51,7 @@ namespace _02.Scripts.UI.Component
 
         public void ConfirmLoadChapter()
         {
+            StatisticsManager.Instance?.BeginRun(_selectedChapter);
             _gameManager.LoadChapter(_selectedChapter);
         }
 
