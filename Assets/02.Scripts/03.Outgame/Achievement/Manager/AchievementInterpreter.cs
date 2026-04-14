@@ -33,7 +33,6 @@ public class AchievementInterpreter : MonoBehaviour
         _interpreters.Add(new OnPrologueClearedAchievementInterpreter(this));
         _interpreters.Add(new OnAct1ClearedAchievementInterpreter(this));
         _interpreters.Add(new OnAct2ClearedAchievementInterpreter(this));
-        _interpreters.Add(new OnAct3ClearedAchievementInterpreter(this));
         _interpreters.Add(new OnEndingReachedAchievementInterpreter(this));
 
         _interpreters.Add(new OnFirstSignalAchievementInterpreter(this));
@@ -42,5 +41,6 @@ public class AchievementInterpreter : MonoBehaviour
         _interpreters.Add(new OnAdaptedToDarknessAchievementInterpreter(this));
         _interpreters.Add(new OnNoAiClearAchievementInterpreter(this));
         _interpreters.Add(new OnAllLogsCollectedAchievementInterpreter(this));
+        _interpreters.Add(new OnFirstLogAchievementInterpreter(this));
     }
 }

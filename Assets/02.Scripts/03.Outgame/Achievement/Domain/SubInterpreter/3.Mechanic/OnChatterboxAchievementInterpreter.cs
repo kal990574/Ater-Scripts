@@ -9,10 +9,10 @@ public class OnChatterboxAchievementInterpreter : AchievementSubInterpreterBase
 
     protected override void Subscribe(GameEventHub hub, CompositeSubscription subscriptions)
     {
-        subscriptions.Add(hub.Subscribe<AiHintAnsweredRawEvent>(OnAiHintAnswered));
+        subscriptions.Add(hub.Subscribe<StatisticsAiQuestionRawEvent>(OnAiQuestionUsed));
     }
 
-    private void OnAiHintAnswered(AiHintAnsweredRawEvent rawEvent)
+    private void OnAiQuestionUsed(StatisticsAiQuestionRawEvent rawEvent)
     {
         StatisticsManager statisticsManager = StatisticsManager.Instance;
         AchievementManager achievementManager = AchievementManager.Instance;
@@ -29,7 +29,7 @@ public class OnChatterboxAchievementInterpreter : AchievementSubInterpreterBase
 
         int total =
             statisticsManager.Persistent.AiQuestionCount +
-            statisticsManager.CurrentRun.AiQuestionCount + 1;
+            statisticsManager.CurrentRun.AiQuestionCount;
 
         if (total >= definition.TargetValue)
         {

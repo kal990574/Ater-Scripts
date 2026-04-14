@@ -26,7 +26,7 @@ public class OnNoAiClearAchievementInterpreter : AchievementSubInterpreterBase
             return;
         }
 
-        if (!_isRunning && rawEvent.Summary.AiQuestionCount == 0)
+        if (_isRunning && rawEvent.Summary.AiQuestionCount == 0)
         {
             PublishAchievement();
         }

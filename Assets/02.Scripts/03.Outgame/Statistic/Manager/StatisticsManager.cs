@@ -6,6 +6,7 @@ public class StatisticsManager : MonoBehaviour
 {
     private static StatisticsManager _instance;
     public static StatisticsManager Instance => _instance;
+    private readonly GameEventPublisher _publisher = new GameEventPublisher();
 
     [Title("Runtime")]
     [FoldoutGroup("View", expanded: true)]
@@ -55,6 +56,10 @@ public class StatisticsManager : MonoBehaviour
     [SerializeField] private int _debugLogItemId = 1;
 
     private IStatisticsRepository _repository;
+    private bool _isRunEnded;
+    private int _committedRunSonarCount;
+    private int _committedRunLidarCount;
+    private int _committedRunAiQuestionCount;
 
     public CurrentRunStatistics CurrentRun => _currentRun;
     public PersistentStatistics Persistent => _persistent;
@@ -71,6 +76,7 @@ public class StatisticsManager : MonoBehaviour
             return;
         }
 
+        _publisher.SetSource(this);
         _repository = new StatisticsPlayerPrefsRepository();
         _persistent = _repository.Load();
 
@@ -79,8 +85,12 @@ public class StatisticsManager : MonoBehaviour
             _currentRun = new CurrentRunStatistics();
         }
 
-        _currentRun.Begin();
         SyncDebugFields();
+    }
+
+    private void Start()
+    {
+        BeginRun();
     }
 
     private void OnDestroy()
@@ -100,7 +110,12 @@ public class StatisticsManager : MonoBehaviour
         }
 
         _currentRun.Begin();
+        _isRunEnded = false;
+        _committedRunSonarCount = 0;
+        _committedRunLidarCount = 0;
+        _committedRunAiQuestionCount = 0;
         SyncDebugFields();
+        _publisher.TryPublish(context => new StatisticsRunStartedRawEvent(context));
     }
 
     public void RecordSonarUsed()
@@ -188,19 +203,79 @@ public class StatisticsManager : MonoBehaviour
             return;
         }
 
+        CommitCurrentRunToPersistent();
         _currentRun.MarkEnded();
+        SyncDebugFields();
+    }
+
+    [Button("Commit Current Run To Persistent", ButtonSizes.Medium)]
+    public void CommitCurrentRunToPersistent()
+    {
+        if (_currentRun == null)
+        {
+            return;
+        }
 
         if (_persistent == null)
         {
             _persistent = new PersistentStatistics();
         }
 
-        _persistent.AddSonarUseCount(_currentRun.SonarUseCount);
-        _persistent.AddLidarRestoreCount(_currentRun.LidarRestoreCount);
-        _persistent.AddAiQuestionCount(_currentRun.AiQuestionCount);
+        int sonarDelta = Mathf.Max(0, _currentRun.SonarUseCount - _committedRunSonarCount);
+        int lidarDelta = Mathf.Max(0, _currentRun.LidarRestoreCount - _committedRunLidarCount);
+        int aiDelta = Mathf.Max(0, _currentRun.AiQuestionCount - _committedRunAiQuestionCount);
+
+        if (sonarDelta == 0 && lidarDelta == 0 && aiDelta == 0)
+        {
+            return;
+        }
+
+        _persistent.AddSonarUseCount(sonarDelta);
+        _persistent.AddLidarRestoreCount(lidarDelta);
+        _persistent.AddAiQuestionCount(aiDelta);
+
+        _committedRunSonarCount = _currentRun.SonarUseCount;
+        _committedRunLidarCount = _currentRun.LidarRestoreCount;
+        _committedRunAiQuestionCount = _currentRun.AiQuestionCount;
 
         SavePersistent();
         SyncDebugFields();
+    }
+
+    [Button]
+    public void NotifyClear()
+    {
+        EndRun(EStatisticsRunEndReason.Clear);
+    }
+
+    [Button]
+    public void NotifyGameOver()
+    {
+        EndRun(EStatisticsRunEndReason.GameOver);
+    }
+
+    [Button]
+    public void NotifyQuitToMenu()
+    {
+        EndRun(EStatisticsRunEndReason.QuitToMenu);
+    }
+
+    public void EndRun(EStatisticsRunEndReason endReason)
+    {
+        if (_isRunEnded == true)
+        {
+            return;
+        }
+
+        if (_currentRun == null)
+        {
+            return;
+        }
+
+        _currentRun.MarkEnded();
+        StatisticsRunSummary summary = new StatisticsRunSummary(_currentRun);
+        _publisher.TryPublish(context => new StatisticsRunEndedRawEvent(context, summary, endReason));
+        _isRunEnded = true;
     }
 
     public void SavePersistent()

@@ -2,7 +2,13 @@ using UnityEngine;
 
 public class StatisticsInterpreter : MonoBehaviour, IStatisticsInterpreter
 {
+    private readonly GameEventPublisher _publisher = new GameEventPublisher();
     private CompositeSubscription _subscriptions;
+
+    private void Awake()
+    {
+        _publisher.SetSource(this);
+    }
 
     private void OnEnable()
     {
@@ -55,6 +61,7 @@ public class StatisticsInterpreter : MonoBehaviour, IStatisticsInterpreter
         }
 
         manager.RecordSonarUsed();
+        _publisher.TryPublish(context => new StatisticsSonarUsedRawEvent(context));
     }
 
     private void OnLidarCompleted(LidarScanTargetCompletedRawEvent rawEvent)
@@ -66,6 +73,7 @@ public class StatisticsInterpreter : MonoBehaviour, IStatisticsInterpreter
         }
 
         manager.RecordLidarRestored();
+        _publisher.TryPublish(context => new StatisticsLidarRestoredRawEvent(context));
     }
 
     private void OnAiHintAnswered(AiHintAnsweredRawEvent rawEvent)
@@ -77,6 +85,7 @@ public class StatisticsInterpreter : MonoBehaviour, IStatisticsInterpreter
         }
 
         manager.RecordAiQuestionUsed();
+        _publisher.TryPublish(context => new StatisticsAiQuestionRawEvent(context));
     }
 
     private void OnItemAcquired(ItemAcquiredRawEvent rawEvent)
@@ -93,6 +102,7 @@ public class StatisticsInterpreter : MonoBehaviour, IStatisticsInterpreter
         }
 
         manager.RecordLogCollected(rawEvent.ItemId);
+        _publisher.TryPublish(context => new StatisticsLogCollectedRawEvent(context, rawEvent.ItemId));
     }
 
     private void OnRunEnded(StatisticsRunEndedRawEvent rawEvent)

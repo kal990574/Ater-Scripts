@@ -141,6 +141,10 @@ public class AchievementManager : MonoBehaviour
 
         _subscriptions = new CompositeSubscription();
         _subscriptions.Add(hub.Subscribe<AchievementEvent>(HandleAchievementEvent));
+        _subscriptions.Add(hub.Subscribe<StatisticsSonarUsedRawEvent>(_ => AchievementListChanged?.Invoke()));
+        _subscriptions.Add(hub.Subscribe<StatisticsLidarRestoredRawEvent>(_ => AchievementListChanged?.Invoke()));
+        _subscriptions.Add(hub.Subscribe<StatisticsAiQuestionRawEvent>(_ => AchievementListChanged?.Invoke()));
+        _subscriptions.Add(hub.Subscribe<StatisticsLogCollectedRawEvent>(_ => AchievementListChanged?.Invoke()));
     }
 
     private void DisposeSubscriptions()
@@ -156,6 +160,12 @@ public class AchievementManager : MonoBehaviour
 
     private void HandleAchievementEvent(AchievementEvent achievementEvent)
     {
+        if (IsStatisticDrivenAchievement(achievementEvent.AchievementId) == true)
+        {
+            TryUnlockAchievement(achievementEvent.AchievementId);
+            return;
+        }
+
         AddProgressAndTryUnlock(achievementEvent.AchievementId, 1);
     }
 
@@ -189,6 +199,21 @@ public class AchievementManager : MonoBehaviour
 
         IReadOnlyList<AchievementDefinition> definitions = _definitionDatabase.GetAllDefinitions();
         return definitions ?? Array.Empty<AchievementDefinition>();
+    }
+
+    public int GetDisplayCurrentValue(AchievementDefinition definition, AchievementState state)
+    {
+        if (definition == null)
+        {
+            return 0;
+        }
+
+        if (TryGetStatisticProgressValue(definition.Id, out int progressValue) == true)
+        {
+            return Mathf.Min(progressValue, definition.TargetValue);
+        }
+
+        return state != null ? state.CurrentValue : 0;
     }
 
     public int GetUnlockedCount()
@@ -264,6 +289,51 @@ public class AchievementManager : MonoBehaviour
             {
                 TryUnlockAterMaster();
             }
+        }
+    }
+
+    private void TryUnlockAchievement(string achievementId)
+    {
+        if (string.IsNullOrWhiteSpace(achievementId) == true)
+        {
+            return;
+        }
+
+        if (_definitionDatabase.TryGetDefinition(achievementId, out AchievementDefinition definition) == false)
+        {
+            return;
+        }
+
+        if (_stateMap.TryGetValue(achievementId, out AchievementState state) == false)
+        {
+            return;
+        }
+
+        if (state.IsUnlocked == true)
+        {
+            return;
+        }
+
+        bool isUnlockedNow = state.TryUnlock();
+        if (isUnlockedNow == false)
+        {
+            return;
+        }
+
+        SaveStates();
+        AchievementStateChanged?.Invoke(definition, state);
+        AchievementListChanged?.Invoke();
+
+        if (_logOnUnlock == true)
+        {
+            Debug.Log($"[AchievementManager] Unlock :: {definition.Title}");
+        }
+
+        AchievementUnlocked?.Invoke(definition, state);
+
+        if (achievementId != AchievementKey.Meta_AterMaster)
+        {
+            TryUnlockAterMaster();
         }
     }
 
@@ -391,10 +461,56 @@ public class AchievementManager : MonoBehaviour
         AddProgressAndTryUnlock(AchievementKey.Meta_AterMaster, 1);
     }
 
-    private void SaveStates()
+    private bool IsStatisticDrivenAchievement(string achievementId)
     {
-        _stateRepository.SaveStates(_states);
+        return achievementId == AchievementKey.Collection_FirstRecord
+               || achievementId == AchievementKey.Collection_AllLogsComplete
+               || achievementId == AchievementKey.Mechanic_FirstSignal
+               || achievementId == AchievementKey.Mechanic_RestorationExpert
+               || achievementId == AchievementKey.Mechanic_Chatterbox;
     }
+
+    private bool TryGetStatisticProgressValue(string achievementId, out int progressValue)
+    {
+        progressValue = 0;
+
+        StatisticsManager statisticsManager = StatisticsManager.Instance;
+        if (statisticsManager == null)
+        {
+            return false;
+        }
+
+        switch (achievementId)
+        {
+            case AchievementKey.Collection_FirstRecord:
+            case AchievementKey.Collection_AllLogsComplete:
+                progressValue = statisticsManager.GetCollectedLogCount();
+                return true;
+
+            case AchievementKey.Mechanic_FirstSignal:
+                progressValue =
+                    statisticsManager.Persistent.SonarUseCount +
+                    statisticsManager.CurrentRun.SonarUseCount;
+                return true;
+
+            case AchievementKey.Mechanic_RestorationExpert:
+                progressValue =
+                    statisticsManager.Persistent.LidarRestoreCount +
+                    statisticsManager.CurrentRun.LidarRestoreCount;
+                return true;
+
+            case AchievementKey.Mechanic_Chatterbox:
+                progressValue =
+                    statisticsManager.Persistent.AiQuestionCount +
+                    statisticsManager.CurrentRun.AiQuestionCount;
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    
 
     [Title("Debug View")]
     [FoldoutGroup("View")]
@@ -437,13 +553,21 @@ public class AchievementManager : MonoBehaviour
                 views.Add(new AchievementDebugStateView(
                     definition.Id,
                     definition.Title,
-                    state != null ? state.CurrentValue : 0,
+                    GetDisplayCurrentValue(definition, state),
                     definition.TargetValue,
                     state != null && state.IsUnlocked));
             }
 
             return views;
         }
+    }
+    [FoldoutGroup("Command")]
+    [Button("데이터 세이브", ButtonSizes.Medium)]
+    private void SaveStates()
+    {
+        _stateRepository.SaveStates(_states);
+        Debug.Log("[AchievementManager] Reload All Data");
+        
     }
 
     [FoldoutGroup("Command")]

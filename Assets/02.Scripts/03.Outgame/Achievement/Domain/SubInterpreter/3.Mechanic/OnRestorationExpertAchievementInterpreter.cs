@@ -9,10 +9,10 @@ public class OnRestorationExpertAchievementInterpreter : AchievementSubInterpret
 
     protected override void Subscribe(GameEventHub hub, CompositeSubscription subscriptions)
     {
-        subscriptions.Add(hub.Subscribe<LidarScanTargetCompletedRawEvent>(OnLidarCompleted));
+        subscriptions.Add(hub.Subscribe<StatisticsLidarRestoredRawEvent>(OnLidarRestored));
     }
 
-    private void OnLidarCompleted(LidarScanTargetCompletedRawEvent rawEvent)
+    private void OnLidarRestored(StatisticsLidarRestoredRawEvent rawEvent)
     {
         StatisticsManager statisticsManager = StatisticsManager.Instance;
         AchievementManager achievementManager = AchievementManager.Instance;
@@ -29,7 +29,7 @@ public class OnRestorationExpertAchievementInterpreter : AchievementSubInterpret
 
         int total =
             statisticsManager.Persistent.LidarRestoreCount +
-            statisticsManager.CurrentRun.LidarRestoreCount + 1;
+            statisticsManager.CurrentRun.LidarRestoreCount;
 
         if (total >= definition.TargetValue)
         {

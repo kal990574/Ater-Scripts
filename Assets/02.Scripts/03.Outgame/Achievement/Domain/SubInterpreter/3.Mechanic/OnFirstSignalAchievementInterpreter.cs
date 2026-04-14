@@ -9,10 +9,10 @@ public class OnFirstSignalAchievementInterpreter : AchievementSubInterpreterBase
 
     protected override void Subscribe(GameEventHub hub, CompositeSubscription subscriptions)
     {
-        subscriptions.Add(hub.Subscribe<SonarScanStartedRawEvent>(OnSonarScanStarted));
+        subscriptions.Add(hub.Subscribe<StatisticsSonarUsedRawEvent>(OnSonarUsed));
     }
 
-    private void OnSonarScanStarted(SonarScanStartedRawEvent rawEvent)
+    private void OnSonarUsed(StatisticsSonarUsedRawEvent rawEvent)
     {
         PublishAchievement();
     }

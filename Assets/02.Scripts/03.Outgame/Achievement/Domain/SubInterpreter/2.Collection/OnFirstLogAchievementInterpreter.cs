@@ -9,16 +9,11 @@ public class OnFirstLogAchievementInterpreter : AchievementSubInterpreterBase
 
     protected override void Subscribe(GameEventHub hub, CompositeSubscription subscriptions)
     {
-        subscriptions.Add(hub.Subscribe<ItemAcquiredRawEvent>(OnItemAcquired));
+        subscriptions.Add(hub.Subscribe<StatisticsLogCollectedRawEvent>(OnLogCollected));
     }
 
-    private void OnItemAcquired(ItemAcquiredRawEvent rawEvent)
+    private void OnLogCollected(StatisticsLogCollectedRawEvent rawEvent)
     {
-        if (rawEvent.ItemType != EItemType.Log)
-        {
-            return;
-        }
-
         AchievementManager manager = AchievementManager.Instance;
         if (manager == null)
         {

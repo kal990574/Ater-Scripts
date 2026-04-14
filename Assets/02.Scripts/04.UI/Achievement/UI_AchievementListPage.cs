@@ -76,6 +76,10 @@ public class UI_AchievementListPage : MonoBehaviour
 
     private UI_AchievementViewData CreateViewData(AchievementDefinition definition, AchievementState state)
     {
+        int displayCurrentValue = _achievementManager != null
+            ? _achievementManager.GetDisplayCurrentValue(definition, state)
+            : state != null ? state.CurrentValue : 0;
+
         bool isHiddenAndLocked =
             definition.VisibilityType == EAchievementVisibilityType.Hidden &&
             state.IsUnlocked == false;
@@ -89,7 +93,7 @@ public class UI_AchievementListPage : MonoBehaviour
                 "미달성",
                 state.IsUnlocked,
                 false,
-                state.CurrentValue,
+                displayCurrentValue,
                 definition.TargetValue,
                 definition.Category);
         }
@@ -103,7 +107,7 @@ public class UI_AchievementListPage : MonoBehaviour
             GetUnlockStatusText(state),
             state.IsUnlocked,
             true,
-            state.CurrentValue,
+            displayCurrentValue,
             definition.TargetValue,
             definition.Category);
     }

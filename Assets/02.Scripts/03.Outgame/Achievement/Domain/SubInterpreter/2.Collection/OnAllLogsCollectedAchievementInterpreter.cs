@@ -9,16 +9,11 @@ public class OnAllLogsCollectedAchievementInterpreter : AchievementSubInterprete
 
     protected override void Subscribe(GameEventHub hub, CompositeSubscription subscriptions)
     {
-        subscriptions.Add(hub.Subscribe<ItemAcquiredRawEvent>(OnItemAcquired));
+        subscriptions.Add(hub.Subscribe<StatisticsLogCollectedRawEvent>(OnLogCollected));
     }
 
-    private void OnItemAcquired(ItemAcquiredRawEvent rawEvent)
+    private void OnLogCollected(StatisticsLogCollectedRawEvent rawEvent)
     {
-        if (rawEvent.ItemType != EItemType.Log)
-        {
-            return;
-        }
-
         StatisticsManager statisticsManager = StatisticsManager.Instance;
         AchievementManager achievementManager = AchievementManager.Instance;
 
@@ -33,11 +28,6 @@ public class OnAllLogsCollectedAchievementInterpreter : AchievementSubInterprete
         }
 
         int predictedCount = statisticsManager.GetCollectedLogCount();
-
-        if (statisticsManager.HasCollectedLog(rawEvent.ItemId) == false)
-        {
-            predictedCount++;
-        }
 
         if (predictedCount >= definition.TargetValue)
         {
