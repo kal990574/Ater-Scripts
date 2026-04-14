@@ -80,7 +80,7 @@ public class AchievementManager : MonoBehaviour
 
     private void EnsureRepositories()
     {
-        if _stateRepository != null)
+        if(_stateRepository != null)
         {
             return;
         }
