@@ -13,8 +13,7 @@ public class AchievementManager : MonoBehaviour
 
     [Title("Debug Option")]
     [SerializeField] private bool _logOnUnlock = true;
-
-    private IAchievementDefinitionRepository _definitionRepository;
+    
     private IAchievementStateRepository _stateRepository;
 
     private readonly List<AchievementState> _states = new List<AchievementState>();
@@ -76,13 +75,12 @@ public class AchievementManager : MonoBehaviour
 
     private void InitializeRepositories()
     {
-        _definitionRepository = new AchievementDefinitionRepository(_definitionDatabase);
-        _stateRepository = new AchievementStateRepository();
+        _stateRepository = new AchievementStatePlayerPrefsRepository();
     }
 
     private void EnsureRepositories()
     {
-        if (_definitionRepository != null && _stateRepository != null)
+        if _stateRepository != null)
         {
             return;
         }
@@ -99,14 +97,14 @@ public class AchievementManager : MonoBehaviour
     {
         EnsureRepositories();
 
-        if (_definitionRepository == null || _stateRepository == null)
+        if (_definitionDatabase == null || _stateRepository == null)
         {
             _states.Clear();
             _stateMap.Clear();
             return;
         }
 
-        IReadOnlyList<AchievementDefinition> definitions = _definitionRepository.GetAllDefinitions();
+        IReadOnlyList<AchievementDefinition> definitions = _definitionDatabase.GetAllDefinitions();
 
         _states.Clear();
         _stateMap.Clear();
@@ -167,12 +165,12 @@ public class AchievementManager : MonoBehaviour
 
         definition = null;
 
-        if (_definitionRepository == null)
+        if (_definitionDatabase == null)
         {
             return false;
         }
 
-        return _definitionRepository.TryGetDefinition(achievementId, out definition);
+        return _definitionDatabase.TryGetDefinition(achievementId, out definition);
     }
 
     public bool TryGetState(string achievementId, out AchievementState state)
@@ -184,12 +182,12 @@ public class AchievementManager : MonoBehaviour
     {
         EnsureRepositories();
 
-        if (_definitionRepository == null)
+        if (_definitionDatabase == null)
         {
             return Array.Empty<AchievementDefinition>();
         }
 
-        IReadOnlyList<AchievementDefinition> definitions = _definitionRepository.GetAllDefinitions();
+        IReadOnlyList<AchievementDefinition> definitions = _definitionDatabase.GetAllDefinitions();
         return definitions ?? Array.Empty<AchievementDefinition>();
     }
 
@@ -225,7 +223,7 @@ public class AchievementManager : MonoBehaviour
             return;
         }
 
-        if (_definitionRepository.TryGetDefinition(achievementId, out AchievementDefinition definition) == false)
+        if (_definitionDatabase.TryGetDefinition(achievementId, out AchievementDefinition definition) == false)
         {
             return;
         }
@@ -276,7 +274,7 @@ public class AchievementManager : MonoBehaviour
             return;
         }
 
-        if (_definitionRepository.TryGetDefinition(achievementId, out AchievementDefinition definition) == false)
+        if (_definitionDatabase.TryGetDefinition(achievementId, out AchievementDefinition definition) == false)
         {
             Debug.LogWarning($"[AchievementManager] Invalid achievement id :: {achievementId}");
             return;
@@ -330,7 +328,7 @@ public class AchievementManager : MonoBehaviour
             return;
         }
 
-        if (_definitionRepository.TryGetDefinition(achievementId, out AchievementDefinition definition) == false)
+        if (_definitionDatabase.TryGetDefinition(achievementId, out AchievementDefinition definition) == false)
         {
             Debug.LogWarning($"[AchievementManager] Invalid achievement id :: {achievementId}");
             return;
@@ -363,7 +361,7 @@ public class AchievementManager : MonoBehaviour
             return;
         }
 
-        IReadOnlyList<AchievementDefinition> definitions = _definitionRepository.GetAllDefinitions();
+        IReadOnlyList<AchievementDefinition> definitions = _definitionDatabase.GetAllDefinitions();
 
         for (int index = 0; index < definitions.Count; index++)
         {

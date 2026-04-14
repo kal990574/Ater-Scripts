@@ -71,7 +71,7 @@ public class StatisticsManager : MonoBehaviour
             return;
         }
 
-        _repository = new StatisticsRepository();
+        _repository = new StatisticsPlayerPrefsRepository();
         _persistent = _repository.Load();
 
         if (_currentRun == null)
@@ -352,7 +352,7 @@ public class StatisticsManager : MonoBehaviour
     {
         if (_repository == null)
         {
-            _repository = new StatisticsRepository();
+            _repository = new StatisticsPlayerPrefsRepository();
         }
 
         _persistent = _repository.Load();

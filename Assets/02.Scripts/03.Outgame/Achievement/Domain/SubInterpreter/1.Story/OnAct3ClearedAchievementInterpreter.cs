@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+//아직 사용안함
 public class OnAct3ClearedAchievementInterpreter : AchievementSubInterpreterBase
 {
     public OnAct3ClearedAchievementInterpreter(Object source)

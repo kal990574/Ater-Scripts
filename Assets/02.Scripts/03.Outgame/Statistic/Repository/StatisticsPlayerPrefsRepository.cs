@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class StatisticsRepository : IStatisticsRepository
+public class StatisticsPlayerPrefsRepository : IStatisticsRepository
 {
     private const string SaveKey = "Statistics.Persistent";
 

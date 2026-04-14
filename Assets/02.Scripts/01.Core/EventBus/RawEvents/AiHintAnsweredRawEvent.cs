@@ -1,5 +1,4 @@
-﻿// AiHintAnsweredRawEvent.cs
-public readonly struct AiHintAnsweredRawEvent : IGameEvent
+﻿public readonly struct AiHintAnsweredRawEvent : IGameEvent
 {
     public GameEventContext Context { get; }
 
