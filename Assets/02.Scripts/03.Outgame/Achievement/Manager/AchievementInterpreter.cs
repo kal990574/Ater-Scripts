@@ -30,17 +30,9 @@ public class AchievementInterpreter : MonoBehaviour
     {
         _interpreters.Clear();
 
-        _interpreters.Add(new OnPrologueClearedAchievementInterpreter(this));
-        _interpreters.Add(new OnAct1ClearedAchievementInterpreter(this));
-        _interpreters.Add(new OnAct2ClearedAchievementInterpreter(this));
-        _interpreters.Add(new OnEndingReachedAchievementInterpreter(this));
-
-        _interpreters.Add(new OnFirstSignalAchievementInterpreter(this));
-        _interpreters.Add(new OnRestorationExpertAchievementInterpreter(this));
-        _interpreters.Add(new OnChatterboxAchievementInterpreter(this));
-        _interpreters.Add(new OnAdaptedToDarknessAchievementInterpreter(this));
-        _interpreters.Add(new OnNoAiClearAchievementInterpreter(this));
-        _interpreters.Add(new OnAllLogsCollectedAchievementInterpreter(this));
-        _interpreters.Add(new OnFirstLogAchievementInterpreter(this));
+        _interpreters.Add(new StoryProgressAchievementInterpreter(this));
+        _interpreters.Add(new CollectAchievementInterpreter(this));
+        _interpreters.Add(new MechanicAchievementInterpreter(this));
+        _interpreters.Add(new ChallengeAchievementInterpreter(this));
     }
 }

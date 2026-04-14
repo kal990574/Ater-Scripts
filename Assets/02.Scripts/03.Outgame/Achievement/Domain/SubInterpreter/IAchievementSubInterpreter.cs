@@ -1,5 +1,4 @@
-﻿// IAchievementSubInterpreter.cs
-public interface IAchievementSubInterpreter
+﻿public interface IAchievementSubInterpreter
 {
     void Enable();
     void Disable();
