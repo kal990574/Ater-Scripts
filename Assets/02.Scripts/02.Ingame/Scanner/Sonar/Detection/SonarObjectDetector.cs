@@ -34,6 +34,7 @@ public class SonarObjectDetector : MonoBehaviour
 
         float cosHalfAngle = Mathf.Cos(e.ScanAngle * 0.5f * Mathf.Deg2Rad);
         Vector3 dirNormalized = e.Direction.normalized;
+        float expandDuration = e.ScanRadius / e.ExpandSpeed;
 
         _processedThisFrame.Clear();
 
@@ -53,8 +54,31 @@ public class SonarObjectDetector : MonoBehaviour
                 if (dot < cosHalfAngle) continue;
             }
 
-            float delay = distance / e.ExpandSpeed;
+            float delay = GetDelayFromCurve(e.ExpandCurve, distance, e.ScanRadius, expandDuration);
             detectable.NotifyWaveReached(delay);
         }
+    }
+
+    private static float GetDelayFromCurve(AnimationCurve curve, float distance, float maxRadius, float expandDuration)
+    {
+        if (curve == null)
+        {
+            return distance / maxRadius * expandDuration;
+        }
+
+        float normalizedDist = distance / maxRadius;
+        float lo = 0f;
+        float hi = 1f;
+
+        for (int i = 0; i < 16; i++)
+        {
+            float mid = (lo + hi) * 0.5f;
+            if (curve.Evaluate(mid) < normalizedDist)
+                lo = mid;
+            else
+                hi = mid;
+        }
+
+        return (lo + hi) * 0.5f * expandDuration;
     }
 }

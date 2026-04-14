@@ -8,6 +8,7 @@ public readonly struct SonarScanStartedRawEvent : IGameEvent
     public float ExpandSpeed { get; }
     public float ScanRadius { get; }
     public float ScanAngle { get; }
+    public AnimationCurve ExpandCurve { get; }
 
     public SonarScanStartedRawEvent(
         GameEventContext context,
@@ -15,7 +16,8 @@ public readonly struct SonarScanStartedRawEvent : IGameEvent
         Vector3 direction,
         float expandSpeed,
         float scanRadius,
-        float scanAngle)
+        float scanAngle,
+        AnimationCurve expandCurve)
     {
         Context = context;
         Origin = origin;
@@ -23,6 +25,7 @@ public readonly struct SonarScanStartedRawEvent : IGameEvent
         ExpandSpeed = expandSpeed;
         ScanRadius = scanRadius;
         ScanAngle = scanAngle;
+        ExpandCurve = expandCurve;
     }
 }
 

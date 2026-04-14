@@ -103,7 +103,8 @@ namespace _02.Scripts.Sonar
                     _cameraTarget.forward,
                     _config.ExpandSpeed,
                     _config.ScanRadius,
-                    _config.ScanAngle));
+                    _config.ScanAngle,
+                    _config.ExpandCurve));
         }
     }
 }
