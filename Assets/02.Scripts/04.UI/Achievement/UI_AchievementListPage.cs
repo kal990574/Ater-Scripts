@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 
@@ -84,6 +86,7 @@ public class UI_AchievementListPage : MonoBehaviour
                 definition.Id,
                 string.Empty,
                 string.Empty,
+                "미달성",
                 state.IsUnlocked,
                 false,
                 state.CurrentValue,
@@ -97,11 +100,27 @@ public class UI_AchievementListPage : MonoBehaviour
             definition.Id,
             displayTitle,
             definition.Description,
+            GetUnlockStatusText(state),
             state.IsUnlocked,
             true,
             state.CurrentValue,
             definition.TargetValue,
             definition.Category);
+    }
+
+    private static string GetUnlockStatusText(AchievementState state)
+    {
+        if (state == null || state.IsUnlocked == false || state.UnlockedAtUnixSeconds <= 0)
+        {
+            return "미달성";
+        }
+
+        string formattedTime = DateTimeOffset
+            .FromUnixTimeSeconds(state.UnlockedAtUnixSeconds)
+            .ToLocalTime()
+            .ToString("MMMMd,yyyy 'at' h:mm tt", CultureInfo.InvariantCulture);
+
+        return $"달성시간 : {formattedTime}";
     }
 
     private void ClearCards()
