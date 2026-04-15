@@ -1,32 +1,32 @@
-using Michsky.UI.Dark;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SettingsPanel : MonoBehaviour
 {
     [Header("Audio Sliders")]
-    [SerializeField] private SliderManager _masterVolumeSlider;
-    [SerializeField] private SliderManager _musicVolumeSlider;
-    [SerializeField] private SliderManager _sfxVolumeSlider;
+    [SerializeField] private Slider _masterVolumeSlider;
+    [SerializeField] private Slider _musicVolumeSlider;
+    [SerializeField] private Slider _sfxVolumeSlider;
 
     private void Awake()
     {
-        _masterVolumeSlider.mainSlider.onValueChanged.AddListener(OnMasterVolumeChanged);
-        _musicVolumeSlider.mainSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
-        _sfxVolumeSlider.mainSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
+        _masterVolumeSlider.onValueChanged.AddListener(OnMasterVolumeChanged);
+        _musicVolumeSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
+        _sfxVolumeSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
     }
 
     private void Start()
     {
-        OnMasterVolumeChanged(_masterVolumeSlider.mainSlider.value);
-        OnMusicVolumeChanged(_musicVolumeSlider.mainSlider.value);
-        OnSFXVolumeChanged(_sfxVolumeSlider.mainSlider.value);
+        OnMasterVolumeChanged(_masterVolumeSlider.value);
+        OnMusicVolumeChanged(_musicVolumeSlider.value);
+        OnSFXVolumeChanged(_sfxVolumeSlider.value);
     }
 
     private void OnDestroy()
     {
-        _masterVolumeSlider.mainSlider.onValueChanged.RemoveListener(OnMasterVolumeChanged);
-        _musicVolumeSlider.mainSlider.onValueChanged.RemoveListener(OnMusicVolumeChanged);
-        _sfxVolumeSlider.mainSlider.onValueChanged.RemoveListener(OnSFXVolumeChanged);
+        _masterVolumeSlider.onValueChanged.RemoveListener(OnMasterVolumeChanged);
+        _musicVolumeSlider.onValueChanged.RemoveListener(OnMusicVolumeChanged);
+        _sfxVolumeSlider.onValueChanged.RemoveListener(OnSFXVolumeChanged);
     }
 
     private void OnMasterVolumeChanged(float value)
