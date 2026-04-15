@@ -5,17 +5,31 @@ using UnityEngine.Events;
 [DisallowMultipleComponent]
 public class PuzzleInteractable : StateInteractable
 {
+    [TabGroup("Inspector", "PuzzleInteractable")]
+    [Required]
     [SerializeField] private PuzzleControllerBase PuzzleBase;
 
-    [Header("State Keys")]
+    [TabGroup("Inspector", "PuzzleInteractable")]
+    [LabelText("Unlock")]
     [SerializeField] private string _unlockStateKey = "is_unlocked";
+
+    [TabGroup("Inspector", "PuzzleInteractable")]
+    [LabelText("Completed")]
     [SerializeField] private string _completedStateKey = "is_completed";
+
+    [TabGroup("Inspector", "PuzzleInteractable")]
+    [ToggleLeft]
+    [LabelText("Require Unlock")]
     [SerializeField] private bool _haveToUnlock = false;
-    [Header("Events")]
+
+    [TabGroup("Inspector", "PuzzleInteractable")]
+    [LabelText("On Puzzle Started")]
     [SerializeField] private UnityEvent _onPuzzleStarted;
+
+    [TabGroup("Inspector", "PuzzleInteractable")]
+    [LabelText("On Completed")]
     [SerializeField] private UnityEvent _onCompleted;
 
-    
     protected override void OnAwake()
     {
         base.OnAwake();

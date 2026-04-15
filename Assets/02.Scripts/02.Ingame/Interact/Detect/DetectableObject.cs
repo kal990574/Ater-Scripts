@@ -1,16 +1,22 @@
 using System;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
 public class DetectableObject : MonoBehaviour , IDetectable
 {
+    [TabGroup("Inspector", "DetectableObject")]
+    [ToggleLeft]
     [SerializeField] protected bool _isDetectable = true;
     protected bool _isOnDetected = false;
 
     public Transform Transform => transform;
     public virtual bool CanDetect => _isDetectable;
 
+    [TabGroup("Inspector", "DetectableObject")]
+    [LabelText("Hover Description")]
+    [MultiLineProperty]
     [SerializeField] private string _hoverDescription;
     public virtual string HoverDescription =>  _hoverDescription;
 
@@ -18,8 +24,12 @@ public class DetectableObject : MonoBehaviour , IDetectable
 
     public event Action<bool> OnDetected;
 
-    [Header("Detected Event")]
+    [TabGroup("Inspector", "DetectableObject")]
+    [LabelText("On Detect Enter")]
     public UnityEvent DetectOnEvent;
+
+    [TabGroup("Inspector", "DetectableObject")]
+    [LabelText("On Detect Exit")]
     public UnityEvent DetectOffEvent;
 
     [ContextMenu("hover")]

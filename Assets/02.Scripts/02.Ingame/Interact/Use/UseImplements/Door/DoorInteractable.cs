@@ -1,23 +1,36 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
 public class DoorInteractable : StateInteractable
 {
+    [TabGroup("Inspector", "DoorInteractable")]
     [SerializeField] private Animator _doorAnimator;
 
-    [Header("Animation")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Open State Name")]
     [SerializeField] private string _openAnimationStateName = "OpenDoor";
 
-    [Header("State Keys")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Unlock")]
     [SerializeField] private string _unlockStateKey = "is_unlocked";
+
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Open")]
     [SerializeField] private string _openStateKey = "is_open";
 
-    [Header("Hover Description")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Unlocked Description")]
+    [MultiLineProperty]
     [SerializeField] private string _hoverDescriptionUnlocked = "";
 
-    [Header("Events")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("On Unlocked")]
     [SerializeField] private UnityEvent _onUnlocked;
+
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("On Opened")]
     [SerializeField] private UnityEvent _onOpened;
 
     public bool IsUnlocked => GetState(_unlockStateKey);

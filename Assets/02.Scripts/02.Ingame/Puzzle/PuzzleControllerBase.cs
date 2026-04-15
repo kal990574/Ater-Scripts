@@ -1,11 +1,12 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 public abstract class PuzzleControllerBase : MonoBehaviour, IPuzzleInputHandler
 {
     [Header("Instance Transform")]
-    [SerializeField] private PlayerController _playerController;
+    [SerializeField, SceneObjectsOnly] private PlayerController _playerController;
+    [SerializeField,SceneObjectsOnly] protected Camera _puzzleCamera;
     
-    [SerializeField] protected Camera _puzzleCamera;
     [SerializeField] protected Vector3 _localSpawnPosition = new(0f, 0f, 0.5f);
     [SerializeField] protected Vector3 _localSpawnEulerAngles = Vector3.zero;
 

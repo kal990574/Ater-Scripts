@@ -1,16 +1,21 @@
-﻿using Sirenix.OdinInspector;
+﻿﻿using Sirenix.OdinInspector;
 using UnityEngine;
 
 [DisallowMultipleComponent]
 public class ButtonDoorInteractable : DoorInteractable
 {
-    [Header("Button Door Settings")]
+    [TabGroup("Inspector", "ButtonDoorInteractable")]
+    [MinValue(1)]
+    [LabelText("Required Press Count")]
     [SerializeField] private int _requiredPressCount = 1;
 
-    [Header("Runtime")]
+    [TabGroup("Inspector", "ButtonDoorInteractable")]
+    [ReadOnly]
+    [LabelText("Current Press Count")]
     [SerializeField] private int _currentPressCount;
 
-    [Button]
+    [TabGroup("Inspector", "ButtonDoorInteractable")]
+    [Button(ButtonSizes.Medium)]
     public void NotifyButtonPressed()
     {
         if (IsOpen)

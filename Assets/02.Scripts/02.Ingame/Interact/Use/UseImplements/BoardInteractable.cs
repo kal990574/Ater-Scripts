@@ -1,19 +1,23 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
 public class BoardInteractable : StateInteractable
 {
-    [Header("References")]
+    [TabGroup("Inspector", "BoardInteractable")]
     [SerializeField] private Animator _animator;
 
-    [Header("Animation")]
+    [TabGroup("Inspector", "BoardInteractable")]
+    [LabelText("Open State Name")]
     [SerializeField] private string _openAnimationStateName = "BoardOpen";
 
-    [Header("State Keys")]
+    [TabGroup("Inspector", "BoardInteractable")]
+    [LabelText("Open")]
     [SerializeField] private string _openStateKey = "is_open";
 
-    [Header("Events")]
+    [TabGroup("Inspector", "BoardInteractable")]
+    [LabelText("On Opened")]
     [SerializeField] private UnityEvent _onOpened;
 
     protected override void OnAwake()
