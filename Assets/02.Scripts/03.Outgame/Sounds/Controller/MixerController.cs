@@ -5,9 +5,9 @@ public class MixerController : MonoBehaviour
 {
     [SerializeField] private AudioMixer _mixer;
 
-    private const string ParamMaster = "MasterVolume";
-    private const string ParamBGM = "BGMVolume";
-    private const string ParamSFX = "SFXVolume";
+    private const string ParamMaster = "Master";
+    private const string ParamBGM = "Music";
+    private const string ParamSFX = "SFX";
 
     private const float MinVolumeForLog = 0.0001f;
     private const float DecibelMultiplier = 20f;
