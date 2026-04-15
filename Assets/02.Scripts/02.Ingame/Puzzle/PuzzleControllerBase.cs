@@ -4,8 +4,10 @@ using UnityEngine;
 public abstract class PuzzleControllerBase : MonoBehaviour, IPuzzleInputHandler
 {
     [Header("Instance Transform")]
-    [SerializeField, SceneObjectsOnly] private PlayerController _playerController;
-    [SerializeField,SceneObjectsOnly] protected Camera _puzzleCamera;
+    [SerializeField, SceneObjectsOnly, Required] 
+    private PlayerController _playerController;
+    [SerializeField,SceneObjectsOnly, Required] 
+    protected Camera _puzzleCamera;
     
     [SerializeField] protected Vector3 _localSpawnPosition = new(0f, 0f, 0.5f);
     [SerializeField] protected Vector3 _localSpawnEulerAngles = Vector3.zero;
@@ -22,7 +24,7 @@ public abstract class PuzzleControllerBase : MonoBehaviour, IPuzzleInputHandler
 
     private bool _isSolved;
     public bool IsSolved => _isSolved;
-    public Camera PuzzleCamera =>  _puzzleCamera;
+    public Camera PuzzleCamera =>  _puzzleCamera != null ? _puzzleCamera : Camera.main;
     public bool HasActivePuzzle => ActivePuzzleInstance != null;
 
     protected virtual void Awake()

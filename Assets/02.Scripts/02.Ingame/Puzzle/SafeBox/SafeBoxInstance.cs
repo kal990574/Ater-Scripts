@@ -279,7 +279,7 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
 
     public Camera GetCamera()
     {
-        if (_controller != null || _controller.PuzzleCamera != null)
+        if (_controller != null)
         {
             return _controller.PuzzleCamera;
         }
