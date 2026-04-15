@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 using UnityEngine.Events;
@@ -5,11 +6,24 @@ using UnityEngine.Events;
 [DisallowMultipleComponent]
 public abstract class Interactable : DetectableObject, IRuntimeInteractObject, IRuntimeDataConsumer
 {
+    public enum EAfterInteract
+    {
+        None,
+        Deactive,
+        Disable,
+        Destroy
+    }
+    
+    [TabGroup("Inspector", "Interactable")]
     [SerializeField] protected bool _isInteractActive;
+    
     private IRuntimeView _instance;
     protected ScannableObject _scannableObject;
     private GameEventPublisher _eventPublisher;
 
+    [TabGroup("Inspector", "Interactable")]
+    [LabelText("Hover Description Before Scan")]
+    [MultiLineProperty]
     [SerializeField] private string _hoverDescriptionBeforeScan = "";
 
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
@@ -30,8 +44,12 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
 
     public event Action OnInteract;
 
-    [Header("Scene Event")]
+    [TabGroup("Inspector", "Interactable")]
+    [LabelText("On Interaction Success")]
     [SerializeField] protected UnityEvent _onInteractionSuccess;
+
+    [TabGroup("Inspector", "Interactable")]
+    [LabelText("On Interaction Failed")]
     [SerializeField] protected UnityEvent _onInteractionFailed;
     private void Awake()
     {
@@ -55,6 +73,8 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     }
 
 
+    [TabGroup("Inspector", "Interactable")]
+    [Button(ButtonSizes.Medium)]
     public abstract void Interact(InteractionContext context);
 
     protected virtual void OnAwake()
@@ -68,11 +88,6 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     private void SetActivate()
     {
         SetActivate(true);
-    }
-
-    public void SetDetectable(bool isDetectable)
-    {
-        _isDetectable = isDetectable;
     }
 
     public void SetActivate(bool active)
