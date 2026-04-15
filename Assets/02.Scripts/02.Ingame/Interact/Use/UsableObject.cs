@@ -15,7 +15,7 @@ public class UsableObject : Interactable
 
 
     [Button]
-    public void UnlockForce()
+    public virtual void UnlockForce()
     {
         Unlock();
     }

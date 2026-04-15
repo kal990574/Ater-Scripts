@@ -3,41 +3,42 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class KeyPadInteractable : StateInteractable
+public class PuzzleInteractable : StateInteractable
 {
-    [SerializeField] private KeyPadController keyPadController;
+    [SerializeField] private PuzzleControllerBase PuzzleBase;
 
     [Header("State Keys")]
     [SerializeField] private string _unlockStateKey = "is_unlocked";
     [SerializeField] private string _completedStateKey = "is_completed";
-
+    [SerializeField] private bool _haveToUnlock = false;
     [Header("Events")]
     [SerializeField] private UnityEvent _onPuzzleStarted;
     [SerializeField] private UnityEvent _onCompleted;
 
+    
     protected override void OnAwake()
     {
         base.OnAwake();
-        GetComponentCached(ref keyPadController);
+        GetComponentCached(ref PuzzleBase);
     }
-    
+
     public override bool Unlock()
     {
         if (!ValidateConfiguration(out string failureReason))
         {
-            Debug.LogError($"[{nameof(KeyPadInteractable)}] {gameObject.name} unlock failed. reason={failureReason}", this);
+            Debug.LogError($"[{nameof(PuzzleInteractable)}] {gameObject.name} unlock failed. reason={failureReason}", this);
             return false;
         }
 
         if (GetState(_unlockStateKey))
         {
-            Debug.LogWarning($"[{nameof(KeyPadInteractable)}] {gameObject.name} unlock was requested, but it is already unlocked.", this);
+            Debug.LogWarning($"[{nameof(PuzzleInteractable)}] {gameObject.name} unlock was requested, but it is already unlocked.", this);
             return false;
         }
 
         SetState(_unlockStateKey, true);
         SetActivate(true);
-        Debug.Log($"[{nameof(KeyPadInteractable)}] {gameObject.name} unlocked and can now start the keypad puzzle.", this);
+        Debug.Log($"[{nameof(PuzzleInteractable)}] {gameObject.name} unlocked and can now start the puzzle.", this);
         return true;
     }
 
@@ -56,31 +57,31 @@ public class KeyPadInteractable : StateInteractable
             return false;
         }
 
-        if (!GetState(_unlockStateKey))
+        if (_haveToUnlock && !GetState(_unlockStateKey))
         {
             SetFailureResult(EUseInteractResult.Locked);
-            failureReason = "The keypad is locked because the fuse box is not completed.";
+            failureReason = "The Puzzle Is not Unlocked";
             return false;
         }
 
         if (GetState(_completedStateKey))
         {
             SetFailureResult(EUseInteractResult.AlreadyCompleted);
-            failureReason = "The keypad puzzle is already completed.";
+            failureReason = "The puzzle is already completed.";
             return false;
         }
 
-        if (keyPadController.IsSolved)
+        if (PuzzleBase.IsSolved)
         {
             SetFailureResult(EUseInteractResult.AlreadyCompleted);
-            failureReason = "The keypad controller is already solved.";
+            failureReason = "The controller is already solved.";
             return false;
         }
 
-        if (keyPadController.HasActivePuzzle)
+        if (PuzzleBase.HasActivePuzzle)
         {
             SetFailureResult(EUseInteractResult.PuzzleAlreadyRunning);
-            failureReason = "The keypad puzzle is already running.";
+            failureReason = "The puzzle is already running.";
             return false;
         }
 
@@ -90,8 +91,8 @@ public class KeyPadInteractable : StateInteractable
 
     protected override bool OnUse(InteractionContext context, out string failureReason)
     {
-        keyPadController.TryOpen(this);
-        Debug.Log($"[{nameof(KeyPadInteractable)}] {gameObject.name} started the keypad puzzle.", this);
+        PuzzleBase.TryOpen(this);
+        Debug.Log($"[{nameof(PuzzleInteractable)}] {gameObject.name} started the puzzle.", this);
         _onPuzzleStarted?.Invoke();
         failureReason = string.Empty;
         SetFailureResult(EUseInteractResult.Success);
@@ -105,9 +106,9 @@ public class KeyPadInteractable : StateInteractable
 
     private bool ValidateConfiguration(out string failureReason)
     {
-        if (keyPadController == null)
+        if (PuzzleBase == null)
         {
-            failureReason = "KeyPadController reference is missing.";
+            failureReason = "Puzzle Controller reference is missing.";
             return false;
         }
 

@@ -17,6 +17,7 @@ public abstract class StateInteractable : UsableObject
         }
     }
 
+
     protected bool HasRuntimeState()
     {
         return ResolveRuntimeData()?.State != null;

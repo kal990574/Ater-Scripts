@@ -1,5 +1,6 @@
 ﻿public enum EPuzzleType
 {
     KeyPad,
-    PadLock
+    PadLock,
+    SafeBox
 }

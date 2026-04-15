@@ -41,7 +41,7 @@ public class PadLockInteractable : UsableObject
 
     protected override bool OnUse(InteractionContext context, out string failureReason)
     {
-        padLockController.TryOpen();
+        padLockController.TryOpen(null);
         Debug.Log($"[{nameof(PadLockInteractable)}] {gameObject.name} started the padlock puzzle.", this);
         failureReason = string.Empty;
         SetFailureResult(EUseInteractResult.Success);
