@@ -16,7 +16,7 @@ public class KeyPadController : PuzzleControllerBase
     [SerializeField] private UnityEvent _failEvent;
 
     private KeyPadPuzzleInstance _activeInstance;
-    private PuzzleInteractable _activeInteractable;
+    
 
     protected override EPuzzleType PuzzleType => EPuzzleType.KeyPad;
     protected override IPuzzleIntance ActivePuzzleInstance => _activeInstance;

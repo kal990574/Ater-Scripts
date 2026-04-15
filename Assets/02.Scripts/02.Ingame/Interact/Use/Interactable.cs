@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System;
 using UnityEngine;
 using UnityEngine.Events;
@@ -55,6 +56,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     }
 
 
+    [Button]
     public abstract void Interact(InteractionContext context);
 
     protected virtual void OnAwake()
@@ -68,11 +70,6 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     private void SetActivate()
     {
         SetActivate(true);
-    }
-
-    public void SetDetectable(bool isDetectable)
-    {
-        _isDetectable = isDetectable;
     }
 
     public void SetActivate(bool active)

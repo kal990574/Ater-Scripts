@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class KeyDoorInteractable : LockedDoorInteractable
+public class KeyDoorInteractable : DoorInteractable
 {
     [Header("Key Settings")]
     [SerializeField] private int _requiredKeyItemId = -1;

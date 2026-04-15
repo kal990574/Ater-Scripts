@@ -14,7 +14,8 @@ public abstract class PuzzleControllerBase : MonoBehaviour, IPuzzleInputHandler
     [SerializeField] private GameObject _lockVisualToDisable;
 
     private GameEventPublisher _eventPublisher;
-
+    protected PuzzleInteractable _activeInteractable;
+    
     protected abstract EPuzzleType PuzzleType { get; }
     protected abstract IPuzzleIntance ActivePuzzleInstance { get; }
 

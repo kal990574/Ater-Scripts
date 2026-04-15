@@ -43,7 +43,7 @@ public class PadLockController : PuzzleControllerBase
         {
             return;
         }
-
+        _activeInteractable = interactable;
         _activeInstance.Initialize(this, _correctCode);
         EnterPuzzleMode();
     }
@@ -57,6 +57,9 @@ public class PadLockController : PuzzleControllerBase
 
         _successEvent?.Invoke();
         HandlePuzzleSolved();
+        _activeInteractable?.HandlePuzzleSolved();
+        _activeInteractable = null;
+        
         _activeInstance = null;
     }
 
