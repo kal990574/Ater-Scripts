@@ -17,6 +17,8 @@ public class AudioSettingPanel : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (SoundManager.Instance == null) return;
+
         _masterChannel.OnVolumeChanged -= SoundManager.Instance.SetMasterVolume;
         _musicChannel.OnVolumeChanged -= SoundManager.Instance.SetBGMVolume;
         _sfxChannel.OnVolumeChanged -= SoundManager.Instance.SetSFXVolume;
