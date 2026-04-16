@@ -37,7 +37,7 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
     private float _elapsedTime;
     private float _nextTriggerTime;
     private bool _isQteActive;
-    private IScannableQTEHandler _qteHandler;
+    private IScannableQTEHandler _qteHandler => scannableObject != null ? scannableObject.QteHandler : null;
 
     public GameObject Owner => gameObject;
     public bool IsConfigured => scannableObject != null && _qteConfig != null && _settings != null;
@@ -90,7 +90,6 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
     {
         if (_isQteActive == false)
         {
-            ResetTriggerTimer();
             return true;
         }
 
@@ -98,8 +97,7 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
         {
             QTEManager.Instance.ForceFailByOwner(this);
         }
-
-        ResetTriggerTimer();
+        
         return false;
     }
 
@@ -187,8 +185,6 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
         {
             scannableObject = GetComponentInParent<ScannableObject>();
         }
-
-        _qteHandler = scannableObject != null ? scannableObject.QteHandler : null;
     }
 
     private void ResetTriggerTimer()

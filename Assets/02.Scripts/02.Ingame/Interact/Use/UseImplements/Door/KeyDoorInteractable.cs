@@ -58,6 +58,17 @@ public class KeyDoorInteractable : DoorInteractable
         return base.GetSuccessInteractEventType(context);
     }
 
+    protected override void OnUseSucceeded(InteractionContext context)
+    {
+        if (_unlockedDuringCurrentUse)
+        {
+            PublishObjectInteracted(GetSuccessInteractEventType(context));
+            return;
+        }
+
+        base.OnUseSucceeded(context);
+    }
+
     private bool CanUnlock(InteractionContext context, out string failureReason)
     {
         RuntimeItemData handItem = context?.Hand;
