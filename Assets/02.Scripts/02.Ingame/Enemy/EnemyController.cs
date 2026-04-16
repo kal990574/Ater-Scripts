@@ -24,6 +24,15 @@ namespace _02.Scripts.Enemy
             _action.Execute(this);
         }
 
+        public void ForceDeactivate()
+        {
+            if (_deactivateCoroutine != null)
+                StopCoroutine(_deactivateCoroutine);
+
+            _action.Stop();
+            gameObject.SetActive(false);
+        }
+
         public void RequestDeactivate()
         {
             if (_deactivateCoroutine != null)

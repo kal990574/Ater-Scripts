@@ -35,7 +35,8 @@ namespace _02.Scripts.Enemy
                 _chaseCoroutine = null;
             }
             
-            _agent.isStopped = true;
+            if (_agent.isOnNavMesh)
+                _agent.isStopped = true;
         }
 
         private IEnumerator ChaseCoroutine(float timeout)
