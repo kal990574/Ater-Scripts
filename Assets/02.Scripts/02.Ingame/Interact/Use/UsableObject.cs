@@ -31,40 +31,23 @@ public class UsableObject : Interactable
 
     public override void Interact(InteractionContext context)
     {
-        if (!IsInteractActive)
-        {
-            FailUse(EUseInteractResult.NotActive, "Interaction is not active.", context);
-            return;
-        }
-
         InteractionContext resolvedContext = context ?? InteractionContext.For((PlayerController)null, this);
-        if (!TryCanUse(resolvedContext, out string failureReason))
+        UseInteractionOutcome preconditionOutcome = EvaluatePreconditions(resolvedContext);
+        if (!preconditionOutcome.IsSuccess)
         {
-            FailUse(LastInteractResult, failureReason, resolvedContext);
+            ApplyFailure(preconditionOutcome, resolvedContext);
             return;
         }
 
         LastFailureReason = string.Empty;
-        if (!OnUse(resolvedContext, out string runtimeFailureReason))
+        UseInteractionOutcome useOutcome = ExecuteUse(resolvedContext);
+        if (!useOutcome.IsSuccess)
         {
-            if (LastInteractResult == EUseInteractResult.None || LastInteractResult == EUseInteractResult.Success)
-            {
-                LastInteractResult = EUseInteractResult.InvalidConfiguration;
-            }
-
-            if (string.IsNullOrWhiteSpace(runtimeFailureReason))
-            {
-                runtimeFailureReason = "Use execution failed.";
-            }
-
-            FailUse(LastInteractResult, runtimeFailureReason, resolvedContext);
+            ApplyFailure(useOutcome, resolvedContext);
             return;
         }
 
-        if (LastInteractResult == EUseInteractResult.None)
-        {
-            LastInteractResult = EUseInteractResult.Success;
-        }
+        LastInteractResult = useOutcome.Result;
         OnInteractActivate();
         OnUseSucceeded(resolvedContext);
     }
@@ -110,26 +93,43 @@ public class UsableObject : Interactable
         return EInteractObjectEventType.Default;
     }
 
-    private bool TryCanUse(InteractionContext context, out string failureReason)
+    private UseInteractionOutcome EvaluatePreconditions(InteractionContext context)
     {
-        if (!CanUse(context, out failureReason))
+        if (!IsInteractActive)
         {
-            if (LastInteractResult == EUseInteractResult.None)
-            {
-                LastInteractResult = EUseInteractResult.InvalidConfiguration;
-            }
-
-            if (string.IsNullOrWhiteSpace(failureReason))
-            {
-                failureReason = "Use requirements are not satisfied.";
-            }
-
-            return false;
+            return UseInteractionOutcome.Fail(EUseInteractResult.NotActive, "Interaction is not active.");
         }
 
-        LastInteractResult = EUseInteractResult.None;
-        failureReason = string.Empty;
-        return true;
+        if (CanUse(context, out string failureReason))
+        {
+            LastInteractResult = EUseInteractResult.None;
+            return UseInteractionOutcome.Success();
+        }
+
+        EUseInteractResult result = ResolveFailureResult(EUseInteractResult.InvalidConfiguration);
+        if (string.IsNullOrWhiteSpace(failureReason))
+        {
+            failureReason = "Use requirements are not satisfied.";
+        }
+
+        return UseInteractionOutcome.Fail(result, failureReason);
+    }
+
+    private UseInteractionOutcome ExecuteUse(InteractionContext context)
+    {
+        if (OnUse(context, out string failureReason))
+        {
+            EUseInteractResult result = ResolveFailureResult(EUseInteractResult.Success);
+            return new UseInteractionOutcome(result, string.Empty);
+        }
+
+        EUseInteractResult failureResult = ResolveFailureResult(EUseInteractResult.InvalidConfiguration);
+        if (string.IsNullOrWhiteSpace(failureReason))
+        {
+            failureReason = "Use execution failed.";
+        }
+
+        return UseInteractionOutcome.Fail(failureResult, failureReason);
     }
 
     protected void SetFailureResult(EUseInteractResult result)
@@ -137,15 +137,23 @@ public class UsableObject : Interactable
         LastInteractResult = result;
     }
 
-    private void FailUse(EUseInteractResult result, string failureReason, InteractionContext context)
+    private EUseInteractResult ResolveFailureResult(EUseInteractResult defaultResult)
     {
-        LastInteractResult = result;
-        LastFailureReason = failureReason ?? string.Empty;
+        if (LastInteractResult == EUseInteractResult.None)
+        {
+            LastInteractResult = defaultResult;
+        }
+
+        return LastInteractResult;
+    }
+
+    private void ApplyFailure(UseInteractionOutcome outcome, InteractionContext context)
+    {
+        LastInteractResult = outcome.Result;
+        LastFailureReason = outcome.Reason ?? string.Empty;
         Debug.LogWarning($"[{GetType().Name}] {gameObject.name} interaction failed. result={LastInteractResult}, reason={LastFailureReason}", this);
         OnUseFailed(context, LastFailureReason);
-
-        if (_failMessage != null && _failMessage.TryGetMessage(_failureMessageIndex, out string message))
-            GameEventHub.Instance.Publish(new InteractionFailedRawEvent(default, message));
+        InteractionFailureNotifier.Notify(_failMessage, _failureMessageIndex);
     }
 }
 

@@ -33,6 +33,9 @@ public class DoorInteractable : StateInteractable
     [LabelText("On Opened")]
     [SerializeField] private UnityEvent _onOpened;
 
+    private DoorInteractableConfig Config => new(_unlockStateKey, _openStateKey, _openAnimationStateName);
+    private DoorInteractableStateSnapshot CurrentState => new(IsUnlocked, IsOpen);
+
     public bool IsUnlocked => GetState(_unlockStateKey);
     public bool IsOpen => GetState(_openStateKey);
 
@@ -67,17 +70,11 @@ public class DoorInteractable : StateInteractable
             return false;
         }
 
-        if (IsOpen)
+        UseInteractionOutcome outcome = DoorInteractableStatePolicy.EvaluateOpen(CurrentState);
+        if (!outcome.IsSuccess)
         {
-            SetFailureResult(EUseInteractResult.AlreadyOpen);
-            failureReason = "The door is already open.";
-            return false;
-        }
-
-        if (!IsUnlocked)
-        {
-            SetFailureResult(EUseInteractResult.Locked);
-            failureReason = "The door is locked.";
+            SetFailureResult(outcome.Result);
+            failureReason = outcome.Reason;
             return false;
         }
 
@@ -106,17 +103,17 @@ public class DoorInteractable : StateInteractable
             return false;
         }
 
-        if (IsUnlocked)
+        if (!DoorInteractableStatePolicy.CanUnlock(CurrentState, out failureReason))
         {
-            Debug.LogWarning($"[{nameof(DoorInteractable)}] {gameObject.name} unlock was requested, but it is already unlocked.", this);
+            Debug.LogWarning($"[{nameof(DoorInteractable)}] {gameObject.name} unlock was requested, but it was rejected. reason={failureReason}", this);
             return false;
         }
 
-        SetState(_unlockStateKey, true);
+        ApplyUnlockState();
         RefreshInteractAvailability();
         Debug.Log($"[{nameof(DoorInteractable)}] {gameObject.name} unlocked.", this);
 
-        _onUnlocked?.Invoke();
+        PlayUnlockPresentation();
         return true;
     }
 
@@ -136,8 +133,28 @@ public class DoorInteractable : StateInteractable
 
     protected virtual void OpenDoor()
     {
-        SetState(_openStateKey, true);
+        ApplyOpenState();
+        PlayOpenPresentation();
+    }
 
+    protected virtual void ApplyUnlockState()
+    {
+        SetState(_unlockStateKey, true);
+    }
+
+    protected virtual void ApplyOpenState()
+    {
+        SetState(_openStateKey, true);
+        SetActivate(false);
+    }
+
+    protected virtual void PlayUnlockPresentation()
+    {
+        _onUnlocked?.Invoke();
+    }
+
+    protected virtual void PlayOpenPresentation()
+    {
         if (_doorAnimator != null && !string.IsNullOrWhiteSpace(_openAnimationStateName))
         {
             _doorAnimator.Play(_openAnimationStateName);
@@ -149,7 +166,6 @@ public class DoorInteractable : StateInteractable
         
         Debug.Log($"[{nameof(DoorInteractable)}] {gameObject.name} opened successfully. animationState={_openAnimationStateName}", this);
         _onOpened?.Invoke();
-        SetActivate(false);
     }
 
     protected override EInteractObjectEventType GetSuccessInteractEventType(InteractionContext context)
@@ -159,23 +175,6 @@ public class DoorInteractable : StateInteractable
 
     protected virtual bool ValidateConfiguration(out string failureReason)
     {
-        if (!ValidateStateKey(_unlockStateKey, "Unlock state key", out failureReason))
-        {
-            return false;
-        }
-
-        if (!ValidateStateKey(_openStateKey, "Open state key", out failureReason))
-        {
-            return false;
-        }
-
-        if (!HasRuntimeState())
-        {
-            failureReason = "RuntimeData.State is not available.";
-            return false;
-        }
-
-        failureReason = string.Empty;
-        return true;
+        return DoorInteractableValidator.Validate(Config, HasRuntimeState(), out failureReason);
     }
 }

@@ -21,31 +21,19 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
     [SerializeField] private int _previewDialValue;
 
     private SafeBoxController _controller;
-    private readonly List<int> _correctCode = new();
-    private bool _isSolved;
-    private bool _isResetAnimating;
+    private readonly SafeBoxStateMachine _stateMachine = new();
     private Tween _resetTween;
 
-    public IReadOnlyList<int> CurrentInput => _currentInput;
-    public int TargetInputCount => _correctCode.Count;
-    public bool IsInputFull => _currentInput.Count >= _correctCode.Count;
-    public bool IsBusy => _isSolved || _isResetAnimating;
+    public IReadOnlyList<int> CurrentInput => _stateMachine.CurrentInput;
+    public int TargetInputCount => _stateMachine.TargetInputCount;
+    public bool IsInputFull => _stateMachine.IsInputFull;
+    public bool IsBusy => _stateMachine.IsBusy;
 
     public void Initialize(SafeBoxController controller, IReadOnlyList<int> correctCode)
     {
         _controller = controller;
-
-        _correctCode.Clear();
-        if (correctCode != null)
-        {
-            for (int i = 0; i < correctCode.Count; i++)
-            {
-                _correctCode.Add(Mathf.Clamp(correctCode[i], 0, 15));
-            }
-        }
-
-        _currentInput.Clear();
-        _previewDialValue = 0;
+        _stateMachine.Initialize(correctCode);
+        SyncDebugState();
 
         if (_dial == null)
         {
@@ -59,7 +47,7 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
         }
 
         _dial.Bind(this);
-        _resetButton.Bind(this);
+        _resetButton?.Bind(this);
 
         _dial.ForceResetVisualImmediate();
         RefreshCodeText();
@@ -67,98 +55,61 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
 
     public bool CanAcceptDialCommit()
     {
-        if (_isSolved)
-        {
-            return false;
-        }
-
-        if (_isResetAnimating)
-        {
-            return false;
-        }
-
-        if (_correctCode.Count == 0)
-        {
-            return false;
-        }
-
-        return _currentInput.Count < _correctCode.Count;
+        return _stateMachine.CanAcceptCommit();
     }
 
     public void SetPreviewDialValue(int value)
     {
-        if (_isSolved)
+        if (!_stateMachine.TrySetPreview(value))
         {
             return;
         }
 
-        if (_isResetAnimating)
-        {
-            return;
-        }
-
-        if (_correctCode.Count == 0)
-        {
-            return;
-        }
-
-        if (_currentInput.Count >= _correctCode.Count)
-        {
-            return;
-        }
-
-        _previewDialValue = Mathf.Clamp(value, 0, 15);
-        _controller.OnDialSpin();
+        SyncDebugState();
+        _controller?.OnDialSpin();
         RefreshCodeText();
     }
 
     public void CommitDialValue(int value)
     {
-        if (!CanAcceptDialCommit())
+        if (!_stateMachine.TryCommit(value))
         {
             return;
         }
 
-        int clampedValue = Mathf.Clamp(value, 0, 15);
-        _currentInput.Add(clampedValue);
-        _previewDialValue = 0;
+        SyncDebugState();
         RefreshCodeText();
     }
 
     public void TryEvaluate()
     {
-        if (_isSolved || _isResetAnimating || _controller == null)
+        if (_controller == null)
         {
             return;
         }
 
-        if (_currentInput.Count != _correctCode.Count)
+        switch (_stateMachine.Evaluate())
         {
-            FailPuzzle();
-            return;
-        }
-
-        for (int i = 0; i < _correctCode.Count; i++)
-        {
-            if (_currentInput[i] != _correctCode[i])
-            {
+            case SafeBoxEvaluationResult.Fail:
                 FailPuzzle();
                 return;
-            }
-        }
 
-        CompletePuzzle();
+            case SafeBoxEvaluationResult.Success:
+                CompletePuzzle();
+                return;
+        }
     }
 
     [ContextMenu("Complete Puzzle")]
     public void CompletePuzzle()
     {
-        if (_isSolved)
+        if (_stateMachine.IsSolved)
         {
             return;
         }
 
-        _isSolved = true;
+        _stateMachine.MarkSolved();
+        SyncDebugState();
         _controller?.HandlePuzzleSuccess(this);
         Destroy(gameObject);
     }
@@ -166,7 +117,7 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
     [ContextMenu("Fail Puzzle")]
     public void FailPuzzle()
     {
-        if (_isSolved)
+        if (_stateMachine.IsSolved)
         {
             return;
         }
@@ -177,7 +128,7 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
 
     public void ResetByButton()
     {
-        if (_isSolved)
+        if (_stateMachine.IsSolved)
         {
             return;
         }
@@ -188,7 +139,7 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
 
     public void Cancel()
     {
-        if (_isSolved)
+        if (_stateMachine.IsSolved)
         {
             return;
         }
@@ -198,8 +149,8 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
 
     private void ResetStateInternal(bool animated)
     {
-        _currentInput.Clear();
-        _previewDialValue = 0;
+        _stateMachine.Reset(animated && _dial != null);
+        SyncDebugState();
         RefreshCodeText();
 
         if (_dial == null)
@@ -208,12 +159,11 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
         }
 
         _resetTween?.Kill();
-        _isResetAnimating = true;
-
         if (!animated)
         {
             _dial.ForceResetVisualImmediate();
-            _isResetAnimating = false;
+            _stateMachine.FinishResetAnimation();
+            SyncDebugState();
             return;
         }
 
@@ -222,9 +172,9 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
 
     private void OnResetAnimationCompleted()
     {
-        _previewDialValue = 0;
+        _stateMachine.FinishResetAnimation();
+        SyncDebugState();
         RefreshCodeText();
-        _isResetAnimating = false;
         _resetTween = null;
     }
 
@@ -235,30 +185,30 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
             return;
         }
 
-        if (_correctCode.Count <= 0)
+        if (TargetInputCount <= 0)
         {
             _codeText.text = string.Empty;
             return;
         }
 
-        System.Text.StringBuilder builder = new System.Text.StringBuilder(_correctCode.Count * 3);
+        System.Text.StringBuilder builder = new System.Text.StringBuilder(TargetInputCount * 3);
 
-        for (int i = 0; i < _correctCode.Count; i++)
+        for (int i = 0; i < TargetInputCount; i++)
         {
-            if (i < _currentInput.Count)
+            if (i < CurrentInput.Count)
             {
-                builder.Append(_currentInput[i]);
+                builder.Append(CurrentInput[i]);
             }
-            else if (i == _currentInput.Count && _currentInput.Count < _correctCode.Count)
+            else if (i == CurrentInput.Count && !IsInputFull)
             {
-                builder.Append(_previewDialValue);
+                builder.Append(_stateMachine.PreviewDialValue);
             }
             else
             {
                 builder.Append('-');
             }
 
-            if (i < _correctCode.Count - 1)
+            if (i < TargetInputCount - 1)
             {
                 builder.Append(' ');
             }
@@ -271,7 +221,7 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
     {
         _resetTween?.Kill();
 
-        if (_controller != null && !_isSolved)
+        if (_controller != null && !_stateMachine.IsSolved)
         {
             _controller.ClearActiveInstance(this);
         }
@@ -285,5 +235,16 @@ public class SafeBoxInstance : MonoBehaviour, IPuzzleIntance
         }
         
         return Camera.main;
+    }
+
+    private void SyncDebugState()
+    {
+        _currentInput.Clear();
+        for (int i = 0; i < _stateMachine.CurrentInput.Count; i++)
+        {
+            _currentInput.Add(_stateMachine.CurrentInput[i]);
+        }
+
+        _previewDialValue = _stateMachine.PreviewDialValue;
     }
 }
