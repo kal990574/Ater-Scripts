@@ -26,8 +26,17 @@ public class ScannableRuntimeStateApplier : StateApplierBase
 
     public override void ApplyState(RuntimeView binder)
     {
-        _runtimeView = binder;
-        _isBind = binder != null;
+        if (_runtimeView != null && binder != null && !ReferenceEquals(_runtimeView, binder))
+        {
+            return;
+        }
+
+        if (_runtimeView == null)
+        {
+            _runtimeView = binder;
+        }
+
+        _isBind = _runtimeView != null;
 
         if (_scannableObject == null || !CheckBindValid())
         {

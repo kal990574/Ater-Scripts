@@ -8,6 +8,7 @@ using Object = UnityEngine.Object;
 public class ScannableObject : MonoBehaviour, IScannable
 {
     private const string ScanStateKey = "is_scan";
+    private const string InteractLayerName = "Interact";
 
     [TabGroup("Inspector", "References")]
     [Required]
@@ -26,6 +27,8 @@ public class ScannableObject : MonoBehaviour, IScannable
     private IRuntimeView _runtimeView;
     private ScannableScanController _scanController;
     private ScannableQTEInvoker _qteInvoker;
+
+    private int _interactLayer = -1;
     private bool _isScanCompletedApplied;
 
     public bool IsProgressComplete => _scanController != null && _scanController.IsProgressComplete;

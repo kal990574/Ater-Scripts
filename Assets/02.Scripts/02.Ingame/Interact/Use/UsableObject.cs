@@ -77,7 +77,7 @@ public class UsableObject : Interactable
             case  EAfterInteract.None:
                 break;
             case EAfterInteract.Deactive:
-                _isInteractActive = false;
+                SetActivate(false);
                 break;
             case EAfterInteract.Disable:
                 gameObject.SetActive(false);

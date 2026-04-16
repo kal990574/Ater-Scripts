@@ -3,7 +3,6 @@ using UnityEngine;
 
 public abstract class StateInteractable : UsableObject
 {
-    [TabGroup("Inspector", "StateInteractable")]
     [SerializeField,ReadOnly] private RuntimeView _runtimeView;
 
     protected RuntimeView RuntimeViewComponent => _runtimeView;
