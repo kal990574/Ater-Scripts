@@ -21,6 +21,7 @@ namespace _02.Scripts.Enemy
         public void Execute(EnemyController enemy)
         {
             _controller = enemy;
+            _agent.enabled = true;
             _agent.speed = enemy.Config.ChaseSpeed;
             _agent.isStopped = false;
             _chaseCoroutine = StartCoroutine(ChaseCoroutine(enemy.Config.ChaseTimeout));
