@@ -1,23 +1,36 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class LockedDoorInteractable : StateInteractable
+public class DoorInteractable : StateInteractable
 {
+    [TabGroup("Inspector", "DoorInteractable")]
     [SerializeField] private Animator _doorAnimator;
 
-    [Header("Animation")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Open State Name")]
     [SerializeField] private string _openAnimationStateName = "OpenDoor";
 
-    [Header("State Keys")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Unlock")]
     [SerializeField] private string _unlockStateKey = "is_unlocked";
+
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Open")]
     [SerializeField] private string _openStateKey = "is_open";
 
-    [Header("Hover Description")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Unlocked Description")]
+    [MultiLineProperty]
     [SerializeField] private string _hoverDescriptionUnlocked = "";
 
-    [Header("Events")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("On Unlocked")]
     [SerializeField] private UnityEvent _onUnlocked;
+
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("On Opened")]
     [SerializeField] private UnityEvent _onOpened;
 
     public bool IsUnlocked => GetState(_unlockStateKey);
@@ -89,19 +102,19 @@ public class LockedDoorInteractable : StateInteractable
     {
         if (!ValidateConfiguration(out string failureReason))
         {
-            Debug.LogError($"[{nameof(LockedDoorInteractable)}] {gameObject.name} unlock failed. reason={failureReason}", this);
+            Debug.LogError($"[{nameof(DoorInteractable)}] {gameObject.name} unlock failed. reason={failureReason}", this);
             return false;
         }
 
         if (IsUnlocked)
         {
-            Debug.LogWarning($"[{nameof(LockedDoorInteractable)}] {gameObject.name} unlock was requested, but it is already unlocked.", this);
+            Debug.LogWarning($"[{nameof(DoorInteractable)}] {gameObject.name} unlock was requested, but it is already unlocked.", this);
             return false;
         }
 
         SetState(_unlockStateKey, true);
         RefreshInteractAvailability();
-        Debug.Log($"[{nameof(LockedDoorInteractable)}] {gameObject.name} unlocked.", this);
+        Debug.Log($"[{nameof(DoorInteractable)}] {gameObject.name} unlocked.", this);
 
         _onUnlocked?.Invoke();
         return true;
@@ -111,14 +124,14 @@ public class LockedDoorInteractable : StateInteractable
     {
         if (!ValidateConfiguration(out string failureReason))
         {
-            Debug.LogError($"[{nameof(LockedDoorInteractable)}] {gameObject.name} reactivation failed. reason={failureReason}", this);
+            Debug.LogError($"[{nameof(DoorInteractable)}] {gameObject.name} reactivation failed. reason={failureReason}", this);
             return;
         }
 
         SetState(_openStateKey, false);
         SetActivate(true);
 
-        Debug.Log($"[{nameof(LockedDoorInteractable)}] {gameObject.name} interaction was reactivated.", this);
+        Debug.Log($"[{nameof(DoorInteractable)}] {gameObject.name} interaction was reactivated.", this);
     }
 
     protected virtual void OpenDoor()
@@ -131,10 +144,10 @@ public class LockedDoorInteractable : StateInteractable
         }
         else
         {
-            Debug.LogWarning($"[{nameof(LockedDoorInteractable)}] {gameObject.name} is missing Animator or animation state name. animationState={_openAnimationStateName}", this);
+            Debug.LogWarning($"[{nameof(DoorInteractable)}] {gameObject.name} is missing Animator or animation state name. animationState={_openAnimationStateName}", this);
         }
         
-        Debug.Log($"[{nameof(LockedDoorInteractable)}] {gameObject.name} opened successfully. animationState={_openAnimationStateName}", this);
+        Debug.Log($"[{nameof(DoorInteractable)}] {gameObject.name} opened successfully. animationState={_openAnimationStateName}", this);
         _onOpened?.Invoke();
         SetActivate(false);
     }

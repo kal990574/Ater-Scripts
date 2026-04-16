@@ -1,11 +1,17 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class KeyDoorInteractable : LockedDoorInteractable
+public class KeyDoorInteractable : DoorInteractable
 {
-    [Header("Key Settings")]
+    [TabGroup("Inspector", "KeyDoorInteractable")]
+    [MinValue(0)]
+    [LabelText("Required Key Item ID")]
     [SerializeField] private int _requiredKeyItemId = -1;
+
+    [TabGroup("Inspector", "KeyDoorInteractable")]
+    [ToggleLeft]
+    [LabelText("Consume On Unlock")]
     [SerializeField] private bool _consumeRequiredItemOnUnlock = true;
     private bool _unlockedDuringCurrentUse;
 

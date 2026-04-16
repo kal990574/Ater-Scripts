@@ -10,61 +10,44 @@ public class PadLockController : PuzzleControllerBase
     [Header("Padlock Instance")]
     [SerializeField] private GameObject _padlockInstancePrefab;
 
-    [Header("State")]
-    [SerializeField] private bool _blockOpenAfterSuccess = true;
-    [SerializeField] private GameObject _lockVisualToDisable;
-    
     [Header("Puzzle Events")]
     [SerializeField] private UnityEvent _spinEvnet;
     [SerializeField] private UnityEvent _successEvent;
     [SerializeField] private UnityEvent _failEvent;
 
     private PadLockPuzzleInstance _activeInstance;
-    private bool _isSolved;
-    
-    protected override EPuzzleType PuzzleType => EPuzzleType.KeyPad;
+
+    protected override EPuzzleType PuzzleType => EPuzzleType.PadLock;
     protected override IPuzzleIntance ActivePuzzleInstance => _activeInstance;
 
-    public bool IsSolved => _isSolved;
-    public bool HasActivePuzzle => _activeInstance != null;
-
-    [ContextMenu("On")]
-    public void TryOpen()
+    public override void TryOpen(PuzzleInteractable interactable)
     {
-        if (_blockOpenAfterSuccess && _isSolved)
+        if (!CanStartPuzzle(null, null))
         {
             return;
         }
 
-        if (_activeInstance != null)
+        GameObject instanceObject = SpawnPuzzleInstance(
+            _padlockInstancePrefab,
+            $"{gameObject.name} : padlock instance prefab is not assigned");
+
+        if (instanceObject == null)
         {
             return;
         }
 
-        if (_padlockInstancePrefab == null)
+        if (!TryResolvePuzzleInstance(
+                instanceObject,
+                out _activeInstance,
+                $"{instanceObject.name} : PadLockPuzzleInstance component is missing"))
         {
-            Debug.LogWarning($"{gameObject.name} : padlock instance prefab is not assigned", this);
             return;
         }
-        _puzzleCamera.gameObject.SetActive(true);
-        Transform spawnParent = ResolveSpawnParent(_puzzleCamera);
-        GameObject instanceObject = Instantiate(_padlockInstancePrefab, spawnParent);
-        instanceObject.transform.localPosition = _localSpawnPosition;
-        instanceObject.transform.localRotation = Quaternion.Euler(_localSpawnEulerAngles);
-
-        _activeInstance = instanceObject.GetComponent<PadLockPuzzleInstance>();
-        if (_activeInstance == null)
-        {
-            Debug.LogWarning($"{instanceObject.name} : PadLockPuzzleInstance component is missing", instanceObject);
-            Destroy(instanceObject);
-            return;
-        }
-
+        _activeInteractable = interactable;
         _activeInstance.Initialize(this, _correctCode);
-        ResolvePlayerController()?.EnterPuzzleMode(this);
+        EnterPuzzleMode();
     }
 
-    
     public void HandlePuzzleSuccess(PadLockPuzzleInstance instance)
     {
         if (_activeInstance != instance)
@@ -72,17 +55,11 @@ public class PadLockController : PuzzleControllerBase
             return;
         }
 
-        _isSolved = true;
         _successEvent?.Invoke();
-        PublishPuzzleResult(EPuzzleResult.Success);
-
-        if (_lockVisualToDisable != null)
-        {
-            _lockVisualToDisable.SetActive(false);
-        }
-
-        ResolvePlayerController()?.ExitPuzzleMode(this);
-        _puzzleCamera.gameObject.SetActive(false);
+        HandlePuzzleSolved();
+        _activeInteractable?.HandlePuzzleSolved();
+        _activeInteractable = null;
+        
         _activeInstance = null;
     }
 
@@ -99,16 +76,15 @@ public class PadLockController : PuzzleControllerBase
 
     public void ClearActiveInstance(PadLockPuzzleInstance instance)
     {
-        if (_activeInstance == instance)
+        if (_activeInstance != instance)
         {
-            PublishPuzzleResult(EPuzzleResult.Cancel);
-
-            ResolvePlayerController()?.ExitPuzzleMode(this);
-            _puzzleCamera.gameObject.SetActive(false);
-            _activeInstance = null;
+            return;
         }
+
+        HandlePuzzleCancelled();
+        _activeInstance = null;
     }
-    
+
     public void OnSpin()
     {
         _spinEvnet?.Invoke();

@@ -9,62 +9,47 @@ public class KeyPadController : PuzzleControllerBase
 
     [Header("KeyPad Instance")]
     [SerializeField] private GameObject _keyPadInstancePrefab;
-   
 
-    [Header("State")]
-    [SerializeField] private bool _blockOpenAfterSuccess = true;
-
-    [Header("Puzzle Events")] 
+    [Header("Puzzle Events")]
     [SerializeField] private UnityEvent _buttonEvent;
     [SerializeField] private UnityEvent _successEvent;
     [SerializeField] private UnityEvent _failEvent;
 
     private KeyPadPuzzleInstance _activeInstance;
-    private KeyPadInteractable _activeInteractable;
-    private bool _isSolved;
+    
+
     protected override EPuzzleType PuzzleType => EPuzzleType.KeyPad;
     protected override IPuzzleIntance ActivePuzzleInstance => _activeInstance;
 
-    public bool IsSolved => _isSolved;
-    public bool HasActivePuzzle => _activeInstance != null;
-
-    public void TryOpen(KeyPadInteractable interactable)
+    public override void TryOpen(PuzzleInteractable interactable)
     {
-        if (_blockOpenAfterSuccess && _isSolved)
+        if (!CanStartPuzzle(
+                $"[{nameof(KeyPadController)}] {gameObject.name} puzzle open was requested, but it is already solved.",
+                $"[{nameof(KeyPadController)}] {gameObject.name} puzzle open was requested, but another keypad puzzle is already active."))
         {
-            Debug.LogWarning($"[{nameof(KeyPadController)}] {gameObject.name} puzzle open was requested, but it is already solved.", this);
             return;
         }
 
-        if (_activeInstance != null)
+        GameObject instanceObject = SpawnPuzzleInstance(
+            _keyPadInstancePrefab,
+            $"[{nameof(KeyPadController)}] {gameObject.name} keyPad instance prefab is not assigned.");
+
+        if (instanceObject == null)
         {
-            Debug.LogWarning($"[{nameof(KeyPadController)}] {gameObject.name} puzzle open was requested, but another keypad puzzle is already active.", this);
             return;
         }
 
-        if (_keyPadInstancePrefab == null)
+        if (!TryResolvePuzzleInstance(
+                instanceObject,
+                out _activeInstance,
+                $"[{nameof(KeyPadController)}] {instanceObject.name} is missing KeyPadPuzzleInstance."))
         {
-            Debug.LogWarning($"[{nameof(KeyPadController)}] {gameObject.name} keyPad instance prefab is not assigned.", this);
-            return;
-        }
-        
-        _puzzleCamera.gameObject.SetActive(true);
-        Transform spawnParent = ResolveSpawnParent(_puzzleCamera);
-        GameObject instanceObject = Instantiate(_keyPadInstancePrefab, spawnParent);
-        instanceObject.transform.localPosition = _localSpawnPosition;
-        instanceObject.transform.localRotation = Quaternion.Euler(_localSpawnEulerAngles);
-
-        _activeInstance = instanceObject.GetComponent<KeyPadPuzzleInstance>();
-        if (_activeInstance == null)
-        {
-            Debug.LogWarning($"[{nameof(KeyPadController)}] {instanceObject.name} is missing KeyPadPuzzleInstance.", instanceObject);
-            Destroy(instanceObject);
             return;
         }
 
         _activeInteractable = interactable;
         _activeInstance.Initialize(this, _correctCode);
-        ResolvePlayerController()?.EnterPuzzleMode(this);
+        EnterPuzzleMode();
     }
 
     public void ButtonClick()
@@ -84,18 +69,12 @@ public class KeyPadController : PuzzleControllerBase
             return;
         }
 
-        _isSolved = true;
         _successEvent?.Invoke();
-        PublishPuzzleResult(EPuzzleResult.Success);
-
+        HandlePuzzleSolved();
         _activeInteractable?.HandlePuzzleSolved();
-
-        ResolvePlayerController()?.ExitPuzzleMode(this);
-        _puzzleCamera.gameObject.SetActive(false);
         _activeInteractable = null;
         _activeInstance = null;
     }
-
 
     public void HandlePuzzleFail(KeyPadPuzzleInstance instance)
     {
@@ -108,7 +87,6 @@ public class KeyPadController : PuzzleControllerBase
         PublishPuzzleResult(EPuzzleResult.Fail);
     }
 
-
     public void ClearActiveInstance(KeyPadPuzzleInstance instance)
     {
         if (_activeInstance != instance)
@@ -116,10 +94,7 @@ public class KeyPadController : PuzzleControllerBase
             return;
         }
 
-        PublishPuzzleResult(EPuzzleResult.Cancel);
-
-        ResolvePlayerController()?.ExitPuzzleMode(this);
-        _puzzleCamera.gameObject.SetActive(false);
+        HandlePuzzleCancelled();
         _activeInteractable = null;
         _activeInstance = null;
     }
