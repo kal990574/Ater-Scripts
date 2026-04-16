@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class TensionManager : MonoBehaviour
 {
+    [SerializeField] private bool _activeSwitch = true;
+    
     [Header("Base Tension / 지속적으로 누적되는 긴장")]
     [SerializeField] private float _baseTension;
     [SerializeField] private float _baseTensionMax = 100.0f;
@@ -45,10 +47,31 @@ public class TensionManager : MonoBehaviour
 
     private void Update()
     {
+        if (!_activeSwitch)
+        {
+            return; 
+        }
+        
         float deltaTime = Time.deltaTime;
 
         IncreaseBaseTensionOverTime(deltaTime);
         DecreaseSpikeTensionOverTime(deltaTime);
+    }
+
+    [Button]
+    public void SetActive(bool tf)
+    {
+        _activeSwitch = tf;
+    }
+
+    public void ActiveFalse()
+    {
+        SetActive(false);
+    }
+
+    public void ActiveTrue()
+    {
+        SetActive(true);
     }
 
     [Button]
@@ -62,6 +85,11 @@ public class TensionManager : MonoBehaviour
     
     private void OnTensionChanged(OnTensionChangedEvent tensionEvent)
     {
+        if (!_activeSwitch)
+        {
+            return;
+        }
+        
         if (string.IsNullOrEmpty(tensionEvent.Reason) == true)
         {
             Debug.LogWarning("[TensionManager] Tension reason is null or empty.");
@@ -146,6 +174,11 @@ public class TensionManager : MonoBehaviour
 
     private void IncreaseBaseTensionOverTime(float deltaTime)
     {
+        if (!_activeSwitch)
+        {
+            return;
+        }
+        
         if (_baseTensionAutoIncreasePerSecond <= 0.0f)
         {
             return;
@@ -157,6 +190,11 @@ public class TensionManager : MonoBehaviour
 
     private void DecreaseSpikeTensionOverTime(float deltaTime)
     {
+        if (!_activeSwitch)
+        {
+            return;
+        }
+
         if (_spikeTensionDecayPerSecond <= 0.0f)
         {
             return;

@@ -6,7 +6,7 @@ using UnityEngine.Events;
 [DisallowMultipleComponent]
 public class TransformInteractable : UsableObject
 {
-    private enum EDestinationMode
+    public enum EDestinationMode
     {
         TargetTransform = 0,
         WorldPose = 1,
@@ -87,6 +87,19 @@ public class TransformInteractable : UsableObject
     [SerializeField] private UnityEvent _onMoveCompleted;
 
     private Sequence _sequence;
+    private TransformInteractableSettings Settings => new(
+        _transformToMove,
+        _destinationTransform,
+        _destinationMode,
+        _worldPosition,
+        _worldEulerAngles,
+        _localPosition,
+        _localEulerAngles,
+        _moveDuration,
+        _moveEase,
+        _rotateDuration,
+        _rotateEase,
+        _rotateMode);
 
     private bool IsTargetTransformMode => _destinationMode == EDestinationMode.TargetTransform;
     private bool IsWorldPoseMode => _destinationMode == EDestinationMode.WorldPose;
@@ -122,9 +135,8 @@ public class TransformInteractable : UsableObject
 
     protected override bool OnUse(InteractionContext context, out string failureReason)
     {
-        ResolveDestination(out Vector3 targetPosition, out Vector3 targetEulerAngles, out bool useLocalSpace);
-
-        StartSequence(targetPosition, targetEulerAngles, useLocalSpace);
+        TransformInteractablePose pose = TransformInteractablePoseResolver.Resolve(Settings);
+        StartSequence(pose);
 
         if (_disableInteractionWhileTweening)
         {
@@ -139,88 +151,39 @@ public class TransformInteractable : UsableObject
 
     private bool ValidateConfiguration(out string failureReason)
     {
-        if (_transformToMove == null)
-        {
-            failureReason = "Transform to move is not assigned.";
-            return false;
-        }
-
-        if (_moveDuration < 0.0f)
-        {
-            failureReason = "Move duration must be zero or greater.";
-            return false;
-        }
-
-        if (_rotateDuration < 0.0f)
-        {
-            failureReason = "Rotate duration must be zero or greater.";
-            return false;
-        }
-
-        if (_destinationMode == EDestinationMode.TargetTransform && _destinationTransform == null)
-        {
-            failureReason = "Destination transform is not assigned.";
-            return false;
-        }
-
-        failureReason = string.Empty;
-        return true;
+        return TransformInteractableValidator.Validate(Settings, out failureReason);
     }
 
-    private void ResolveDestination(out Vector3 targetPosition, out Vector3 targetEulerAngles, out bool useLocalSpace)
+    private void StartMoveTween(TransformInteractablePose pose)
     {
-        switch (_destinationMode)
-        {
-            case EDestinationMode.TargetTransform:
-                targetPosition = _destinationTransform.position;
-                targetEulerAngles = _destinationTransform.rotation.eulerAngles;
-                useLocalSpace = false;
-                break;
-
-            case EDestinationMode.LocalPose:
-                targetPosition = _localPosition;
-                targetEulerAngles = _localEulerAngles;
-                useLocalSpace = true;
-                break;
-
-            default:
-                targetPosition = _worldPosition;
-                targetEulerAngles = _worldEulerAngles;
-                useLocalSpace = false;
-                break;
-        }
-    }
-
-    private void StartMoveTween(Vector3 targetPosition, bool useLocalSpace)
-    {
-        Tween moveTween = useLocalSpace
-            ? _transformToMove.DOLocalMove(targetPosition, _moveDuration)
-            : _transformToMove.DOMove(targetPosition, _moveDuration);
+        Tween moveTween = pose.UseLocalSpace
+            ? _transformToMove.DOLocalMove(pose.Position, _moveDuration)
+            : _transformToMove.DOMove(pose.Position, _moveDuration);
 
         moveTween.SetEase(_moveEase);
 
         _sequence.Join(moveTween);
     }
 
-    private void StartRotateTween(Vector3 targetEulerAngles, bool useLocalSpace)
+    private void StartRotateTween(TransformInteractablePose pose)
     {
-        Tween rotateTween = useLocalSpace
-            ? _transformToMove.DOLocalRotate(targetEulerAngles, _rotateDuration, _rotateMode)
-            : _transformToMove.DORotate(targetEulerAngles, _rotateDuration, _rotateMode);
+        Tween rotateTween = pose.UseLocalSpace
+            ? _transformToMove.DOLocalRotate(pose.EulerAngles, _rotateDuration, _rotateMode)
+            : _transformToMove.DORotate(pose.EulerAngles, _rotateDuration, _rotateMode);
 
         rotateTween.SetEase(_rotateEase);
 
         _sequence.Join(rotateTween);
     }
 
-    private void StartSequence(Vector3 targetPosition, Vector3 targetEulerAngles, bool useLocalSpace)
+    private void StartSequence(TransformInteractablePose pose)
     {
         KillTweens(false);
         _sequence = DOTween.Sequence();
         _sequence.SetUpdate(UpdateType.Normal);
 
-        StartMoveTween(targetPosition, useLocalSpace);
-        StartRotateTween(targetEulerAngles, useLocalSpace);
+        StartMoveTween(pose);
+        StartRotateTween(pose);
 
         _sequence.OnComplete(() =>
         {

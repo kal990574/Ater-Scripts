@@ -2,7 +2,7 @@ public class ScanReturnState : ScanStateBase
 {
     public override EScanState StateType => EScanState.OnReturn;
 
-    public ScanReturnState(ScannableObject owner) : base(owner)
+    public ScanReturnState(IScanStateContext owner) : base(owner)
     {
     }
 

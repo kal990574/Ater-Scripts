@@ -1,15 +1,10 @@
 ﻿using DG.Tweening;
-using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 [DisallowMultipleComponent]
 public class SafeBoxDial : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
-    private const int MinValue = 0;
-    private const int MaxValue = 15;
-    private const int ValueCount = 16;
-
     [Header("Rotation")]
     [SerializeField] private float _degreesPerStep = -22.5f;
     [SerializeField] private Vector3 _rotationAxis = new(0f, 0f, -1f);
@@ -27,6 +22,7 @@ public class SafeBoxDial : MonoBehaviour, IPointerDownHandler, IDragHandler, IPo
     private bool _isDragging;
     private float _previousPointerAngle;
     private Tween _rotationTween;
+    private SafeBoxDialRotationModel _rotationModel;
 
     public int CurrentValue => _currentValue;
 
@@ -34,6 +30,7 @@ public class SafeBoxDial : MonoBehaviour, IPointerDownHandler, IDragHandler, IPo
     {
         _owner = owner;
         _eventCamera = owner.GetCamera();
+        _rotationModel = new SafeBoxDialRotationModel(_degreesPerStep);
         ForceResetVisualImmediate();
         _owner?.SetPreviewDialValue(_currentValue);
     }
@@ -207,19 +204,16 @@ public class SafeBoxDial : MonoBehaviour, IPointerDownHandler, IDragHandler, IPo
 
     private void SnapToNearestStep()
     {
-        float stepIndex = Mathf.Round(-_currentVisualAngle / _degreesPerStep);
-        float normalizedStepIndex = Mod(stepIndex, ValueCount);
-
-        _currentValue = (int)normalizedStepIndex;
-        _currentVisualAngle = -_currentValue * _degreesPerStep;
+        SafeBoxDialRotationStep step = GetRotationModel().GetStep(_currentVisualAngle);
+        _currentValue = step.Value;
+        _currentVisualAngle = step.VisualAngle;
         ApplyVisualAngle(_currentVisualAngle);
     }
 
     private void UpdateCurrentValueFromAngle()
     {
-        float stepIndex = Mathf.Round(-_currentVisualAngle / _degreesPerStep);
-        float normalizedStepIndex = Mod(stepIndex, ValueCount);
-        _currentValue = Mathf.Clamp((int)normalizedStepIndex, MinValue, MaxValue);
+        SafeBoxDialRotationStep step = GetRotationModel().GetStep(_currentVisualAngle);
+        _currentValue = step.Value;
     }
 
     private void ApplyVisualAngle(float angle)
@@ -227,14 +221,13 @@ public class SafeBoxDial : MonoBehaviour, IPointerDownHandler, IDragHandler, IPo
         transform.localRotation = Quaternion.AngleAxis(angle, _rotationAxis.normalized);
     }
 
-    private static float Mod(float value, float modulus)
+    private SafeBoxDialRotationModel GetRotationModel()
     {
-        float result = value % modulus;
-        if (result < 0f)
+        if (_rotationModel == null)
         {
-            result += modulus;
+            _rotationModel = new SafeBoxDialRotationModel(_degreesPerStep);
         }
 
-        return result;
+        return _rotationModel;
     }
 }
