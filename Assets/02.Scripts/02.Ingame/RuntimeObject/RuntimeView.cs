@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -11,6 +12,26 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
     public string InstanceId => _instanceId;
     public RuntimeData RuntimeData => _runtimeData;
     public RuntimeItemData RuntimeItemData => _runtimeData as RuntimeItemData;
+
+    [FoldoutGroup("Debug"), ShowInInspector, ReadOnly, LabelText("Bound Runtime Data")]
+    private RuntimeData DebugBoundRuntimeData => _runtimeData;
+
+    [FoldoutGroup("Debug"), ShowInInspector, ReadOnly, LabelText("Stored Runtime Data")]
+    private RuntimeData DebugStoredRuntimeData => ResolveStoredRuntimeData();
+
+    [FoldoutGroup("Debug"), ShowInInspector, ReadOnly, LabelText("Stored State")]
+    [MultiLineProperty(3)]
+    private string DebugStoredState => ResolveDebugState();
+
+    [FoldoutGroup("Debug"), ShowInInspector, ReadOnly, LabelText("Uses Stored Reference")]
+    private bool DebugUsesStoredReference
+    {
+        get
+        {
+            RuntimeData storedRuntimeData = ResolveStoredRuntimeData();
+            return storedRuntimeData != null && ReferenceEquals(_runtimeData, storedRuntimeData);
+        }
+    }
 
     public virtual void Bind(RuntimeData runtimeData)
     {
@@ -148,5 +169,32 @@ public class RuntimeView : MonoBehaviour, IRuntimeView
         Debug.Log(
             $"[{nameof(RuntimeView)}] Bound '{gameObject.name}' to {runtimeType} (instanceId={_instanceId}{itemInfo}{stateInfo})",
             this);
+    }
+
+    private RuntimeData ResolveStoredRuntimeData()
+    {
+        if (string.IsNullOrWhiteSpace(_instanceId))
+        {
+            return null;
+        }
+
+        RuntimeInstanceManager runtimeInstanceManager = RuntimeInstanceManager.Instance;
+        if (runtimeInstanceManager == null)
+        {
+            return _runtimeData;
+        }
+
+        return runtimeInstanceManager.GetRuntimeData(_instanceId) ?? _runtimeData;
+    }
+
+    private string ResolveDebugState()
+    {
+        RuntimeData runtimeData = ResolveStoredRuntimeData();
+        if (runtimeData?.State != null)
+        {
+            return runtimeData.State.ToDebugString();
+        }
+
+        return "null";
     }
 }

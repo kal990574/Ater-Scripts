@@ -96,9 +96,21 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
             case EPlayerInteractMode.Puzzle:
                 HandlePuzzleModeInput();
                 return true;
+            case EPlayerInteractMode.Cutscene:
+                return true;
             default:
                 return false;
         }
+    }
+
+    public void EnterCutsceneMode()
+    {
+        SetInteractMode(EPlayerInteractMode.Cutscene);
+    }
+
+    public void ExitCutsceneMode()
+    {
+        SetInteractMode(_lastGameplayMode);
     }
 
     private void HandleUIModeInput()
@@ -319,12 +331,13 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     {
         if (_isPausedByGame) return;
         
-        bool blocksPlayerControl = mode == EPlayerInteractMode.UI || mode == EPlayerInteractMode.Puzzle;
+        bool blocksPlayerControl = mode == EPlayerInteractMode.UI || mode == EPlayerInteractMode.Puzzle || mode == EPlayerInteractMode.Cutscene;
         _canMove = !blocksPlayerControl;
         _canRotate = !blocksPlayerControl;
-
-        Cursor.lockState = blocksPlayerControl ? CursorLockMode.None : CursorLockMode.Locked;
-        Cursor.visible = blocksPlayerControl;
+        
+        bool showCursor = mode == EPlayerInteractMode.UI ||  mode == EPlayerInteractMode.Puzzle;
+        Cursor.lockState = showCursor ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = showCursor;
     }
 
     private void HandleGameStateChanged(GameState state)

@@ -1,9 +1,9 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 public abstract class StateInteractable : UsableObject
 {
-    [Header("References")]
-    [SerializeField] private RuntimeView _runtimeView;
+    [SerializeField,ReadOnly] private RuntimeView _runtimeView;
 
     protected RuntimeView RuntimeViewComponent => _runtimeView;
     
@@ -16,6 +16,7 @@ public abstract class StateInteractable : UsableObject
             _runtimeView = GetComponent<RuntimeView>();
         }
     }
+
 
     protected bool HasRuntimeState()
     {

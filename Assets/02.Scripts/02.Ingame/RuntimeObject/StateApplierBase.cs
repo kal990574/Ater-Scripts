@@ -2,7 +2,7 @@ using UnityEngine;
 
 public abstract class StateApplierBase : MonoBehaviour, IStateApplier
 {
-    [SerializeField]protected RuntimeView _runtimeView;
+    [SerializeField] protected RuntimeView _runtimeView;
     public IRuntimeView RuntimeView => _runtimeView;
     protected bool _isBind = false;
     
@@ -10,7 +10,8 @@ public abstract class StateApplierBase : MonoBehaviour, IStateApplier
     {
         if (_runtimeView == null)
         {
-            _runtimeView = GetComponentInParent<RuntimeView>();
+            //만약 스캐너블 하위에 스캐너블이 있다면 하위의 스캐너블이 참고하는 RuntimeView는 상위 스캐너블이됨
+            _runtimeView = GetComponent<RuntimeView>();
         }
 
         OnAwake();

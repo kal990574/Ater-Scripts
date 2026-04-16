@@ -7,6 +7,9 @@ public class JumpScareManager : MonoBehaviour
     private static JumpScareManager _instance;
     public static JumpScareManager Instance => _instance;
 
+    [SerializeField] private bool _activeSwitch = true;
+
+    
     [Header("References")]
     [SerializeField] private PlayerController _playerController;
     [SerializeField] private TensionManager _tensionManager;
@@ -38,6 +41,7 @@ public class JumpScareManager : MonoBehaviour
     public bool EnableSubLog => _enableSubLog;
     public bool EnableMainLog => _enableMainLog;
     public bool IncludeInactiveOnRegister => _includeInactiveOnRegister;
+    public bool IsActiveSwitchOn => _activeSwitch;
     public Transform PlayerRootTransform => _playerController.transform;
     public Transform PlayerCameraTransform => _mainCamera.transform;
 
@@ -101,6 +105,11 @@ public class JumpScareManager : MonoBehaviour
 
     private void Update()
     {
+        if (!_activeSwitch)
+        {
+            return;
+        }
+        
         _subJumpScareService?.Tick(
             Time.deltaTime,
             _usePeriodicTick,
@@ -119,9 +128,30 @@ public class JumpScareManager : MonoBehaviour
             _instance = null;
         }
     }
+    
+    [Button]
+    public void SetActive(bool tf)
+    {
+        _activeSwitch = tf;
+    }
+
+    public void ActiveFalse()
+    {
+        SetActive(false);
+    }
+
+    public void ActiveTrue()
+    {
+        SetActive(true);
+    }
 
     private void OnSonarActive(SonarScanStartedRawEvent data)
     {
+        if (!CanTriggerJumpScare())
+        {
+            return;
+        }
+
         _subJumpScareService?.TrySelectSonar(
             _mainJumpScareService != null && _mainJumpScareService.IsAnyMainJumpScarePlaying,
             false);
@@ -135,6 +165,11 @@ public class JumpScareManager : MonoBehaviour
 
     public bool TryExecuteMainJumpScare(string id)
     {
+        if (!CanTriggerJumpScare())
+        {
+            return false;
+        }
+
         if (_mainJumpScareService?.TryExecuteMainJumpScare(id) == true)
         {
             return true;
@@ -156,6 +191,11 @@ public class JumpScareManager : MonoBehaviour
     [ContextMenu("Debug/Try Select Periodic")]
     public void TrySelectPeriodic()
     {
+        if (!CanTriggerJumpScare())
+        {
+            return;
+        }
+
         _subJumpScareService?.TrySelectPeriodic(
             _mainJumpScareService != null && _mainJumpScareService.IsAnyMainJumpScarePlaying,
             false);
@@ -164,8 +204,18 @@ public class JumpScareManager : MonoBehaviour
     [ContextMenu("Debug/Try Select Sonar")]
     public void TrySelectSonar()
     {
+        if (!CanTriggerJumpScare())
+        {
+            return;
+        }
+
         _subJumpScareService?.TrySelectSonar(
             _mainJumpScareService != null && _mainJumpScareService.IsAnyMainJumpScarePlaying,
             false);
+    }
+
+    private bool CanTriggerJumpScare()
+    {
+        return _activeSwitch;
     }
 }

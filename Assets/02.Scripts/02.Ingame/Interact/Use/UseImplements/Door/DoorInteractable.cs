@@ -1,24 +1,40 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
-public class LockedDoorInteractable : StateInteractable
+public class DoorInteractable : StateInteractable
 {
+    [TabGroup("Inspector", "DoorInteractable")]
     [SerializeField] private Animator _doorAnimator;
 
-    [Header("Animation")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Open State Name")]
     [SerializeField] private string _openAnimationStateName = "OpenDoor";
 
-    [Header("State Keys")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Unlock")]
     [SerializeField] private string _unlockStateKey = "is_unlocked";
+
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Open")]
     [SerializeField] private string _openStateKey = "is_open";
 
-    [Header("Hover Description")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("Unlocked Description")]
+    [MultiLineProperty]
     [SerializeField] private string _hoverDescriptionUnlocked = "";
 
-    [Header("Events")]
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("On Unlocked")]
     [SerializeField] private UnityEvent _onUnlocked;
+
+    [TabGroup("Inspector", "DoorInteractable")]
+    [LabelText("On Opened")]
     [SerializeField] private UnityEvent _onOpened;
+
+    private DoorInteractableConfig Config => new(_unlockStateKey, _openStateKey, _openAnimationStateName);
+    private DoorInteractableStateSnapshot CurrentState => new(IsUnlocked, IsOpen);
 
     public bool IsUnlocked => GetState(_unlockStateKey);
     public bool IsOpen => GetState(_openStateKey);
@@ -54,17 +70,11 @@ public class LockedDoorInteractable : StateInteractable
             return false;
         }
 
-        if (IsOpen)
+        UseInteractionOutcome outcome = DoorInteractableStatePolicy.EvaluateOpen(CurrentState);
+        if (!outcome.IsSuccess)
         {
-            SetFailureResult(EUseInteractResult.AlreadyOpen);
-            failureReason = "The door is already open.";
-            return false;
-        }
-
-        if (!IsUnlocked)
-        {
-            SetFailureResult(EUseInteractResult.Locked);
-            failureReason = "The door is locked.";
+            SetFailureResult(outcome.Result);
+            failureReason = outcome.Reason;
             return false;
         }
 
@@ -89,21 +99,21 @@ public class LockedDoorInteractable : StateInteractable
     {
         if (!ValidateConfiguration(out string failureReason))
         {
-            Debug.LogError($"[{nameof(LockedDoorInteractable)}] {gameObject.name} unlock failed. reason={failureReason}", this);
+            Debug.LogError($"[{nameof(DoorInteractable)}] {gameObject.name} unlock failed. reason={failureReason}", this);
             return false;
         }
 
-        if (IsUnlocked)
+        if (!DoorInteractableStatePolicy.CanUnlock(CurrentState, out failureReason))
         {
-            Debug.LogWarning($"[{nameof(LockedDoorInteractable)}] {gameObject.name} unlock was requested, but it is already unlocked.", this);
+            Debug.LogWarning($"[{nameof(DoorInteractable)}] {gameObject.name} unlock was requested, but it was rejected. reason={failureReason}", this);
             return false;
         }
 
-        SetState(_unlockStateKey, true);
+        ApplyUnlockState();
         RefreshInteractAvailability();
-        Debug.Log($"[{nameof(LockedDoorInteractable)}] {gameObject.name} unlocked.", this);
+        Debug.Log($"[{nameof(DoorInteractable)}] {gameObject.name} unlocked.", this);
 
-        _onUnlocked?.Invoke();
+        PlayUnlockPresentation();
         return true;
     }
 
@@ -111,32 +121,51 @@ public class LockedDoorInteractable : StateInteractable
     {
         if (!ValidateConfiguration(out string failureReason))
         {
-            Debug.LogError($"[{nameof(LockedDoorInteractable)}] {gameObject.name} reactivation failed. reason={failureReason}", this);
+            Debug.LogError($"[{nameof(DoorInteractable)}] {gameObject.name} reactivation failed. reason={failureReason}", this);
             return;
         }
 
         SetState(_openStateKey, false);
         SetActivate(true);
 
-        Debug.Log($"[{nameof(LockedDoorInteractable)}] {gameObject.name} interaction was reactivated.", this);
+        Debug.Log($"[{nameof(DoorInteractable)}] {gameObject.name} interaction was reactivated.", this);
     }
 
     protected virtual void OpenDoor()
     {
-        SetState(_openStateKey, true);
+        ApplyOpenState();
+        PlayOpenPresentation();
+    }
 
+    protected virtual void ApplyUnlockState()
+    {
+        SetState(_unlockStateKey, true);
+    }
+
+    protected virtual void ApplyOpenState()
+    {
+        SetState(_openStateKey, true);
+        SetActivate(false);
+    }
+
+    protected virtual void PlayUnlockPresentation()
+    {
+        _onUnlocked?.Invoke();
+    }
+
+    protected virtual void PlayOpenPresentation()
+    {
         if (_doorAnimator != null && !string.IsNullOrWhiteSpace(_openAnimationStateName))
         {
             _doorAnimator.Play(_openAnimationStateName);
         }
         else
         {
-            Debug.LogWarning($"[{nameof(LockedDoorInteractable)}] {gameObject.name} is missing Animator or animation state name. animationState={_openAnimationStateName}", this);
+            Debug.LogWarning($"[{nameof(DoorInteractable)}] {gameObject.name} is missing Animator or animation state name. animationState={_openAnimationStateName}", this);
         }
         
-        Debug.Log($"[{nameof(LockedDoorInteractable)}] {gameObject.name} opened successfully. animationState={_openAnimationStateName}", this);
+        Debug.Log($"[{nameof(DoorInteractable)}] {gameObject.name} opened successfully. animationState={_openAnimationStateName}", this);
         _onOpened?.Invoke();
-        SetActivate(false);
     }
 
     protected override EInteractObjectEventType GetSuccessInteractEventType(InteractionContext context)
@@ -146,23 +175,6 @@ public class LockedDoorInteractable : StateInteractable
 
     protected virtual bool ValidateConfiguration(out string failureReason)
     {
-        if (!ValidateStateKey(_unlockStateKey, "Unlock state key", out failureReason))
-        {
-            return false;
-        }
-
-        if (!ValidateStateKey(_openStateKey, "Open state key", out failureReason))
-        {
-            return false;
-        }
-
-        if (!HasRuntimeState())
-        {
-            failureReason = "RuntimeData.State is not available.";
-            return false;
-        }
-
-        failureReason = string.Empty;
-        return true;
+        return DoorInteractableValidator.Validate(Config, HasRuntimeState(), out failureReason);
     }
 }

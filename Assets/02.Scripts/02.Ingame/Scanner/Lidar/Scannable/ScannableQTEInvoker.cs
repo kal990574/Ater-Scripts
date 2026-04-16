@@ -1,4 +1,5 @@
 using System;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 using Random = UnityEngine.Random;
@@ -6,37 +7,60 @@ using Random = UnityEngine.Random;
 [DisallowMultipleComponent]
 public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
 {
-    [Header("Required References")]
+    [TabGroup("Inspector", "References")]
+    [Required]
+    [LabelText("Scannable Object")]
     [SerializeField] private ScannableObject scannableObject;
+
+    [TabGroup("Inspector", "References")]
+    [Required]
+    [LabelText("QTE Config")]
     [SerializeField] private QTEConfigSOBase _qteConfig;
 
-    [Header("Optional Settings")]
+    [TabGroup("Inspector", "Settings")]
+    [Required]
+    [LabelText("QTE Settings")]
     [SerializeField] private ScanQTESettings _settings;
 
-    [Header("Result Events")]
+    [TabGroup("Inspector", "Events")]
+    [LabelText("On QTE Success")]
     [SerializeField] private UnityEvent _onQteSuccess;
+
+    [TabGroup("Inspector", "Events")]
+    [LabelText("On QTE Great Success")]
     [SerializeField] private UnityEvent _onQteGreatSuccess;
+
+    [TabGroup("Inspector", "Events")]
+    [LabelText("On QTE Failed")]
     [SerializeField] private UnityEvent _onQteFail;
 
-    
     private float _elapsedTime;
     private float _nextTriggerTime;
     private bool _isQteActive;
+    private IScannableQTEHandler _qteHandler;
 
     public GameObject Owner => gameObject;
     public bool IsConfigured => scannableObject != null && _qteConfig != null && _settings != null;
 
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Is Configured")]
+    private bool DebugIsConfigured => IsConfigured;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Is QTE Active")]
+    private bool DebugIsQteActive => _isQteActive;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Elapsed Time")]
+    private float DebugElapsedTime => _elapsedTime;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Next Trigger Time")]
+    private float DebugNextTriggerTime => _nextTriggerTime;
+
     private void Awake()
     {
-        if (scannableObject == null)
-        {
-            scannableObject = GetComponent<ScannableObject>();
-        }
-
-        if (scannableObject == null)
-        {
-            scannableObject = GetComponentInParent<ScannableObject>();
-        }
+        ResolveReferences();
 
         ResetTriggerTimer();
     }
@@ -48,7 +72,7 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
             return;
         }
 
-        if (scannableObject.State != EScanState.OnProgress)
+        if (_qteHandler == null || _qteHandler.State != EScanState.OnProgress)
         {
             return;
         }
@@ -81,48 +105,34 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
 
     public void ApplyQTEFailure()
     {
-        if (scannableObject == null)
+        if (_qteHandler == null)
         {
             return;
         }
 
-        scannableObject.ReduceProgress(_settings.FailPenalty);
-        scannableObject.ChangeState(
-            scannableObject.CurrentProgress <= 0.0f
-                ? EScanState.Default
-                : EScanState.OnReturn);
+        _qteHandler.HandleQteFailure(_settings.FailPenalty);
         _onQteFail?.Invoke();
     }
 
     public void ApplyQTESuccess()
     {
-        if (scannableObject == null)
+        if (_qteHandler == null)
         {
             return;
         }
 
-        scannableObject.ChangeState(
-            scannableObject.IsProgressComplete
-                ? EScanState.OnCompleted
-                : EScanState.OnProgress);
+        _qteHandler.HandleQteSuccess();
         _onQteSuccess?.Invoke();
     }
 
     public void ApplyQTEGreatSuccess()
     {
-        if (scannableObject == null)
+        if (_qteHandler == null)
         {
             return;
         }
 
-        scannableObject.AddProgress(_settings.GreatSuccessBonus);
-        if (scannableObject.TryTransitToCompleted())
-        {
-            _onQteGreatSuccess?.Invoke();
-            return;
-        }
-
-        scannableObject.ChangeState(EScanState.OnProgress);
+        _qteHandler.HandleQteGreatSuccess(_settings.GreatSuccessBonus);
         _onQteGreatSuccess?.Invoke();
     }
 
@@ -140,7 +150,7 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
         }
 
         _isQteActive = true;
-        scannableObject.PauseScanning();
+        _qteHandler?.PauseScanning();
     }
 
     private void HandleQteEnded(EQuickTimeEventResult result)
@@ -159,14 +169,26 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
                 ApplyQTEGreatSuccess();
                 break;
             default:
-                if (scannableObject != null)
-                {
-                    scannableObject.ChangeState(EScanState.OnProgress);
-                }
+                _qteHandler?.ResumeScanningAfterQte();
                 break;
         }
 
         ResetTriggerTimer();
+    }
+
+    private void ResolveReferences()
+    {
+        if (scannableObject == null)
+        {
+            scannableObject = GetComponent<ScannableObject>();
+        }
+
+        if (scannableObject == null)
+        {
+            scannableObject = GetComponentInParent<ScannableObject>();
+        }
+
+        _qteHandler = scannableObject != null ? scannableObject.QteHandler : null;
     }
 
     private void ResetTriggerTimer()

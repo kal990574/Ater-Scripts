@@ -1,22 +1,37 @@
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
 [DisallowMultipleComponent]
 public class FuseBoxInteractable : StateInteractable
 {
-    [Header("References")]
+    [TabGroup("Inspector", "FuseBoxInteractable")]
     [SerializeField] private GameObject _innerFuseObject;
+
+    [TabGroup("Inspector", "FuseBoxInteractable")]
+    [LabelText("Light On")]
     [SerializeField] private GameObject _fuseLightOn;
+
+    [TabGroup("Inspector", "FuseBoxInteractable")]
+    [LabelText("Light Off")]
     [SerializeField] private GameObject _fuseLightOff;
 
-    [Header("Fuse Settings")]
+    [TabGroup("Inspector", "FuseBoxInteractable")]
+    [MinValue(0)]
+    [LabelText("Required Fuse Item ID")]
     [SerializeField] private int _requiredFuseItemId = 11;
+
+    [TabGroup("Inspector", "FuseBoxInteractable")]
+    [ToggleLeft]
+    [LabelText("Consume Required Item")]
     [SerializeField] private bool _consumeRequiredItem = true;
 
-    [Header("State Keys")]
+    [TabGroup("Inspector", "FuseBoxInteractable")]
+    [LabelText("Completed")]
     [SerializeField] private string _completedStateKey = "is_completed";
 
-    [Header("Events")]
+    [TabGroup("Inspector", "FuseBoxInteractable")]
+    [LabelText("On Completed")]
     [SerializeField] private UnityEvent _onCompleted;
 
     protected override bool CanUse(InteractionContext context, out string failureReason)
@@ -79,8 +94,6 @@ public class FuseBoxInteractable : StateInteractable
         _fuseLightOff.SetActive(false);
 
         SetState(_completedStateKey, true);
-
-        // TODO: Play fuse insertion SFX via SoundManager.
 
         Debug.Log($"[{nameof(FuseBoxInteractable)}] {gameObject.name} completed successfully. requiredItemId={_requiredFuseItemId}", this);
         _onCompleted?.Invoke();

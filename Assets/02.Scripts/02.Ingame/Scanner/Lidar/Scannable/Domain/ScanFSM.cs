@@ -9,7 +9,7 @@ public class ScanFSM
 
     public EScanState CurrentStateType => _currentState == null ? EScanState.Default : _currentState.StateType;
 
-    public ScanFSM(ScannableObject owner)
+    public ScanFSM(IScanStateContext owner)
     {
         _states = new Dictionary<EScanState, IScanState>();
         _stateFactories = new Dictionary<EScanState, Func<IScanState>>
