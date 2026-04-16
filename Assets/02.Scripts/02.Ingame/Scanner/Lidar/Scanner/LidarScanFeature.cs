@@ -66,7 +66,7 @@ public class LidarScanFeature : MonoBehaviour
 
     public void ActiveScan()
     {
-        if (!HasEnergy) return;
+        if (!HasEnergy || IsOnScan) return;
         IsOnScan = true;
 
         
@@ -78,10 +78,8 @@ public class LidarScanFeature : MonoBehaviour
 
     public void UpdateScan(float deltaTime)
     {
-        if (!HasEnergy)
+        if (!IsOnScan)
         {
-            StopScan();
-            SoundService.PlaySFX2D(_config.ScanFailed);
             return;
         }
         
@@ -177,6 +175,8 @@ public class LidarScanFeature : MonoBehaviour
                 {
                     _eventPublisher.TryPublish(
                         context => new LidarScanEnergyDepletedRawEvent(context));
+
+                    SoundService.PlaySFX2D(_config.ScanFailed);
                 }
 
                 StopScan();
