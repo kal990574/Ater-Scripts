@@ -2,6 +2,7 @@ using System.Collections;
 using DG.Tweening;
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace _02.Scripts.Enemy
 {
@@ -20,6 +21,10 @@ namespace _02.Scripts.Enemy
         [Header("Mannequins")]
         [SerializeField] private EnemyController[] _mannequins;
         [SerializeField] private float _activationDelay = 0.2f;
+
+        [Header("Events")]
+        [SerializeField] private UnityEvent _onWallRise;
+        [SerializeField] private UnityEvent _onMannequinsActivated;
 
         [Header("Detection")]
         [SerializeField] private LayerMask _playerLayer;
@@ -43,6 +48,8 @@ namespace _02.Scripts.Enemy
             if (_impulseSource != null)
                 _impulseSource.GenerateImpulseWithForce(_impulseForce);
 
+            _onWallRise?.Invoke();
+
             yield return new WaitForSeconds(_activationDelay);
 
             foreach (var mannequin in _mannequins)
@@ -50,6 +57,8 @@ namespace _02.Scripts.Enemy
                 if (mannequin != null)
                     mannequin.Activate();
             }
+
+            _onMannequinsActivated?.Invoke();
         }
 
         private void OnDestroy()
