@@ -1,38 +1,83 @@
-
 using System;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
+using Object = UnityEngine.Object;
 
-public class ScannableObject : MonoBehaviour, IScannable,IStateApplier
+[DisallowMultipleComponent]
+public class ScannableObject : MonoBehaviour, IScannable
 {
-    [Header("Required References")]
-    [SerializeField] private ScanProgressSetting _settings;
-    [SerializeField] private Rigidbody _targetRigidbody;
-    
-    
+    private const string ScanStateKey = "is_scan";
+    private const string InteractLayerName = "Interact";
+
+    [TabGroup("Inspector", "References")]
+    [Required]
+    [LabelText("Progress Settings")]
+    [SerializeField] private ScanProgressSettingSO _setting;
+
+    [TabGroup("Inspector", "References")]
+    [LabelText("Active Rigidbody Switch")]
+    [SerializeField] private bool _activePhysicsAfterScanComplete;
+
+    [TabGroup("Inspector", "References")]
+    [LabelText("Target Rigidbody")]
+    [SerializeField, ShowIf(nameof(_activePhysicsAfterScanComplete))] private Rigidbody _targetRigidbody;
+
     private GameEventPublisher _eventPublisher;
     private IRuntimeView _runtimeView;
-    private ScanProgress _progress;
-    private ScanFSM _fsm;
+    private ScannableScanController _scanController;
     private ScannableQTEInvoker _qteInvoker;
-    
-    public IRuntimeView RuntimeView => _runtimeView;
-    public bool IsProgressComplete => _progress != null && _progress.IsActivated;
-    public float CurrentProgress => _progress != null ? _progress.CurrentProgress : 0.0f;
-    public float ProgressRatio => _progress != null ? _progress.ProgressRatio : 0.0f;
-    public EScanState State => _fsm.CurrentStateType;
 
-    
-    public event Action<float> OnScanProgressChanged; //ratio전달
+    private int _interactLayer = -1;
+    private bool _isScanCompletedApplied;
+
+    public bool IsProgressComplete => _scanController != null && _scanController.IsProgressComplete;
+    public float CurrentProgress => _scanController != null ? _scanController.CurrentProgress : 0.0f;
+    public float ProgressRatio => _scanController != null ? _scanController.ProgressRatio : 0.0f;
+    public EScanState State => _scanController == null ? EScanState.Default : _scanController.State;
+    public IScannableQTEHandler QteHandler => _scanController;
+
+    public event Action<float> OnScanProgressChanged;
     public event Action OnScanStart;
     public event Action OnScanEnd;
     public event Action OnScanComplete;
-    
-    [Header("Scene Event")]
+
+    [TabGroup("Inspector", "Events")]
+    [LabelText("On Scan Started")]
     public UnityEvent OnScanStartUnityEvent;
+
+    [TabGroup("Inspector", "Events")]
+    [LabelText("On Scan Ended")]
     public UnityEvent OnScanEndUnityEvent;
+
+    [TabGroup("Inspector", "Events")]
+    [LabelText("On Scan Completed")]
     public UnityEvent OnScanCompleteUnityEvent;
-    
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("State")]
+    private EScanState DebugState => State;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Current Progress")]
+    private float DebugCurrentProgress => CurrentProgress;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, ProgressBar(0f, 1f), LabelText("Progress Ratio")]
+    private float DebugProgressRatio => ProgressRatio;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Runtime View")]
+    private Object DebugRuntimeView => _runtimeView as Object;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("QTE Invoker")]
+    private ScannableQTEInvoker DebugQteInvoker => _qteInvoker;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Completed State Applied")]
+    private bool DebugIsCompletedApplied => _isScanCompletedApplied;
+
     private void Awake()
     {
         Init();
@@ -40,72 +85,36 @@ public class ScannableObject : MonoBehaviour, IScannable,IStateApplier
 
     private void OnDestroy()
     {
-        if (_progress != null)
-        {
-            _progress.OnProgressChanged -= HandleProgressChanged;
-            _progress.OnActivated -= OnScanCompleted;
-        }
+        _scanController?.Dispose();
     }
 
     private void Update()
     {
-        if (IsProgressComplete)
-        {
-            return;
-        }
-
-        _fsm.Tick(Time.deltaTime);
+        _scanController?.Tick(Time.deltaTime);
     }
 
     public void Init()
     {
-        if (_settings == null)
+        if (_setting == null)
         {
-            Debug.LogError($"[{nameof(ScannableObject)}] {nameof(ScanProgressSetting)} is missing.", this);
+            Debug.LogError($"[{nameof(ScannableObject)}] {nameof(ScanProgressSettingSO)} is missing.", this);
             enabled = false;
             return;
         }
-        
-        if (_targetRigidbody == null)
-        {
-            _targetRigidbody = GetComponentInParent<Rigidbody>();
-        }
 
-        if (_runtimeView == null)
-        {
-            _runtimeView = GetComponentInParent<IRuntimeView>();
-        }
-        
-        _qteInvoker = GetComponent<ScannableQTEInvoker>();
-        if (_qteInvoker == null)
-        {
-            _qteInvoker = GetComponentInChildren<ScannableQTEInvoker>();
-        }
-
-        _eventPublisher = new GameEventPublisher();
-        _eventPublisher.SetSource(this);
-        
-        if (_progress != null)
-        {
-            _progress.OnProgressChanged -= HandleProgressChanged;
-            _progress.OnActivated -= OnScanCompleted;
-        }
-
-        _progress = new ScanProgress(_settings);
-        _progress.OnProgressChanged += HandleProgressChanged;
-        _progress.OnActivated += OnScanCompleted;
-
-        _fsm = new ScanFSM(this);
-        ChangeState(EScanState.Default, true);
-        ApplyPhysicsState(false);
+        ResolveReferences();
+        SetupEventPublisher();
+        SetupScanController();
+        ResetCompletionState();
     }
 
+    [TabGroup("Inspector", "Debug")]
+    [Button("Reset Scan", ButtonSizes.Medium)]
     [ContextMenu("Reset")]
     public void ResetAll()
     {
-        _progress?.Reset();
-        ChangeState(EScanState.Default, true);
-        ApplyPhysicsState(false);
+        _scanController?.Reset();
+        ResetCompletionState();
     }
 
     public void OnScanStarted()
@@ -114,117 +123,53 @@ public class ScannableObject : MonoBehaviour, IScannable,IStateApplier
         {
             return;
         }
-        
+
+        OnScanStart?.Invoke();
         OnScanStartUnityEvent?.Invoke();
     }
 
     public void OnScanning(float deltaTime)
     {
-        if (IsProgressComplete)
+        if (_scanController == null)
         {
             return;
         }
 
-        _fsm.OnScanning(deltaTime);
+        _scanController.OnScanning(deltaTime);
         _qteInvoker?.HandleScanning(deltaTime);
     }
 
     public void OnScanStopped()
     {
-        if (IsProgressComplete)
+        if (_scanController == null)
         {
             return;
         }
-        
+
         bool shouldNotifyScanLost = _qteInvoker == null || _qteInvoker.HandleScanStopped();
-        if (shouldNotifyScanLost)
+        if (!shouldNotifyScanLost)
         {
-            _fsm.OnScanStopped();
-            OnScanEndUnityEvent?.Invoke();
+            return;
         }
-        
-    }
-   
-    public void OnScanCompleted()
-    {
-        ApplyPhysicsState(true);
-        SetInteractable();
-        
-        OnScanComplete?.Invoke();
-        OnScanCompleteUnityEvent?.Invoke();
-        
-        if (_runtimeView != null)
-        {
-            _runtimeView.RuntimeData.State.SetBool("is_scan", true);
-        }
-        
-        _eventPublisher.TryPublish(
-            context => new LidarScanTargetCompletedRawEvent(context, this));
-    }
-    
-    public void AddProgress(float amount)
-    {
-        _progress.Add(amount);
+
+        _scanController.OnScanStopped();
+        OnScanEnd?.Invoke();
+        OnScanEndUnityEvent?.Invoke();
     }
 
-    public void ReduceProgress(float amount)
+    private void OnScanCompleted()
     {
-        _progress.Reduce(amount);
+        CompleteScan(notifyListeners: true, updateRuntimeState: true, publishGameEvent: true);
     }
-    
+
     private void HandleProgressChanged(float ratio)
     {
         OnScanProgressChanged?.Invoke(ratio);
     }
 
-    public void ChangeState(EScanState nextState, bool force = false)
-    {
-        _fsm.ChangeState(nextState, force);
-    }
-
-    public void ChangeState(EScanState nextState)
-    {
-        ChangeState(nextState, false);
-    }
-
-    public void ReduceProgressByReturn(float deltaTime)
-    {
-        _progress.Reduce(_settings.ReturnSpeed * deltaTime);
-        if (CurrentProgress <= 0.0f)
-        {
-            ChangeState(EScanState.Default);
-        }
-    }
-
-    public void ApplyScanProgress(float deltaTime)
-    {
-        AddProgress(deltaTime);
-    }
-
-    public bool TryTransitToCompleted()
-    {
-        if (IsProgressComplete == false)
-        {
-            return false;
-        }
-
-        ChangeState(EScanState.OnCompleted);
-        return true;
-    }
-
-    public void PauseScanning()
-    {
-        if (IsProgressComplete)
-        {
-            return;
-        }
-
-        ChangeState(EScanState.OnHold);
-    }
-    
     private void ApplyPhysicsState(bool isScanComplete)
     {
-        if (_targetRigidbody == null)
+        if (!_activePhysicsAfterScanComplete || _targetRigidbody == null)
         {
             return;
         }
@@ -232,42 +177,136 @@ public class ScannableObject : MonoBehaviour, IScannable,IStateApplier
         _targetRigidbody.useGravity = isScanComplete;
         _targetRigidbody.isKinematic = !isScanComplete;
     }
-    
+
+    [TabGroup("Inspector", "Debug")]
+    [Button("Force Complete", ButtonSizes.Medium)]
     [ContextMenu("Force")]
     public void ForceScanComplete()
     {
-        if (_progress == null || _fsm == null)
-        {
-            Init();
-        }
-
-        if (IsProgressComplete == false)
-        {
-            AddProgress(_settings.RequiredScanTime);
-        }
-
-        ChangeState(EScanState.OnCompleted, true);
-        ApplyPhysicsState(true);
-        
-        OnScanProgressChanged?.Invoke(1);
-        OnScanComplete?.Invoke();
+        EnsureScanControllerInitialized();
+        _scanController?.ForceComplete();
     }
-    
-    public void ApplyState(RuntimeView binder)
+
+    public void ApplyRuntimeScanState(bool isCompleted)
     {
-        if (binder.RuntimeData.State.GetBool("is_scan"))
+        if (isCompleted)
         {
-            ForceScanComplete();
-            SetInteractable();
+            EnsureScanControllerInitialized();
+            _scanController?.RestoreCompletedState();
+            ApplyCompletedState();
+            return;
         }
+
+        ResetAll();
     }
 
-    public void SetInteractable()
+    private void SetInteractable()
     {
         IRuntimeInteractObject[] interactObjects = GetComponentsInChildren<IRuntimeInteractObject>();
         foreach (IRuntimeInteractObject interactObject in interactObjects)
         {
             interactObject.SetActivate(true);
         }
+    }
+
+    private void ResolveReferences()
+    {
+        if (_activePhysicsAfterScanComplete && _targetRigidbody == null)
+        {
+            _targetRigidbody = GetComponentInParent<Rigidbody>();
+        }
+
+        if (_runtimeView == null)
+        {
+            _runtimeView = GetComponentInParent<IRuntimeView>();
+        }
+
+        if (_qteInvoker == null)
+        {
+            _qteInvoker = GetComponent<ScannableQTEInvoker>();
+        }
+
+        if (_qteInvoker == null)
+        {
+            _qteInvoker = GetComponentInChildren<ScannableQTEInvoker>();
+        }
+    }
+
+    private void SetupEventPublisher()
+    {
+        if (_eventPublisher != null)
+        {
+            return;
+        }
+
+        _eventPublisher = new GameEventPublisher();
+        _eventPublisher.SetSource(this);
+    }
+
+    private void SetupScanController()
+    {
+        _scanController?.Dispose();
+        _scanController = new ScannableScanController(_setting, HandleProgressChanged, OnScanCompleted);
+    }
+
+    private void EnsureScanControllerInitialized()
+    {
+        if (_scanController != null)
+        {
+            return;
+        }
+
+        SetupScanController();
+    }
+
+    private void ResetCompletionState()
+    {
+        _isScanCompletedApplied = false;
+        _scanController?.ChangeState(EScanState.Default, true);
+        ApplyPhysicsState(false);
+    }
+
+    private void CompleteScan(bool notifyListeners, bool updateRuntimeState, bool publishGameEvent)
+    {
+        bool wasCompleted = _isScanCompletedApplied;
+
+        ApplyCompletedState();
+        _scanController?.ChangeState(EScanState.OnCompleted, true);
+
+        if (updateRuntimeState)
+        {
+            PersistCompletedState();
+        }
+
+        if (wasCompleted || !notifyListeners)
+        {
+            return;
+        }
+
+        OnScanComplete?.Invoke();
+        OnScanCompleteUnityEvent?.Invoke();
+
+        if (publishGameEvent)
+        {
+            _eventPublisher?.TryPublish(
+                context => new LidarScanTargetCompletedRawEvent(context, this));
+        }
+    }
+
+    private void ApplyCompletedState()
+    {
+        ApplyPhysicsState(true);
+        SetInteractable();
+        _isScanCompletedApplied = true;
+    }
+
+    private void PersistCompletedState()
+    {
+        if (_runtimeView?.RuntimeData?.State == null)
+        {
+            return;
+        }
+
+        _runtimeView.RuntimeData.State.SetBool(ScanStateKey, true);
     }
 }
