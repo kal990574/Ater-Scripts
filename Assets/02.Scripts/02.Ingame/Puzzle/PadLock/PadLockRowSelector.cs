@@ -34,7 +34,6 @@ public class PadLockRowSelector : MonoBehaviour, IPointerClickHandler
     public void Bind(PadLockPuzzleInstance puzzleInstance)
     {
         _puzzleInstance = puzzleInstance;
-        _puzzleInstance.SetRowValue(_rowIndex, _currentValue);
     }
 
     public void OnPointerClick(PointerEventData eventData)
