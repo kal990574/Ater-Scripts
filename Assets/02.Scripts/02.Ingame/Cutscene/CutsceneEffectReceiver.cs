@@ -1,8 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Rendering;
 using Unity.Cinemachine;
-using System.Collections;
 using System;
 
 public class CutsceneEffectReceiver : MonoBehaviour
@@ -10,10 +8,6 @@ public class CutsceneEffectReceiver : MonoBehaviour
     [Header("Camera Shake")]
     [SerializeField] private CinemachineImpulseSource _impulseSource;
     [SerializeField] private float _doorImpulseForce = 2.0f;
-
-    [Header("Post Processing")]
-    [SerializeField] private Volume _cutsceneVolume;
-    [SerializeField] private float _effectDuration = 1.5f;
 
     [Header("Enemy")]
     [SerializeField] private NavMeshAgent _enemyAgent;
@@ -36,12 +30,6 @@ public class CutsceneEffectReceiver : MonoBehaviour
     public void OnDoorImpulse()
     {
         _impulseSource.GenerateImpulseWithForce(_doorImpulseForce);
-    }
-
-    public void OnEnemyReveal()
-    {
-        if (_cutsceneVolume == null) return;
-        StartCoroutine(EnemyRevealEffect());
     }
 
     private bool _isHeadTurning;
@@ -78,20 +66,5 @@ public class CutsceneEffectReceiver : MonoBehaviour
             _onHeadTurnComplete?.Invoke();
             _onHeadTurnComplete = null;
         }
-    }
-
-    private IEnumerator EnemyRevealEffect()
-    {
-        _cutsceneVolume.weight = 1f;
-
-        float elapsed = 0f;
-        while (elapsed < _effectDuration)
-        {
-            elapsed += Time.deltaTime;
-            _cutsceneVolume.weight = Mathf.Lerp(1f, 0f, elapsed / _effectDuration);
-            yield return null;
-        }
-
-        _cutsceneVolume.weight = 0f;
     }
 }
