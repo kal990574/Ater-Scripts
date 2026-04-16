@@ -25,6 +25,7 @@ public class CutsceneEffectReceiver : MonoBehaviour
     public void OnStartChaseAnimation()
     {
         _enemyAnimator.runtimeAnimatorController = _chaseAnimatorController;
+        _enemyAnimator.SetBool("StartChase", true);
     }
 
     public void OnDoorImpulse()
