@@ -82,6 +82,11 @@ public class SoundManager : MonoBehaviour, ISoundService
         _mixerController.SetSFXVolume(volume);
     }
 
+    public void SetHintVolume(float volume)
+    {
+        _mixerController.SetHintVolume(volume);
+    }
+
     public void TransitionToSnapshot(AudioMixerSnapshot snapshot, float transitionTime = 0.5f)
     {
         _mixerController.TransitionToSnapshot(snapshot, transitionTime);
