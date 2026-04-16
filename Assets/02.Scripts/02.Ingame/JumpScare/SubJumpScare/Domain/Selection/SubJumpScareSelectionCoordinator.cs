@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using _02.Scripts.Player;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SubJumpScareSelectionCoordinator

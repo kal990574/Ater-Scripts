@@ -9,23 +9,24 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 {
     [Header("References")]
     [SerializeField] private PlayerConfigSO _playerConfig;
-    [SerializeField] private bool _canMove = true;
-    [SerializeField] private bool _canRotate = true;
-    [SerializeField] private EPlayerInteractMode _interactMode = EPlayerInteractMode.Scan;
+    [SerializeField] private EPlayerInteractMode _initialMode = EPlayerInteractMode.Scan;
 
     private readonly Dictionary<Type, PlayerAbility> _abilities = new();
     private IPlayerInput _input;
-    private EPlayerInteractMode _lastGameplayMode = EPlayerInteractMode.Scan;
     private IGameManager _gameManager;
-    private bool _isPausedByGame;
-    private IPuzzleInputHandler _activePuzzleInputHandler;
-
+    private PlayerModeService _modeService;
+    private PlayerInteractionContextFactory _interactionContextFactory;
+    private PlayerGameplayInputRouter _gameplayInputRouter;
+    private PlayerBlockedInputRouter _blockedInputRouter;
+    private PlayerEventPublisher _eventPublisher;
+    
     public PlayerConfigSO Config => _playerConfig;
     public IPlayerInput Input => _input;
-    public bool CanMove => _canMove;
-    public bool CanRotate => _canRotate;
-    public EPlayerInteractMode InteractMode => _interactMode;
-    public IDetectable Target => GetAbility<PlayerDetectAbility>().CurrentTarget;
+    public bool CanMove => _modeService != null && _modeService.CanMove;
+    public bool CanRotate => _modeService != null && _modeService.CanRotate;
+    public EPlayerInteractMode InteractMode => _modeService != null ? _modeService.CurrentMode : _initialMode;
+    public PlayerEventPublisher EventPublisher => _eventPublisher;
+    private IDetectable Target => GetAbility<PlayerDetectAbility>()?.CurrentTarget;
 
     public event Action<EPlayerInteractMode> OnModeChanged;
 
@@ -36,16 +37,38 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
             _input = GetComponentInChildren<IPlayerInput>();
         }
 
-        if (IsGameplayMode(_interactMode))
+        _modeService = new PlayerModeService(_initialMode);
+        _modeService.OnModeChanged += HandleModeChanged;
+
+        PlayerDetectAbility detectAbility = GetAbility<PlayerDetectAbility>();
+        if (detectAbility != null)
         {
-            _lastGameplayMode = _interactMode;
+            _eventPublisher = new PlayerEventPublisher(this, detectAbility.PromptQuery);
+            detectAbility.SetEventPublisher(_eventPublisher);
         }
 
-        ApplyModeState(_interactMode);
+        PlayerHandAbility handAbility = GetAbility<PlayerHandAbility>();
+        _interactionContextFactory = new PlayerInteractionContextFactory(this, handAbility);
+        _gameplayInputRouter = new PlayerGameplayInputRouter(
+            _modeService,
+            () => Target,
+            GetAbility<PlayerInteractAbility>(),
+            GetAbility<PlayerScanAbility>(),
+            handAbility,
+            SwitchToItemMode,
+            SwitchToScanMode,
+            ToggleInventoryUI);
+        _blockedInputRouter = new PlayerBlockedInputRouter(_modeService, ToggleInventoryUI);
     }
 
     private void OnEnable()
     {
+        PlayerHandAbility handAbility = GetAbility<PlayerHandAbility>();
+        if (handAbility != null)
+        {
+            handAbility.OnHandSlotChanged += HandleHandSlotChanged;
+        }
+
         if (InventoryManager.Instance != null)
         {
             InventoryManager.Instance.OnInventoryToggled += HandleInventoryToggled;
@@ -59,6 +82,12 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 
     private void OnDisable()
     {
+        PlayerHandAbility handAbility = GetAbility<PlayerHandAbility>();
+        if (handAbility != null)
+        {
+            handAbility.OnHandSlotChanged -= HandleHandSlotChanged;
+        }
+
         if (InventoryManager.Instance != null)
         {
             InventoryManager.Instance.OnInventoryToggled -= HandleInventoryToggled;
@@ -70,116 +99,77 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         }
     }
 
-    private void Update()
+    private void OnDestroy()
     {
-        if (_isPausedByGame)
+        if (_modeService != null)
         {
-            return;
+            _modeService.OnModeChanged -= HandleModeChanged;
         }
-        if (TryHandleBlockedModeInput())
-        {
-            return;
-        }
-
-        HandleGameplayInteractionInput();
-        HandleModeSwitchInput();
-        HandleCurrentModeInput();
     }
 
-    private bool TryHandleBlockedModeInput()
+    private void Update()
     {
-        switch (_interactMode)
+        if (_input == null)
         {
-            case EPlayerInteractMode.UI:
-                HandleUIModeInput();
-                return true;
-            case EPlayerInteractMode.Puzzle:
-                HandlePuzzleModeInput();
-                return true;
-            case EPlayerInteractMode.Cutscene:
-                return true;
-            default:
-                return false;
+            return;
         }
+
+        if (_modeService != null && _modeService.IsPausedByGame)
+        {
+            return;
+        }
+
+        if (_blockedInputRouter != null && _blockedInputRouter.Handle(_input))
+        {
+            return;
+        }
+
+        _gameplayInputRouter?.Handle(_input);
     }
 
     public void EnterCutsceneMode()
     {
-        SetInteractMode(EPlayerInteractMode.Cutscene);
+        _modeService?.EnterCutsceneMode();
     }
 
     public void ExitCutsceneMode()
     {
-        SetInteractMode(_lastGameplayMode);
-    }
-
-    private void HandleUIModeInput()
-    {
-        if (_input.InventoryToggleInput)
-        {
-            ToggleInventoryUI();
-        }
-    }
-
-    private void HandleGameplayInteractionInput()
-    {
-        if (Target != null && _input.InteractInput)
-        {
-            GetAbility<PlayerInteractAbility>().Interact(Target);
-            //GetAbility<PlayerDetectAbility>().ForceHidePrompt();
-
-        }
-    }
-
-    private void HandleModeSwitchInput()
-    {
-        if (_input.ModeToggleInput)
-        {
-            SwitchToScanMode();
-        }
-
-        if (_input.InventoryToggleInput)
-        {
-            ToggleInventoryUI();
-        }
-
-        int itemSlotIndex = _input.ItemSlotInput;
-        if (itemSlotIndex >= 0 && itemSlotIndex <= 5)
-        {
-            SwitchToItemMode(itemSlotIndex);
-        }
-    }
-
-    private void HandleCurrentModeInput()
-    {
-        switch (_interactMode)
-        {
-            case EPlayerInteractMode.Scan:
-                ScanModeInput();
-                break;
-            case EPlayerInteractMode.Item:
-                break;
-        }
-
-        float scroll = Input.ScrollInput;
-        if(!Mathf.Approximately(scroll, 0f))
-        {
-            SetInteractMode(EPlayerInteractMode.Item);
-            int direction = scroll > 0f ? 1 : -1;
-            GetAbility<PlayerHandAbility>().CycleHandItem(direction);
-        }
+        _modeService?.ExitCutsceneMode();
     }
     
-    private void SwitchToScanMode()
+    public bool SwitchToScanMode()
     {
-        GetAbility<PlayerHandAbility>().ClearHandItem();
-        SetInteractMode(EPlayerInteractMode.Scan);
+        if (InteractMode == EPlayerInteractMode.Scan)
+        {
+            return false;
+        }
+
+        PlayerModeTransitionAbility modeTransitionAbility = GetAbility<PlayerModeTransitionAbility>();
+        PlayerHandAbility handAbility = GetAbility<PlayerHandAbility>();
+        PlayerScanAbility scanAbility = GetAbility<PlayerScanAbility>();
+
+        if (modeTransitionAbility != null && modeTransitionAbility.TryPlayTransition(
+                onLowered: () =>
+                {
+                    handAbility?.ClearHandItem();
+                    scanAbility?.SetScannerVisible(true);
+                },
+                onCompleted: () => _modeService?.SetGameplayMode(EPlayerInteractMode.Scan)))
+        {
+            _modeService?.SetGameplayMode(EPlayerInteractMode.Scan);
+            return true;
+        }
+
+        handAbility?.ClearHandItem();
+        scanAbility?.SetScannerVisible(true);
+        _modeService?.SetGameplayMode(EPlayerInteractMode.Scan);
+        return true;
     }
 
     private void ToggleInventoryUI()
     {
-        bool wasInUIMode = _interactMode == EPlayerInteractMode.UI;
-        GetAbility<PlayerHandAbility>().ToggleInventory();
+        bool wasInUIMode = InteractMode == EPlayerInteractMode.UI;
+        GetAbility<PlayerHandAbility>()?.ToggleInventory();
 
         if (wasInUIMode)
         {
@@ -190,39 +180,63 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         EnterUIMode();
     }
 
-    private void SwitchToItemMode(int itemSlotIndex)
+    public bool SwitchToItemMode(int itemSlotIndex)
     {
-        SetInteractMode(EPlayerInteractMode.Item);
-        GetAbility<PlayerHandAbility>().TryPickUpItem(itemSlotIndex);
+        PlayerModeTransitionAbility modeTransitionAbility = GetAbility<PlayerModeTransitionAbility>();
+        PlayerHandAbility handAbility = GetAbility<PlayerHandAbility>();
+        PlayerScanAbility scanAbility = GetAbility<PlayerScanAbility>();
+
+        if (handAbility != null
+            && handAbility.HasHandItem
+            && handAbility.CurrentHandIndex == itemSlotIndex)
+        {
+            return false;
+        }
+
+        if (modeTransitionAbility != null && modeTransitionAbility.TryPlayTransition(
+                onLowered: () =>
+                {
+                    scanAbility?.SetScannerVisible(false);
+                    bool didEquip = handAbility != null && handAbility.TryPickUpItem(itemSlotIndex);
+                    if (didEquip == false)
+                    {
+                        scanAbility?.SetScannerVisible(true);
+                        _modeService?.SetGameplayMode(EPlayerInteractMode.Scan);
+                    }
+                },
+                onCompleted: null))
+        {
+            _modeService?.SetGameplayMode(EPlayerInteractMode.Item);
+            return true;
+        }
+
+        _modeService?.SetGameplayMode(EPlayerInteractMode.Item);
+        scanAbility?.SetScannerVisible(false);
+
+        if (handAbility == null || handAbility.TryPickUpItem(itemSlotIndex))
+        {
+            return true;
+        }
+
+        scanAbility?.SetScannerVisible(true);
+        _modeService?.SetGameplayMode(EPlayerInteractMode.Scan);
+        return false;
     }
 
-    private void ScanModeInput()
+    public void HandleHandConsumeResult(HandConsumeResult result)
     {
-        PlayerScanAbility scanAbility = GetAbility<PlayerScanAbility>();
-        if (_input.RmbPressInput)
+        if (!result.Consumed)
         {
-            scanAbility.SonarActive();
+            return;
         }
 
-        if (_input.LmbPressInput)
+        if (result.InventoryEmptyAfterConsume || result.NextRecommendedSlotIndex < 0)
         {
-            scanAbility.LidarScanActive();
-        }
-        
-        if (_input.LmbHoldInput)
-        {
-            scanAbility.LidarScanUpdate();
+            SwitchToScanMode();
+            return;
         }
 
-        if (_input.InteractInput)
-        {
-            QTEManager.Instance?.SubmitCurrent();
-        }
-
-        if (_input.LmbReleaseInput)
-        {
-            scanAbility.LidarScanDeactive();
-        }
+        _modeService?.SetGameplayMode(EPlayerInteractMode.Item);
     }
 
     public T GetAbility<T>() where T : PlayerAbility
@@ -244,126 +258,116 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         return null;
     }
 
+    [System.Obsolete("Prefer explicit mode request methods such as EnterUIMode, EnterPuzzleMode, SwitchToScanMode, or SwitchToItemMode.")]
     public void SetInteractMode(EPlayerInteractMode mode)
     {
-        if (_interactMode == mode)
+        if (_modeService == null)
         {
             return;
         }
 
-        if (IsGameplayMode(mode))
+        if (mode == EPlayerInteractMode.Item || mode == EPlayerInteractMode.Scan)
         {
-            _lastGameplayMode = mode;
+            _modeService.SetGameplayMode(mode);
+            return;
         }
 
-        _interactMode = mode;
-        ApplyModeState(mode);
-        OnModeChanged?.Invoke(mode);
+        switch (mode)
+        {
+            case EPlayerInteractMode.UI:
+                _modeService.EnterUIMode();
+                break;
+            case EPlayerInteractMode.Puzzle:
+                _modeService.EnterPuzzleMode(null);
+                break;
+            case EPlayerInteractMode.Cutscene:
+                _modeService.EnterCutsceneMode();
+                break;
+        }
     }
 
     public void EnterUIMode()
     {
-        SetInteractMode(EPlayerInteractMode.UI);
+        _modeService?.EnterUIMode();
     }
 
     public void ExitUIMode()
     {
-        SetInteractMode(_lastGameplayMode);
+        _modeService?.ExitUIMode();
     }
 
     public void EnterPuzzleMode()
     {
         GetAbility<PlayerDetectAbility>()?.ForceHidePrompt();
-        SetInteractMode(EPlayerInteractMode.Puzzle);
+        _modeService?.EnterPuzzleMode(null);
     }
 
     public void ExitPuzzleMode()
     {
         GetAbility<PlayerDetectAbility>()?.ResumePrompt();
-        SetInteractMode(_lastGameplayMode);
+        _modeService?.ExitPuzzleMode(null);
     }
 
     public void EnterPuzzleMode(IPuzzleInputHandler puzzleInputHandler)
     {
-        _activePuzzleInputHandler = puzzleInputHandler;
-        EnterPuzzleMode();
+        GetAbility<PlayerDetectAbility>()?.ForceHidePrompt();
+        _modeService?.EnterPuzzleMode(puzzleInputHandler);
     }
 
     public void ExitPuzzleMode(IPuzzleInputHandler puzzleInputHandler)
     {
-        if (_activePuzzleInputHandler != null && _activePuzzleInputHandler != puzzleInputHandler)
+        if (_modeService != null
+            && _modeService.ActivePuzzleInputHandler != null
+            && _modeService.ActivePuzzleInputHandler != puzzleInputHandler)
         {
             return;
         }
 
-        _activePuzzleInputHandler = null;
-        ExitPuzzleMode();
+        GetAbility<PlayerDetectAbility>()?.ResumePrompt();
+        _modeService?.ExitPuzzleMode(puzzleInputHandler);
     }
 
     private void HandleInventoryToggled(bool isOn)
     {
-        if (isOn)
-        {
-            EnterUIMode();
-            return;
-        }
-
-        if (_interactMode == EPlayerInteractMode.UI)
-        {
-            ExitUIMode();
-        }
-    }
-
-    private void HandlePuzzleModeInput()
-    {
-        if (_input.ConfirmInput)
-        {
-            _activePuzzleInputHandler?.ConfirmActivePuzzle();
-        }
-
-        if (_input.CancelInput)
-        {
-            _activePuzzleInputHandler?.CancelActivePuzzle();
-        }
-    }
-
-    private void ApplyModeState(EPlayerInteractMode mode)
-    {
-        if (_isPausedByGame) return;
-        
-        bool blocksPlayerControl = mode == EPlayerInteractMode.UI || mode == EPlayerInteractMode.Puzzle || mode == EPlayerInteractMode.Cutscene;
-        _canMove = !blocksPlayerControl;
-        _canRotate = !blocksPlayerControl;
-        
-        bool showCursor = mode == EPlayerInteractMode.UI ||  mode == EPlayerInteractMode.Puzzle;
-        Cursor.lockState = showCursor ? CursorLockMode.None : CursorLockMode.Locked;
-        Cursor.visible = showCursor;
+        _modeService?.HandleInventoryToggled(isOn);
     }
 
     private void HandleGameStateChanged(GameState state)
     {
-        switch (state)
-        {
-            case GameState.Paused:
-            case GameState.GameOver:
-                _isPausedByGame = true;
-                _canMove = false;
-                _canRotate = false;
-                break;
-            case GameState.Playing:
-                _isPausedByGame = false;
-                ApplyModeState(_interactMode);
-                break;
-        }
+        _modeService?.HandleGameStateChanged(state);
     }
 
-    private static bool IsGameplayMode(EPlayerInteractMode mode)
+    private void HandleModeChanged(EPlayerInteractMode mode)
     {
-        return mode == EPlayerInteractMode.Item || mode == EPlayerInteractMode.Scan;
+        OnModeChanged?.Invoke(mode);
+    }
+
+    private void HandleHandSlotChanged(int handIndex)
+    {
+        if (InteractMode != EPlayerInteractMode.Item || handIndex >= 0)
+        {
+            return;
+        }
+
+        PlayerHandAbility handAbility = GetAbility<PlayerHandAbility>();
+        if (handAbility == null || handAbility.InventoryCount <= 0)
+        {
+            SwitchToScanMode();
+        }
     }
 
     public EPlayerInteractMode GetCurrentMode()
     {
-        return _interactMode;
+        return InteractMode;
+    }
+
+    public InteractionContext CreateInteractionContext(GameObject targetObject)
+    {
+        if (_interactionContextFactory == null)
+        {
+            return InteractionContext.CreateForPlayer(this, targetObject);
+        }
+
+        return _interactionContextFactory.Create(targetObject);
     }
 }

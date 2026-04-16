@@ -1,3 +1,4 @@
+using _02.Scripts.Player;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -102,13 +103,15 @@ public class KeyDoorInteractable : DoorInteractable
                 return false;
             }
 
-            if (!context.HandAbility.TryConsumeCurrentHandItem())
+            if (!context.HandAbility.TryConsumeCurrentHandItem(out HandConsumeResult consumeResult))
             {
                 SetFailureResult(EUseInteractResult.ConsumeFailed);
                 failureReason = $"Failed to consume the required key. requiredItemId={_requiredKeyItemId}";
                 Debug.LogError($"[{nameof(KeyDoorInteractable)}] {gameObject.name} failed to consume the required key. requiredItemId={_requiredKeyItemId}", this);
                 return false;
             }
+
+            context.User?.HandleHandConsumeResult(consumeResult);
         }
 
         if (!Unlock())

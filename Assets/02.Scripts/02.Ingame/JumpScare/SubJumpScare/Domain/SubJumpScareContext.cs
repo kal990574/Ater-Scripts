@@ -1,4 +1,5 @@
-﻿using System;
+﻿using _02.Scripts.Player;
+using System;
 
 /// <summary>
 /// 현재 프레임의 런타임 상태를 선택 로직에 전달

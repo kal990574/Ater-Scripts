@@ -1,83 +1,77 @@
-using _02.Scripts.Player;
 using _02.Scripts.Sonar;
-using System;
 using UnityEngine;
 
-//소나와 라이더 스캔 관장
-public class PlayerScanAbility : PlayerAbility
+namespace _02.Scripts.Player
 {
-    [SerializeField] private LidarScanFeature _lidarScanFeature;
-    [SerializeField] private SonarScanFeature _sonarScanFeature;
-
-    [SerializeField] private GameObject _scannerModel;
-    [SerializeField] private bool _isScannerActive = false;
-
-    private bool _isLidarHolding = false;
-    
-    private void Start()
+    public class PlayerScanAbility : PlayerAbility
     {
-        _lidarScanFeature.Initialize();
-        _sonarScanFeature.Initialize();
-        _isScannerActive = true;
-        _owner.OnModeChanged += SetScannerVisible;
-    }
+        [SerializeField] private LidarScanFeature _lidarScanFeature;
+        [SerializeField] private SonarScanFeature _sonarScanFeature;
 
-    private void SetScannerVisible(EPlayerInteractMode mode)
-    {
-        if (mode == EPlayerInteractMode.Scan)
+        [SerializeField] private GameObject _scannerModel;
+        [SerializeField] private bool _isScannerActive = false;
+
+        private bool _isLidarHolding = false;
+
+        private void Start()
         {
-            _scannerModel.SetActive(true);
-            _isScannerActive = true;
+            _lidarScanFeature.Initialize();
+            _sonarScanFeature.Initialize();
+            bool startVisible = _owner == null || _owner.InteractMode == EPlayerInteractMode.Scan;
+            SetScannerVisible(startVisible);
         }
-        else
+
+        private void Update()
         {
-            _scannerModel.SetActive(false);
-            _isScannerActive = false;
+            _sonarScanFeature.UpdateCoolDown();
+            _lidarScanFeature.UpdateEnergy(Time.deltaTime, _isLidarHolding);
         }
-    }
 
-    private void Update()
-    {
-        _sonarScanFeature.UpdateCoolDown();
-        _lidarScanFeature.UpdateEnergy(Time.deltaTime, _isLidarHolding);
-    }
-
-    private void OnDestroy()
-    {
-        _owner.OnModeChanged -= SetScannerVisible;
-    }
-
-    public void LidarScanDeactive()
-    {
-        _isLidarHolding = false;
-        _lidarScanFeature.StopScan();
-    }
-
-    public void LidarScanUpdate()
-    {
-        if (!_isScannerActive)
+        public void SetScannerVisible(bool isVisible)
         {
-            return;
-        }
-        _lidarScanFeature.UpdateScan(Time.deltaTime);
-    }
+            if (_scannerModel != null)
+            {
+                _scannerModel.SetActive(isVisible);
+            }
 
-    public void LidarScanActive()
-    {
-        if (!_isScannerActive)
-        {
-            return;
+            _isScannerActive = isVisible;
         }
-        _isLidarHolding = true;
-        _lidarScanFeature.ActiveScan();
-    }
 
-    public void SonarActive()
-    {
-        if (!_isScannerActive)
+        public void LidarScanDeactive()
         {
-            return;
+            _isLidarHolding = false;
+            _lidarScanFeature.StopScan();
         }
-        _sonarScanFeature.TryScan();
+
+        public void LidarScanUpdate()
+        {
+            if (!_isScannerActive)
+            {
+                return;
+            }
+
+            _lidarScanFeature.UpdateScan(Time.deltaTime);
+        }
+
+        public void LidarScanActive()
+        {
+            if (!_isScannerActive)
+            {
+                return;
+            }
+
+            _isLidarHolding = true;
+            _lidarScanFeature.ActiveScan();
+        }
+
+        public void SonarActive()
+        {
+            if (!_isScannerActive)
+            {
+                return;
+            }
+
+            _sonarScanFeature.TryScan();
+        }
     }
 }

@@ -1,3 +1,4 @@
+using _02.Scripts.Player;
 using UnityEngine;
 
 public class InteractionContext
@@ -28,7 +29,7 @@ public class InteractionContext
         Hand = hand;
     }
 
-    public static InteractionContext For(PlayerController user, GameObject targetObject)
+    public static InteractionContext CreateForPlayer(PlayerController user, GameObject targetObject)
     {
         UsableObject usableObject = targetObject != null
             ? targetObject.GetComponent<UsableObject>()
@@ -37,13 +38,35 @@ public class InteractionContext
         return Create(user, usableObject, targetObject);
     }
 
-    public static InteractionContext For(PlayerController user, UsableObject target)
+    public static InteractionContext CreateForPlayer(PlayerController user, UsableObject target)
     {
         GameObject targetObject = target != null
             ? target.gameObject
             : null;
 
         return Create(user, target, targetObject);
+    }
+
+    public static InteractionContext CreateEmpty(GameObject targetObject)
+    {
+        return CreateForPlayer(null, targetObject);
+    }
+
+    public static InteractionContext CreateEmpty(UsableObject target)
+    {
+        return CreateForPlayer(null, target);
+    }
+
+    [System.Obsolete("Prefer CreateForPlayer or CreateEmpty to make ownership explicit.")]
+    public static InteractionContext For(PlayerController user, GameObject targetObject)
+    {
+        return CreateForPlayer(user, targetObject);
+    }
+
+    [System.Obsolete("Prefer CreateForPlayer or CreateEmpty to make ownership explicit.")]
+    public static InteractionContext For(PlayerController user, UsableObject target)
+    {
+        return CreateForPlayer(user, target);
     }
 
     private static InteractionContext Create(PlayerController user, UsableObject target, GameObject targetObject)
@@ -79,7 +102,7 @@ public class InteractionContext
             return null;
         }
 
-        PlayerHandAbility handAbility = user.GetComponent<PlayerHandAbility>();
+        PlayerHandAbility handAbility = user.GetAbility<PlayerHandAbility>();
         if (handAbility != null)
         {
             return handAbility;
