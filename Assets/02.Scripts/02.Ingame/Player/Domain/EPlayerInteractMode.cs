@@ -4,4 +4,5 @@
     Scan,
     UI,
     Puzzle,
+    Cutscene,
 }
