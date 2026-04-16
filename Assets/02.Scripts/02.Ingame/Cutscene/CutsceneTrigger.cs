@@ -20,7 +20,8 @@ public class CutsceneTrigger : MonoBehaviour
     [SerializeField] private RectTransform _topBar;
     [SerializeField] private RectTransform _bottomBar;
     [SerializeField] private float _letterboxHeight = 120f;
-    [SerializeField] private float _letterboxDuration = 1f;
+    [SerializeField] private float _letterboxIntroDuration = 1f;
+    [SerializeField] private float _letterboxOutroDuration = 0.4f;
 
     [Header("HUD")]
     [SerializeField] private CanvasGroup _hudCanvasGroup;
@@ -51,15 +52,15 @@ public class CutsceneTrigger : MonoBehaviour
         _cutsceneSeq = DOTween.Sequence();
 
         _cutsceneSeq.Append(
-            _topBar.DOSizeDelta(new Vector2(_topBar.sizeDelta.x, _letterboxHeight), _letterboxDuration)
+            _topBar.DOSizeDelta(new Vector2(_topBar.sizeDelta.x, _letterboxHeight), _letterboxIntroDuration)
                 .SetEase(Ease.OutQuad)
         );
         _cutsceneSeq.Join(
-            _bottomBar.DOSizeDelta(new Vector2(_bottomBar.sizeDelta.x, _letterboxHeight), _letterboxDuration)
+            _bottomBar.DOSizeDelta(new Vector2(_bottomBar.sizeDelta.x, _letterboxHeight), _letterboxIntroDuration)
                 .SetEase(Ease.OutQuad)
         );
         _cutsceneSeq.Join(
-            _hudCanvasGroup.DOFade(0f, _letterboxDuration)
+            _hudCanvasGroup.DOFade(0f, _letterboxIntroDuration)
         );
 
         _cutsceneSeq.AppendCallback(() => StartCoroutine(SmoothLookAt()));
@@ -112,15 +113,15 @@ public class CutsceneTrigger : MonoBehaviour
         _cutsceneSeq = DOTween.Sequence();
 
         _cutsceneSeq.Append(
-            _topBar.DOSizeDelta(new Vector2(_topBar.sizeDelta.x, 0f), _letterboxDuration)
+            _topBar.DOSizeDelta(new Vector2(_topBar.sizeDelta.x, 0f), _letterboxOutroDuration)
                 .SetEase(Ease.InQuad)
         );
         _cutsceneSeq.Join(
-            _bottomBar.DOSizeDelta(new Vector2(_bottomBar.sizeDelta.x, 0f), _letterboxDuration)
+            _bottomBar.DOSizeDelta(new Vector2(_bottomBar.sizeDelta.x, 0f), _letterboxOutroDuration)
                 .SetEase(Ease.InQuad)
         );
         _cutsceneSeq.Join(
-            _hudCanvasGroup.DOFade(1f, _letterboxDuration)
+            _hudCanvasGroup.DOFade(1f, _letterboxOutroDuration)
         );
 
         _cutsceneSeq.OnComplete(() =>
