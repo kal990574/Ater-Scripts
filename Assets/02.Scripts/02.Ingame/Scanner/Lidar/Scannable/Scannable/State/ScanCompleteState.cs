@@ -2,7 +2,7 @@ public class ScanCompleteState : ScanStateBase
 {
     public override EScanState StateType => EScanState.OnCompleted;
 
-    public ScanCompleteState(ScannableObject owner) : base(owner)
+    public ScanCompleteState(IScanStateContext owner) : base(owner)
     {
     }
 }

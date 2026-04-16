@@ -2,7 +2,7 @@
 using UnityEngine;
 public class ScanProgress
 {
-    private readonly ScanProgressSetting _settings;
+    private readonly ScanProgressSettingSO _settingsSo;
 
     private float _currentProgress;
 
@@ -10,14 +10,14 @@ public class ScanProgress
     public bool CanInteract { get; private set; }
 
     public float CurrentProgress => _currentProgress;
-    public float ProgressRatio => Mathf.Clamp01(_currentProgress / _settings.RequiredScanTime);
+    public float ProgressRatio => Mathf.Clamp01(_currentProgress / _settingsSo.MaxScanAmount);
     
     public event Action<float> OnProgressChanged;
     public event Action OnActivated;
 
-    public ScanProgress(ScanProgressSetting settings)
+    public ScanProgress(ScanProgressSettingSO settingsSo)
     {
-        _settings = settings;
+        _settingsSo = settingsSo;
         Reset();
     }
 
@@ -28,11 +28,11 @@ public class ScanProgress
             return;
         }
 
-        _currentProgress = Mathf.Clamp(_currentProgress + amount, 0.0f, _settings.RequiredScanTime);
+        _currentProgress = Mathf.Clamp(_currentProgress + amount, 0.0f, _settingsSo.MaxScanAmount);
 
         NotifyProgressChanged();
 
-        if (_currentProgress >= _settings.RequiredScanTime)
+        if (_currentProgress >= _settingsSo.MaxScanAmount)
         {
             Activate();
         }
@@ -45,7 +45,7 @@ public class ScanProgress
             return;
         }
 
-        _currentProgress = Mathf.Clamp(_currentProgress - amount, 0.0f, _settings.RequiredScanTime);
+        _currentProgress = Mathf.Clamp(_currentProgress - amount, 0.0f, _settingsSo.MaxScanAmount);
         NotifyProgressChanged();
     }
 
@@ -57,14 +57,27 @@ public class ScanProgress
         NotifyProgressChanged();
     }
 
-    private void Activate()
+    public void Complete(bool notify = true)
+    {
+        if (IsActivated)
+        {
+            return;
+        }
+
+        Activate(notify);
+    }
+
+    private void Activate(bool notify = true)
     {
         IsActivated = true;
         CanInteract = true;
-        _currentProgress = _settings.RequiredScanTime;
+        _currentProgress = _settingsSo.MaxScanAmount;
 
         NotifyProgressChanged();
-        OnActivated?.Invoke();
+        if (notify)
+        {
+            OnActivated?.Invoke();
+        }
     }
 
     private void NotifyProgressChanged()

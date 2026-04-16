@@ -1,7 +1,9 @@
 using _02.Scripts.Sonar;
 using DG.Tweening;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
+[DisallowMultipleComponent]
 public class InteractTargetShaderModifier : MonoBehaviour
 {
     public const string TEXTURE_BLENDING_CUTOFF_NAME = "_BlendingMaskCutoffWhite";
@@ -12,9 +14,17 @@ public class InteractTargetShaderModifier : MonoBehaviour
     public const string HIT_BLEND_NAME = "_HitBlend";
     public const string HIT_COLOR_NAME = "_HitColor";
     public const string HIT_GLOW_NAME = "_HitGlow";
-    [Header("Required References")]
+    [TabGroup("Inspector", "References")]
+    [LabelText("Shader Controller")]
     [SerializeField] private AllInOneShaderController _shaderPropertyController;
+
+    [TabGroup("Inspector", "References")]
+    [Required]
+    [LabelText("Scan Shader Config")]
     [SerializeField] private ScanShaderConfigSO _scanConfig;
+
+    [TabGroup("Inspector", "References")]
+    [LabelText("Outline Config")]
     [SerializeField] private OutlineShaderConfigSO _oultineConfig;
     
     private IScannable scannable;
@@ -25,6 +35,30 @@ public class InteractTargetShaderModifier : MonoBehaviour
     private float _currentHitBlend;
     private bool _isDetected;
     private float _currentScanRatio;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Scannable")]
+    private Component DebugScannable => scannable as Component;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Detectable")]
+    private Component DebugDetectable => detectable as Component;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Sonar Highlighting")]
+    private bool DebugIsSonarHighlighting => IsSonarHighlighting();
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Detected")]
+    private bool DebugIsDetected => _isDetected;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, ProgressBar(0f, 1f), LabelText("Scan Ratio")]
+    private float DebugScanRatio => _currentScanRatio;
+
+    [TabGroup("Inspector", "Debug")]
+    [ShowInInspector, ReadOnly, LabelText("Hit Blend")]
+    private float DebugHitBlend => _currentHitBlend;
     
     private void Start()
     {
