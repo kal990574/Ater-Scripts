@@ -103,7 +103,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
         }
     }
 
-    private void EnterCutsceneMode()
+    public void EnterCutsceneMode()
     {
         SetInteractMode(EPlayerInteractMode.Cutscene);
     }
