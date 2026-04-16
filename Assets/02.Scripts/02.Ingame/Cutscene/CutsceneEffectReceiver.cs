@@ -16,6 +16,10 @@ public class CutsceneEffectReceiver : MonoBehaviour
     [SerializeField] private Transform _enemyHead;
     [SerializeField] private Transform _playerTransform;
     [SerializeField] private float _headTurnDuration = 0.5f;
+    [SerializeField] private float _dirY = 4f;
+    [SerializeField] private float _dirX = 2f;
+    
+    private static readonly int StartChase = Animator.StringToHash("StartChase");
 
     public void OnDisableEnemyAgent()
     {
@@ -25,7 +29,7 @@ public class CutsceneEffectReceiver : MonoBehaviour
     public void OnStartChaseAnimation()
     {
         _enemyAnimator.runtimeAnimatorController = _chaseAnimatorController;
-        _enemyAnimator.SetBool("StartChase", true);
+        _enemyAnimator.SetBool(StartChase, true);
     }
 
     public void OnDoorImpulse()
@@ -44,8 +48,8 @@ public class CutsceneEffectReceiver : MonoBehaviour
         _headStartRot = _enemyHead.rotation;
 
         Vector3 dir = _playerTransform.position - _enemyHead.position;
-        dir.y -= 4f;
-        dir.x += 2f;
+        dir.y -= _dirY;
+        dir.x += _dirX;
         _headTargetRot = Quaternion.LookRotation(dir.normalized);
 
         _headTurnElapsed = 0f;

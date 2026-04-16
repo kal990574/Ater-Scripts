@@ -135,5 +135,6 @@ public class CutsceneTrigger : MonoBehaviour
     private void OnDestroy()
     {
         _cutsceneSeq?.Kill();
+        _director.stopped -= OnDirectorStopped;
     }
 }
