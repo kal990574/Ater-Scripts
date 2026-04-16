@@ -1,12 +1,15 @@
 using System;
 using UnityEngine;
 
-public class PlayerAbility : MonoBehaviour
+namespace _02.Scripts.Player
 {
-    protected PlayerController _owner;
-
-    protected virtual void Awake()
+    public class PlayerAbility : MonoBehaviour
     {
-        _owner = GetComponentInParent<PlayerController>();
+        protected PlayerController _owner;
+
+        protected virtual void Awake()
+        {
+            _owner = GetComponentInParent<PlayerController>();
+        }
     }
 }

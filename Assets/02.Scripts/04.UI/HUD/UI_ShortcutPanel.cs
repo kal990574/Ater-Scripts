@@ -1,3 +1,4 @@
+using _02.Scripts.Player;
 using UnityEngine;
 using UnityEngine.UI;
 

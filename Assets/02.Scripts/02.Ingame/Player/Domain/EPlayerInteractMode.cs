@@ -1,8 +1,11 @@
-﻿public enum EPlayerInteractMode
+namespace _02.Scripts.Player
 {
-    Item,
-    Scan,
-    UI,
-    Puzzle,
-    Cutscene,
+    public enum EPlayerInteractMode
+    {
+        Item,
+        Scan,
+        UI,
+        Puzzle,
+        Cutscene,
+    }
 }

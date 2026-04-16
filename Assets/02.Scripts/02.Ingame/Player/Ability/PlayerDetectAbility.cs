@@ -1,104 +1,62 @@
 using UnityEngine;
 
-public class PlayerDetectAbility : PlayerAbility
+namespace _02.Scripts.Player
 {
-    [SerializeField] private Camera _camera;
-    [SerializeField] private RaycastSetting _query = new(5f, ~0, QueryTriggerInteraction.Ignore);
-
-    private PlayerTargetDetector _playerTargetDetector;
-    private IDetectable _currentTarget;
-    private GameEventPublisher _eventPublisher;
-
-    private IDetectable _currentPromptTarget;
-    private string _lastPublishedDescription;
-    private bool _suppressPromptUntilLookAway;
-
-    public IDetectable CurrentTarget => _currentTarget;
-
-
-    private void Start()
+    public class PlayerDetectAbility : PlayerAbility
     {
-        _camera = Camera.main;
-        _playerTargetDetector = new PlayerTargetDetector(
-            new RaycastService(),
-            _query);
+        [SerializeField] private Camera _camera;
+        [SerializeField] private RaycastSetting _query = new(5f, ~0, QueryTriggerInteraction.Ignore);
 
-        _eventPublisher = new GameEventPublisher();
-        _eventPublisher.SetSource(this);
-    }
+        private PlayerDetectTargetTracker _targetTracker;
+        private PlayerEventPublisher _eventPublisher;
 
-    private void Update()
-    {
-        IDetectable nextDetectTarget =
-            _playerTargetDetector.Detect(_camera.transform.position, _camera.transform.forward);
+        public IDetectable CurrentTarget => _targetTracker != null ? _targetTracker.CurrentTarget : null;
+        public RaycastSetting PromptQuery => _query;
 
-        if (!ReferenceEquals(_currentTarget, nextDetectTarget))
+        private void Start()
         {
-            _currentTarget?.OnDetectExit();
-            _currentTarget = nextDetectTarget;
-            _currentTarget?.OnDetectEnter();
+            _camera = Camera.main;
+            _targetTracker = new PlayerDetectTargetTracker(
+                new PlayerTargetDetector(
+                    new RaycastService(),
+                    _query));
         }
 
-        UpdatePromptEvent();
-    }
-
-    private void UpdatePromptEvent()
-    {
-        IDetectable promptTarget = null;
-
-        if (Physics.Raycast(_camera.transform.position, _camera.transform.forward,
-            out RaycastHit hit, _query.Distance))
+        public void SetEventPublisher(PlayerEventPublisher eventPublisher)
         {
-            promptTarget = hit.collider.GetComponentInParent<IDetectable>();
+            _eventPublisher = eventPublisher;
         }
 
-        if (_suppressPromptUntilLookAway)
+        private void Update()
         {
-            return;
+            if (_camera == null)
+            {
+                return;
+            }
+
+            _targetTracker?.UpdateTarget(_camera.transform.position, _camera.transform.forward);
+            _eventPublisher?.UpdatePrompt(_camera);
         }
 
-        string desc = promptTarget?.HoverDescription ?? string.Empty;
-        bool changed = !ReferenceEquals(_currentPromptTarget, promptTarget)
-                       || desc != _lastPublishedDescription;
-
-        if (!changed) return;
-
-        _currentPromptTarget = promptTarget;
-        _lastPublishedDescription = desc;
-
-        bool isVisible = promptTarget != null && !string.IsNullOrEmpty(desc);
-        _eventPublisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, isVisible, desc));
-    }
-
-    public void ResumePrompt()
-    {
-        _suppressPromptUntilLookAway = false;
-    }
-
-    public void ForceHidePrompt()
-    {
-        _suppressPromptUntilLookAway = true;
-        _lastPublishedDescription = string.Empty;
-        _eventPublisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, false, string.Empty));
-    }
-
-    private void OnDisable()
-    {
-        ClearCurrentHoverTarget();
-    }
-
-    private void ClearCurrentHoverTarget()
-    {
-        if (_currentTarget == null)
+        public void ResumePrompt()
         {
-            return;
+            _eventPublisher?.Resume();
         }
 
-        _currentTarget.OnDetectExit();
-        _currentTarget = null;
+        public void ForceHidePrompt()
+        {
+            _eventPublisher?.HideUntilLookAway();
+        }
 
-        _currentPromptTarget = null;
-        _lastPublishedDescription = string.Empty;
-        _eventPublisher.TryPublish(ctx => new InteractPromptRawEvent(ctx, false, string.Empty));
+        private void OnDisable()
+        {
+            ClearCurrentHoverTarget();
+        }
+
+        private void ClearCurrentHoverTarget()
+        {
+            _targetTracker?.Clear();
+            _eventPublisher?.Clear();
+        }
     }
 }

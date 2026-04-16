@@ -1,3 +1,4 @@
+using _02.Scripts.Player;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
@@ -80,13 +81,15 @@ public class FuseBoxInteractable : StateInteractable
                 return false;
             }
 
-            if (!context.HandAbility.TryConsumeCurrentHandItem())
+            if (!context.HandAbility.TryConsumeCurrentHandItem(out HandConsumeResult consumeResult))
             {
                 SetFailureResult(EUseInteractResult.ConsumeFailed);
                 failureReason = $"Failed to consume the required fuse. requiredItemId={_requiredFuseItemId}";
                 Debug.LogError($"[{nameof(FuseBoxInteractable)}] {gameObject.name} failed to consume the required fuse. requiredItemId={_requiredFuseItemId}", this);
                 return false;
             }
+
+            context.User?.HandleHandConsumeResult(consumeResult);
         }
 
         _innerFuseObject.SetActive(true);

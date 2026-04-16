@@ -1,23 +1,27 @@
-using _02.Scripts.Player;
 using UnityEngine;
 
-public class PlayerInteractAbility : PlayerAbility
+namespace _02.Scripts.Player
 {
-    public void Interact(IDetectable target)
+    public class PlayerInteractAbility : PlayerAbility
     {
-        if (target == null)
+        public void Interact(IDetectable target)
         {
-            Debug.Log("[PlayerInteractAbility] : 지정된 대상이 없음");
-            return;
-        }
-        
-        if (!target.Transform.TryGetComponent(out IRuntimeInteractObject interactableObject))
-        {
-            Debug.Log("[PlayerInteractAbility] :해당 대상은 상호작용 가능하지 않음");
-            return;
-        }
+            if (target == null)
+            {
+                Debug.Log("[PlayerInteractAbility] : 吏?뺣맂 ??곸씠 ?놁쓬");
+                return;
+            }
 
-        InteractionContext context = InteractionContext.For(_owner, target.Transform.gameObject);
-        interactableObject.Interact(context);
+            if (!target.Transform.TryGetComponent(out IRuntimeInteractObject interactableObject))
+            {
+                Debug.Log("[PlayerInteractAbility] :?대떦 ??곸? ?곹샇?묒슜 媛?ν븯吏 ?딆쓬");
+                return;
+            }
+
+            InteractionContext context = _owner != null
+                ? _owner.CreateInteractionContext(target.Transform.gameObject)
+                : InteractionContext.CreateEmpty(target.Transform.gameObject);
+            interactableObject.Interact(context);
+        }
     }
 }

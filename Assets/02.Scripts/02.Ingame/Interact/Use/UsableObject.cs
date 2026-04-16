@@ -31,7 +31,7 @@ public class UsableObject : Interactable
 
     public override void Interact(InteractionContext context)
     {
-        InteractionContext resolvedContext = context ?? InteractionContext.For((PlayerController)null, this);
+        InteractionContext resolvedContext = context ?? InteractionContext.CreateEmpty(this);
         UseInteractionOutcome preconditionOutcome = EvaluatePreconditions(resolvedContext);
         if (!preconditionOutcome.IsSuccess)
         {
