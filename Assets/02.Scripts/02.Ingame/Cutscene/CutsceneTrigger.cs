@@ -29,6 +29,10 @@ public class CutsceneTrigger : MonoBehaviour
     [Header("Camera Rotation")]
     [SerializeField] private float _lookRotationDuration = 2.5f;
 
+    [Header("BGM")]
+    [SerializeField] private SoundKeyReference _chaseBgmKey;
+    [SerializeField] private float _bgmFadeTime = 1f;
+
     private bool _hasTriggered;
     private Sequence _cutsceneSeq;
     private Animator _hudAnimator;
@@ -127,6 +131,8 @@ public class CutsceneTrigger : MonoBehaviour
         _cutsceneSeq.OnComplete(() =>
         {
             if (_hudAnimator != null) _hudAnimator.enabled = true;
+            if (!_chaseBgmKey.IsEmpty)
+                SoundManager.Instance.PlayBGM(_chaseBgmKey, _bgmFadeTime);
             _effectReceiver.OnStartChaseAnimation();
             _playerController.ExitCutsceneMode();
             _enemyController.Activate();
