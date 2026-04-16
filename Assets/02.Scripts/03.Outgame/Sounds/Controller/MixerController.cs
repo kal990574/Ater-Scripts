@@ -8,6 +8,7 @@ public class MixerController : MonoBehaviour
     private const string ParamMaster = "Master";
     private const string ParamBGM = "Music";
     private const string ParamSFX = "SFX";
+    private const string ParamHint = "Hint";
 
     private const float MinVolumeForLog = 0.0001f;
     private const float DecibelMultiplier = 20f;
@@ -24,6 +25,10 @@ public class MixerController : MonoBehaviour
     public void SetSFXVolume(float volume)
     {
         SetMixerVolume(ParamSFX, volume);
+    }
+    public void SetHintVolume(float volume)
+    {
+        SetMixerVolume(ParamHint, volume);
     }
 
     public void TransitionToSnapshot(AudioMixerSnapshot snapshot, float transitionTime)
