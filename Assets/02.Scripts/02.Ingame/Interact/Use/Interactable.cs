@@ -85,9 +85,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
         UnsubscribeScannableEvents();
     }
 
-
-    [TabGroup("Inspector", "Interactable")]
-    [Button(ButtonSizes.Medium)]
+    
     public abstract void Interact(InteractionContext context);
 
     protected virtual void OnAwake()

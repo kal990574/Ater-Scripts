@@ -139,8 +139,9 @@ public class TimingQTERunner : IQuickTimeEvent
         _successZoneSizeProgress = UnityEngine.Random.Range(_config.SuccessZoneSizeRange.x, _config.SuccessZoneSizeRange.y);
         _greatZonePercent = UnityEngine.Random.Range(_config.GreatZonePercentRange.x, _config.GreatZonePercentRange.y);
 
-        float maxStartProgress = MaxProgress - _successZoneSizeProgress;
-        _successZoneStartProgress = UnityEngine.Random.Range(0f, maxStartProgress);
+        float maxStartProgress = Mathf.Max(0f, MaxProgress - _successZoneSizeProgress);
+        float minStartProgress = Mathf.Clamp(_config.SuccessZoneMinStartProgress, 0f, maxStartProgress);
+        _successZoneStartProgress = UnityEngine.Random.Range(minStartProgress, maxStartProgress);
 
         if (_view != null)
         {
