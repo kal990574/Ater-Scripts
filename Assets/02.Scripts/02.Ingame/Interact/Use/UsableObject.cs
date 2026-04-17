@@ -71,21 +71,7 @@ public class UsableObject : Interactable
     protected virtual void OnUseSucceeded(InteractionContext context)
     {
         PublishObjectInteracted(GetSuccessInteractEventType(context));
-        
-        switch (_afterUse)
-        {
-            case  EAfterInteract.None:
-                break;
-            case EAfterInteract.Deactive:
-                SetActivate(false);
-                break;
-            case EAfterInteract.Disable:
-                gameObject.SetActive(false);
-                break;
-            case EAfterInteract.Destroy:
-                Destroy(gameObject);
-                break;
-        }
+        ApplyAfterUse();
     }
 
     protected virtual EInteractObjectEventType GetSuccessInteractEventType(InteractionContext context)
@@ -135,6 +121,24 @@ public class UsableObject : Interactable
     protected void SetFailureResult(EUseInteractResult result)
     {
         LastInteractResult = result;
+    }
+
+    protected void ApplyAfterUse()
+    {
+        switch (_afterUse)
+        {
+            case EAfterInteract.None:
+                break;
+            case EAfterInteract.Deactive:
+                SetActivate(false);
+                break;
+            case EAfterInteract.Disable:
+                gameObject.SetActive(false);
+                break;
+            case EAfterInteract.Destroy:
+                Destroy(gameObject);
+                break;
+        }
     }
 
     private EUseInteractResult ResolveFailureResult(EUseInteractResult defaultResult)

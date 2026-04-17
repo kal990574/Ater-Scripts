@@ -11,7 +11,6 @@ public class PadLockController : PuzzleControllerBase
     [SerializeField] private GameObject _padlockInstancePrefab;
 
     [Header("Puzzle Events")]
-    [SerializeField] private UnityEvent _spinEvnet;
     [SerializeField] private UnityEvent _successEvent;
     [SerializeField] private UnityEvent _failEvent;
 
@@ -84,10 +83,5 @@ public class PadLockController : PuzzleControllerBase
         HandlePuzzleCancelled();
         _activeInteractable = null;
         _activeInstance = null;
-    }
-
-    public void OnSpin()
-    {
-        _spinEvnet?.Invoke();
     }
 }
