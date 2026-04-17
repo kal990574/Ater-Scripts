@@ -1,8 +1,6 @@
 public class OnScanEnergyDepletedInterpreter : SubTensionInterpreterBase
 {
     private const float LidarEventCooldownSeconds = 3f;
-    private const float LidarEnergyDepletedBaseDelta = 5f;
-    private const float SonarEnergyDepletedBaseDelta = 20f;
     private float _lastLidarEventTime = float.NegativeInfinity;
 
     public OnScanEnergyDepletedInterpreter(UnityEngine.Object source) : base(source)
@@ -28,7 +26,7 @@ public class OnScanEnergyDepletedInterpreter : SubTensionInterpreterBase
                 context,
                 TensionReasons.LidarEnergyDepleted,
                 ETensionChannel.BaseTension,
-                LidarEnergyDepletedBaseDelta));
+                TensionDeltaConstants.LidarEnergyDepletedBase));
     }
 
     private void OnSonarEnergyDepleted(SonarScanEnergyDepletedRawEvent data)
@@ -38,7 +36,7 @@ public class OnScanEnergyDepletedInterpreter : SubTensionInterpreterBase
                 context,
                 TensionReasons.SonarEnergyDepleted,
                 ETensionChannel.BaseTension,
-                SonarEnergyDepletedBaseDelta));
+                TensionDeltaConstants.SonarEnergyDepletedBase));
     }
 
     protected override void Reset()

@@ -16,6 +16,6 @@ public class OnScanCompletedInterpreter : SubTensionInterpreterBase
                 context,
                 TensionReasons.LidarScanCompleted,
                 ETensionChannel.BaseTension,
-                5f));
+                TensionDeltaConstants.LidarScanCompletedBase));
     }
 }

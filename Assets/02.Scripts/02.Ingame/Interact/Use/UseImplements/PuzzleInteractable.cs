@@ -21,7 +21,7 @@ public class PuzzleInteractable : StateInteractable
     [ToggleLeft]
     [LabelText("Require Unlock")]
     [SerializeField] private bool _haveToUnlock = false;
-
+    
     [TabGroup("Inspector", "PuzzleInteractable")]
     [LabelText("On Puzzle Started")]
     [SerializeField] private UnityEvent _onPuzzleStarted;
@@ -116,6 +116,14 @@ public class PuzzleInteractable : StateInteractable
     protected override void OnUseFailed(InteractionContext context, string failureReason)
     {
         _onInteractionFailed?.Invoke();
+    }
+
+    protected override void OnUseSucceeded(InteractionContext context)
+    {
+        // Puzzle interactables manage their own completion lifecycle.
+        // Skipping the base after-use handling prevents one-shot deactivation
+        // from blocking re-entry after the player cancels the puzzle.
+        PublishObjectInteracted(GetSuccessInteractEventType(context));
     }
 
     private bool ValidateConfiguration(out string failureReason)
