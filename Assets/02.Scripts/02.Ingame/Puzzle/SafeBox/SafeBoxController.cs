@@ -101,6 +101,7 @@ public class SafeBoxController : PuzzleControllerBase
         }
 
         HandlePuzzleCancelled();
+        _activeInteractable = null;
         _activeInstance = null;
     }
 

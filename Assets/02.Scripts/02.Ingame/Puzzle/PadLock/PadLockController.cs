@@ -82,6 +82,7 @@ public class PadLockController : PuzzleControllerBase
         }
 
         HandlePuzzleCancelled();
+        _activeInteractable = null;
         _activeInstance = null;
     }
 
