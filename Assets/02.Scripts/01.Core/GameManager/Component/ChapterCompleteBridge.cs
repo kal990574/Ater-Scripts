@@ -5,15 +5,6 @@ namespace _02.Scripts.Core.Component
 {
     public class ChapterCompleteBridge : MonoBehaviour
     {
-        private enum EEndAction
-        {
-            CompleteChapter,   // 다음 챕터로 이동
-            ReturnToMainMenu,  // 메인메뉴 복귀 (프로토타입용)
-        }
-
-        [Header("End Action")]
-        [SerializeField] private EEndAction _endAction = EEndAction.ReturnToMainMenu;
-
         [Header("Delay")]
         [Tooltip("트리거 후 씬 전환까지 지연 시간(초)")]
         [SerializeField, Min(0f)] private float _delay = 1.5f;
@@ -49,16 +40,7 @@ namespace _02.Scripts.Core.Component
                 return;
             }
 
-            switch (_endAction)
-            {
-                case EEndAction.CompleteChapter:
-                    gameManager.CompleteChapter();
-                    break;
-                case EEndAction.ReturnToMainMenu:
-                    gameManager.MarkChapterCleared();
-                    gameManager.ReturnToMainMenu();
-                    break;
-            }
+            gameManager.CompleteChapter();
         }
         
         private void PublishChapterCleared(int chapterId)
