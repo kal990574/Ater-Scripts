@@ -65,19 +65,19 @@ namespace _02.Scripts.Player
             _inventoryManager.ToggleInventory();
         }
 
+        public bool CanPickUpItem(int num)
+        {
+            return TryGetPickableItemInstanceId(num, out _);
+        }
+
         public bool TryPickUpItem(int num)
         {
-            if (_inventoryManager == null || _handViewService == null)
+            if (_handViewService == null)
             {
                 return false;
             }
 
-            if (num < 0 || num >= _inventoryManager.Count)
-            {
-                return false;
-            }
-
-            if (_inventoryManager.TryGetInventoryItemInstanceIdAt(num, out string instanceId) == false)
+            if (TryGetPickableItemInstanceId(num, out string instanceId) == false)
             {
                 return false;
             }
@@ -223,6 +223,28 @@ namespace _02.Scripts.Player
             }
 
             return _inventoryManager.Count - 1;
+        }
+
+        private bool TryGetPickableItemInstanceId(int num, out string instanceId)
+        {
+            instanceId = null;
+
+            if (_inventoryManager == null)
+            {
+                return false;
+            }
+
+            if (num < 0 || num >= _inventoryManager.Count)
+            {
+                return false;
+            }
+
+            if (_inventoryManager.TryGetInventoryItemInstanceIdAt(num, out instanceId) == false)
+            {
+                return false;
+            }
+
+            return string.IsNullOrEmpty(instanceId) == false;
         }
 
         private void NotifyHandSlotChanged()

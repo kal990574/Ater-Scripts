@@ -193,6 +193,11 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
             return false;
         }
 
+        if (handAbility != null && handAbility.CanPickUpItem(itemSlotIndex) == false)
+        {
+            return false;
+        }
+
         if (modeTransitionAbility != null && modeTransitionAbility.TryPlayTransition(
                 onLowered: () =>
                 {
