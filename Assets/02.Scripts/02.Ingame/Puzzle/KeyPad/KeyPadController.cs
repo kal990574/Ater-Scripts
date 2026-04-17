@@ -11,7 +11,6 @@ public class KeyPadController : PuzzleControllerBase
     [SerializeField] private GameObject _keyPadInstancePrefab;
 
     [Header("Puzzle Events")]
-    [SerializeField] private UnityEvent _buttonEvent;
     [SerializeField] private UnityEvent _successEvent;
     [SerializeField] private UnityEvent _failEvent;
 
@@ -51,16 +50,7 @@ public class KeyPadController : PuzzleControllerBase
         _activeInstance.Initialize(this, _correctCode);
         EnterPuzzleMode();
     }
-
-    public void ButtonClick()
-    {
-        if (_activeInstance == null)
-        {
-            return;
-        }
-
-        _buttonEvent?.Invoke();
-    }
+    
 
     public void HandlePuzzleSuccess(KeyPadPuzzleInstance instance)
     {

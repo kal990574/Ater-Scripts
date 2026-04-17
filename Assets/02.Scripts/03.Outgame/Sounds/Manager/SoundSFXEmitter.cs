@@ -9,7 +9,8 @@ public class SoundSFXEmitter : MonoBehaviour
         Self,
         TargetTransform,
         WorldPosition,
-        LocalPositionOnSelf
+        LocalPositionOnSelf,
+        Not3D,
     }
 
     [Header("Sound")]
@@ -40,6 +41,12 @@ public class SoundSFXEmitter : MonoBehaviour
             return;
         }
 
+        if (_emitPointType == EmitPointType.Not3D)
+        {
+            soundService.PlaySFX2D(_soundKey, _volume);
+            return;
+        }
+        
         soundService.PlaySFX(_soundKey, ResolvePosition(), _volume);
     }
 

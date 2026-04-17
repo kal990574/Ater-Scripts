@@ -85,7 +85,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
         UnsubscribeScannableEvents();
     }
 
-    
+    [Button]
     public abstract void Interact(InteractionContext context);
 
     protected virtual void OnAwake()

@@ -59,6 +59,7 @@ public class PuzzleInteractable : StateInteractable
     public void HandlePuzzleSolved()
     {
         SetState(_completedStateKey, true);
+        
         _onCompleted?.Invoke();
         SetActivate(false);
     }
