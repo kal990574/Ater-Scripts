@@ -1,7 +1,6 @@
 using _02.Scripts._02.Ingame.Tutorial.Config;
 using _02.Scripts._02.Ingame.Tutorial.Domain;
 using _02.Scripts.Core;
-using _02.Scripts.Core.Domain;
 using _02.Scripts.Player;
 using System;
 using System.Collections;
@@ -19,9 +18,6 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
         [SerializeField] private PlayerController _playerController;
         [SerializeField] private PlayerHandAbility _playerHandAbility;
         [SerializeField] private ExamineInteraction _examineInteraction;
-
-        [Header("Completion")]
-        [SerializeField, Min(0f)] private float _completionDelay = 1.5f;
 
         private IPlayerInput _playerInput;
         private CompositeSubscription _subscriptions;
@@ -193,11 +189,7 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
             _currentStepIndex++;
 
             if (_currentStepIndex >= _config.Steps.Count)
-            {
-                Debug.Log($"[Tutorial] All steps completed, waiting {_completionDelay}s before transition");
-                StartCoroutine(CompleteChapterAfterDelay());
                 return;
-            }
 
             TutorialStepEntry entry = _config.Steps[_currentStepIndex];
             TryShow(entry.Id);
@@ -255,19 +247,6 @@ namespace _02.Scripts._02.Ingame.Tutorial.Manager
         {
             _currentStep = TutorialStepId.None;
             OnGuideHide?.Invoke();
-        }
-
-        private IEnumerator CompleteChapterAfterDelay()
-        {
-            yield return new WaitForSeconds(_completionDelay);
-
-            var gameManager = Managers.Get<IGameManager>();
-            if (gameManager == null)
-            {
-                Debug.LogError("[Tutorial] GameManager not found");
-                yield break;
-            }
-            gameManager.CompleteChapter();
         }
     }
 }
