@@ -2,8 +2,6 @@
 
 public class OnQTEResultInterpreter : SubTensionInterpreterBase
 {
-    public const float FAILED_SPIKEDELTA = 20;
-    public const float GREAT_BASEDELTA = -10;
     public OnQTEResultInterpreter(Object source) : base(source)
     {
     }
@@ -24,14 +22,14 @@ public class OnQTEResultInterpreter : SubTensionInterpreterBase
                             context,
                             TensionReasons.QteFailed,
                             ETensionChannel.SpikeTension,
-                            FAILED_SPIKEDELTA));
+                            TensionDeltaConstants.QteFailedSpike));
                     
                     publisher.TryPublish(
                         context => new OnTensionChangedEvent(
                             context,
                             TensionReasons.QteFailed,
                             ETensionChannel.BaseTension,
-                            10f));
+                            TensionDeltaConstants.QteFailedBase));
                     break;
                 }
 
@@ -42,7 +40,7 @@ public class OnQTEResultInterpreter : SubTensionInterpreterBase
                             context,
                             TensionReasons.QteGreatSuccess,
                             ETensionChannel.BaseTension,
-                            GREAT_BASEDELTA));
+                            TensionDeltaConstants.QteGreatSuccessBase));
                     break;
                 }
 
@@ -53,7 +51,7 @@ public class OnQTEResultInterpreter : SubTensionInterpreterBase
                             context,
                             TensionReasons.QteSuccess,
                             ETensionChannel.BaseTension,
-                            0));
+                            TensionDeltaConstants.QteSuccessBase));
                     break;
                 }
         }

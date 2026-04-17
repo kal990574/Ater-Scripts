@@ -2,7 +2,6 @@
 
 public class OnPuzzleResultInterpreter : SubTensionInterpreterBase
 {
-    private const float PUZZLEFAILED_SPIKEDELTA = 30;
     public OnPuzzleResultInterpreter(Object source) : base(source)
     {
     }
@@ -21,23 +20,23 @@ public class OnPuzzleResultInterpreter : SubTensionInterpreterBase
                     context,
                     TensionReasons.PuzzleFailed,
                     ETensionChannel.SpikeTension,
-                    PUZZLEFAILED_SPIKEDELTA));
+                    TensionDeltaConstants.PuzzleFailedSpike));
             publisher.TryPublish(
                 context => new OnTensionChangedEvent(
                     context,
                     TensionReasons.PuzzleFailed,
                     ETensionChannel.BaseTension,
-                    5f));
+                    TensionDeltaConstants.PuzzleFailedBase));
         }
 
         if (data.Result == EPuzzleResult.Cancel)
         {
             publisher.TryPublish(
                 context => new OnTensionChangedEvent(
-                    context,
-                    TensionReasons.PuzzleFailed,
-                    ETensionChannel.BaseTension,
-                    10f));
+                context,
+                TensionReasons.PuzzleFailed,
+                ETensionChannel.BaseTension,
+                TensionDeltaConstants.PuzzleCancelledBase));
         }
         
     }
