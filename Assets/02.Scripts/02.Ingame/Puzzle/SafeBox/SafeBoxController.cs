@@ -12,10 +12,8 @@ public class SafeBoxController : PuzzleControllerBase
     [SerializeField] private GameObject _safeBoxInstancePrefab;
 
     [Header("Puzzle Events")]
-    [SerializeField] private UnityEvent _dialSpinEvent;
     [SerializeField] private UnityEvent _successEvent;
     [SerializeField] private UnityEvent _failEvent;
-    [SerializeField] private UnityEvent _resetEvent;
 
     private SafeBoxInstance _activeInstance;
 
@@ -82,17 +80,7 @@ public class SafeBoxController : PuzzleControllerBase
         _failEvent?.Invoke();
         PublishPuzzleResult(EPuzzleResult.Fail);
     }
-
-    public void HandlePuzzleReset(SafeBoxInstance instance)
-    {
-        if (_activeInstance != instance)
-        {
-            return;
-        }
-
-        _resetEvent?.Invoke();
-    }
-
+    
     public void ClearActiveInstance(SafeBoxInstance instance)
     {
         if (_activeInstance != instance)
@@ -103,15 +91,5 @@ public class SafeBoxController : PuzzleControllerBase
         HandlePuzzleCancelled();
         _activeInteractable = null;
         _activeInstance = null;
-    }
-
-    public void OnDialSpin()
-    {
-        if (_activeInstance == null)
-        {
-            return;
-        }
-
-        _dialSpinEvent?.Invoke();
     }
 }

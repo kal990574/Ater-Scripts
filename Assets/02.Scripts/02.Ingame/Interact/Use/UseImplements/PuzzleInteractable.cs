@@ -60,7 +60,7 @@ public class PuzzleInteractable : StateInteractable
     {
         SetState(_completedStateKey, true);
         _onCompleted?.Invoke();
-        SetActivate(false);
+        ApplyAfterUse();
     }
 
     protected override bool CanUse(InteractionContext context, out string failureReason)
