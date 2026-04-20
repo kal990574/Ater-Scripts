@@ -51,11 +51,11 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
 
     public event Action OnInteract;
 
-    [TabGroup("Inspector", "Interactable")]
+    [TabGroup("Inspector", "Events")]
     [LabelText("On Interaction Success")]
     [SerializeField] protected UnityEvent _onInteractionSuccess;
 
-    [TabGroup("Inspector", "Interactable")]
+    [TabGroup("Inspector", "Events")]
     [LabelText("On Interaction Failed")]
     [SerializeField] protected UnityEvent _onInteractionFailed;
 

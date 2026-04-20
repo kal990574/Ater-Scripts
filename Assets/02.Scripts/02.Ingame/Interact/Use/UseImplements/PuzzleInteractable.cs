@@ -22,11 +22,11 @@ public class PuzzleInteractable : StateInteractable
     [LabelText("Require Unlock")]
     [SerializeField] private bool _haveToUnlock = false;
     
-    [TabGroup("Inspector", "PuzzleInteractable")]
+    [TabGroup("Inspector", "Events")]
     [LabelText("On Puzzle Started")]
     [SerializeField] private UnityEvent _onPuzzleStarted;
 
-    [TabGroup("Inspector", "PuzzleInteractable")]
+    [TabGroup("Inspector", "Events")]
     [LabelText("On Completed")]
     [SerializeField] private UnityEvent _onCompleted;
 

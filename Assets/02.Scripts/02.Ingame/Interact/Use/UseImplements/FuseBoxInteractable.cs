@@ -31,7 +31,7 @@ public class FuseBoxInteractable : StateInteractable
     [LabelText("Completed")]
     [SerializeField] private string _completedStateKey = "is_completed";
 
-    [TabGroup("Inspector", "FuseBoxInteractable")]
+    [TabGroup("Inspector", "Events")]
     [LabelText("On Completed")]
     [SerializeField] private UnityEvent _onCompleted;
 
