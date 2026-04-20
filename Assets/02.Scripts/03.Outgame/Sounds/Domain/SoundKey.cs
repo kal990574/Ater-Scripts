@@ -6,6 +6,8 @@ public class SoundKey
     public const string BGM_Chapter1 = "BGM_Chapter1";
     public const string  BGM_Chapter2 = "BGM_Chapter2";
     public const string BGM_Chasing = "BGM_Chasing";
+    public const string BGM_Ending = "BGM_Ending";
+    public const string BGM_Credit = "BGM_Credit";
 
 
     //----------SFX----------
@@ -125,6 +127,14 @@ public class SoundKey
     public const string JumpScare_SubSound_Laughing =  "JumpScare_SubSound_Laughing";
     
     
+    //나레이션
+    public const string Narration_Typing = "Narration_Typing";
+
+    //엔딩
+    public const string Ending_Typing = "Ending_Typing";
+    public const string Ending_Glitch = "Ending_Glitch";
+    public const string Ending_JumpScare = "Ending_JumpScare";
+
     //----------Stinger----------
 
 

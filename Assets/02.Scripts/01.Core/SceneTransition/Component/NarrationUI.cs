@@ -20,8 +20,7 @@ namespace _02.Scripts._01.Core.SceneTransition.Component
         [SerializeField] private float _pauseDelayMultiplier = 3f;
 
         [Header("Sound")]
-        [SerializeField] private AudioSource _audioSource;
-        [SerializeField] private AudioClip _typingSFX;
+        [SerializeField] private SoundKeyReference _typingSfxKey;
         [SerializeField] private int _soundInterval = 2;
         
         [Header("Input")]
@@ -102,10 +101,10 @@ namespace _02.Scripts._01.Core.SceneTransition.Component
                 _narrationText.maxVisibleCharacters = i + 1;
                 char c = fullText[i];
 
-                if (_audioSource != null && _typingSFX != null
+                if (_typingSfxKey.IsValid
                     && !char.IsWhiteSpace(c) && ++charCount % _soundInterval == 0)
                 {
-                    _audioSource.PlayOneShot(_typingSFX);
+                    SoundManager.Instance?.PlaySFX2D(_typingSfxKey);
                 }
 
                 float delay = speed;
