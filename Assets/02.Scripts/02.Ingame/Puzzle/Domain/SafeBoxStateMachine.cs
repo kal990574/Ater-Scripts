@@ -53,7 +53,13 @@ public class SafeBoxStateMachine
             return false;
         }
 
-        PreviewDialValue = Mathf.Clamp(value, 0, 15);
+        int clampedValue = Mathf.Clamp(value, 0, 15);
+        if (PreviewDialValue == clampedValue)
+        {
+            return false;
+        }
+
+        PreviewDialValue = clampedValue;
         return true;
     }
 

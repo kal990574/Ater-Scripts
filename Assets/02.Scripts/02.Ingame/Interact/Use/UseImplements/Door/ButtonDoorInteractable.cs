@@ -1,4 +1,4 @@
-﻿﻿using Sirenix.OdinInspector;
+﻿using Sirenix.OdinInspector;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -43,6 +43,17 @@ public class ButtonDoorInteractable : DoorInteractable
         }
 
         return base.CanUse(context, out failureReason);
+    }
+
+    protected override void OnAwake()
+    {
+        base.OnAwake();
+        _scannableObject = null;
+    }
+
+    protected override bool IsAdditionalInteractRequirementSatisfied()
+    {
+        return true;
     }
 
     private void TryOpenByButtonCount()
