@@ -1,5 +1,6 @@
 public interface IPuzzleInputHandler
 {
+    EPuzzleType PuzzleType { get; }
     void ConfirmActivePuzzle();
     void CancelActivePuzzle();
 }

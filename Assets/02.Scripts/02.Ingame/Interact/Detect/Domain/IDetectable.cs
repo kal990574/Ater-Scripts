@@ -8,6 +8,5 @@ public interface IDetectable
     bool CanShowHoverUI { get; }
     void OnDetectEnter();
     void OnDetectExit();
-    string HoverDescription { get; }
     event Action<bool> OnDetected;
 }

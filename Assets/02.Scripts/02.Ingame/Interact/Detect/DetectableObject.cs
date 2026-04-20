@@ -14,12 +14,6 @@ public class DetectableObject : MonoBehaviour , IDetectable
     public Transform Transform => transform;
     public virtual bool CanDetect => _isDetectable;
 
-    [TabGroup("Inspector", "DetectableObject")]
-    [LabelText("Hover Description")]
-    [MultiLineProperty]
-    [SerializeField] private string _hoverDescription;
-    public virtual string HoverDescription =>  _hoverDescription;
-
     public virtual bool CanShowHoverUI => _isDetectable;
 
     public event Action<bool> OnDetected;

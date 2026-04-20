@@ -20,6 +20,7 @@ public abstract class PuzzleControllerBase : MonoBehaviour, IPuzzleInputHandler
     protected PuzzleInteractable _activeInteractable;
     
     protected abstract EPuzzleType PuzzleType { get; }
+    EPuzzleType IPuzzleInputHandler.PuzzleType => PuzzleType;
     protected abstract IPuzzleIntance ActivePuzzleInstance { get; }
 
     private bool _isSolved;

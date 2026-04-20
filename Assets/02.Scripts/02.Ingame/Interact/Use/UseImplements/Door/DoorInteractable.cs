@@ -39,17 +39,7 @@ public class DoorInteractable : StateInteractable
     public bool IsUnlocked => GetState(_unlockStateKey);
     public bool IsOpen => GetState(_openStateKey);
 
-    public override string HoverDescription
-    {
-        get
-        {
-            if (IsOpen) return string.Empty;
-            if (IsUnlocked)
-                return _hoverDescriptionUnlocked;
 
-            return base.HoverDescription;
-        }
-    }
 
     protected override bool IsAdditionalInteractRequirementSatisfied()
     {
