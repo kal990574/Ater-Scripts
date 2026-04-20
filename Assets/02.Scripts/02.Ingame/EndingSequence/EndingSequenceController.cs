@@ -60,6 +60,24 @@ namespace _02.Scripts._02.Ingame.EndingSequence
         [SerializeField, Tooltip("씬 진입 후 자유 탐색 시간 (초)")]
         private float _freeRoamDuration = 7f;
 
+        [SerializeField, Tooltip("깜빡임 웨이브 패턴 (각 값 = 해당 웨이브의 깜빡임 횟수)")]
+        private int[] _flickerPattern = { 1, 2, 1, 3, 5 };
+
+        [SerializeField, Tooltip("웨이브 간 대기 시간 (초)")]
+        private float _flickerWavePause = 0.4f;
+
+        [SerializeField, Tooltip("깜빡임 켜짐 시간 시작 (초)")]
+        private float _flickerOnStart = 0.1f;
+
+        [SerializeField, Tooltip("깜빡임 켜짐 시간 끝 (초, 점차 짧아짐)")]
+        private float _flickerOnEnd = 0.03f;
+
+        [SerializeField, Tooltip("깜빡임 꺼짐 시간 시작 (초)")]
+        private float _flickerOffStart = 0.15f;
+
+        [SerializeField, Tooltip("깜빡임 꺼짐 시간 끝 (초, 점차 짧아짐)")]
+        private float _flickerOffEnd = 0.04f;
+
         [SerializeField, Tooltip("타이핑 글자당 간격 (초)")]
         private float _typingSpeed = 0.04f;
 
@@ -153,6 +171,8 @@ namespace _02.Scripts._02.Ingame.EndingSequence
             if (_endingBgmKey.IsValid) SoundManager.Instance?.PlayBGM(_endingBgmKey, _bgmFadeInDuration);
 
             yield return new WaitForSeconds(_freeRoamDuration);
+
+            yield return FlickerScreen();
 
             _playerController.EnterCutsceneMode();
             Managers.Get<IGameManager>().EnterTransition();
@@ -268,6 +288,30 @@ namespace _02.Scripts._02.Ingame.EndingSequence
             yield return new WaitForSecondsRealtime(_creditEndDelay);
 
             Managers.Get<IGameManager>().ReturnToMainMenu();
+        }
+
+        private IEnumerator FlickerScreen()
+        {
+            int totalWaves = _flickerPattern.Length;
+
+            for (int w = 0; w < totalWaves; w++)
+            {
+                float progress = (float)w / (totalWaves - 1);
+                float onDuration = Mathf.Lerp(_flickerOnStart, _flickerOnEnd, progress);
+                float offDuration = Mathf.Lerp(_flickerOffStart, _flickerOffEnd, progress);
+
+                int count = _flickerPattern[w];
+                for (int i = 0; i < count; i++)
+                {
+                    _blackoutCanvasGroup.alpha = 1f;
+                    yield return new WaitForSeconds(onDuration);
+                    _blackoutCanvasGroup.alpha = 0f;
+                    yield return new WaitForSeconds(offDuration);
+                }
+
+                if (w < totalWaves - 1)
+                    yield return new WaitForSeconds(Mathf.Lerp(_flickerWavePause, _flickerWavePause * 0.3f, progress));
+            }
         }
 
         private void OnDestroy()
