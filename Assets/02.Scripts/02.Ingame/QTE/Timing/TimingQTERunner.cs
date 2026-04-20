@@ -219,8 +219,7 @@ public class TimingQTERunner : IQuickTimeEvent
 
         if (_view != null)
         {
-            _view.ResetView();
-            _view.Hide();
+            _view.PlayResultFeedback(result);
         }
 
         OnEnded?.Invoke(Result);
