@@ -4,7 +4,7 @@ using _02.Scripts.Core.Domain;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
+
 
 namespace _02.Scripts._02.Ingame.EndingSequence
 {
@@ -100,9 +100,22 @@ namespace _02.Scripts._02.Ingame.EndingSequence
         [SerializeField, Tooltip("타이핑 사운드 재생 간격 (N글자마다 1회)")]
         private int _typingSoundInterval = 2;
 
-        [Header("Events")]
-        [SerializeField, Tooltip("엔딩 시퀀스 완료 시 호출 (크레딧 로드 등)")]
-        private UnityEvent _onSequenceEnd;
+        [Header("Credits")]
+        [SerializeField, Tooltip("크레딧 패널 CanvasGroup")]
+        private CanvasGroup _creditCanvasGroup;
+
+        [SerializeField, Tooltip("크레딧 텍스트 RectTransform (스크롤 대상)")]
+        private RectTransform _creditTextRect;
+
+        [SerializeField, Tooltip("크레딧 스크롤 속도 (px/초)")]
+        private float _creditScrollSpeed = 80f;
+
+        [SerializeField, Tooltip("크레딧 페이드인 시간 (초)")]
+        private float _creditFadeInDuration = 1f;
+
+        [SerializeField, Tooltip("크레딧 종료 후 메인 메뉴 전환까지 대기 (초)")]
+        private float _creditEndDelay = 2f;
+
 
         private Sequence _seq;
         private Animator _hudAnimator;
@@ -224,7 +237,22 @@ namespace _02.Scripts._02.Ingame.EndingSequence
 
             yield return new WaitForSecondsRealtime(_blackoutDuration);
 
-            _onSequenceEnd?.Invoke();
+            _creditCanvasGroup.DOFade(1f, _creditFadeInDuration).SetUpdate(true);
+            yield return new WaitForSecondsRealtime(_creditFadeInDuration);
+
+            float totalHeight = _creditTextRect.rect.height + Screen.height;
+            float scrollDuration = totalHeight / _creditScrollSpeed;
+
+            _creditTextRect.DOAnchorPosY(totalHeight, scrollDuration)
+                .SetEase(Ease.Linear)
+                .SetUpdate(true);
+
+            yield return new WaitForSecondsRealtime(scrollDuration);
+
+            _creditCanvasGroup.DOFade(0f, _creditFadeInDuration).SetUpdate(true);
+            yield return new WaitForSecondsRealtime(_creditEndDelay);
+
+            Managers.Get<IGameManager>().ReturnToMainMenu();
         }
 
         private void OnDestroy()
