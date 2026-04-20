@@ -34,6 +34,7 @@ public class PuzzleInteractable : StateInteractable
     {
         base.OnAwake();
         GetComponentCached(ref PuzzleBase);
+        EnsureInteractionAvailableWhileLocked();
     }
 
     public override bool Unlock()
@@ -120,10 +121,28 @@ public class PuzzleInteractable : StateInteractable
 
     protected override void OnUseSucceeded(InteractionContext context)
     {
-        // Puzzle interactables manage their own completion lifecycle.
-        // Skipping the base after-use handling prevents one-shot deactivation
-        // from blocking re-entry after the player cancels the puzzle.
         PublishObjectInteracted(GetSuccessInteractEventType(context));
+    }
+
+    private void EnsureInteractionAvailableWhileLocked()
+    {
+        if (!_haveToUnlock)
+        {
+            return;
+        }
+
+        if (!ValidateConfiguration(out string failureReason))
+        {
+            Debug.LogWarning($"[{nameof(PuzzleInteractable)}] {gameObject.name} could not initialize locked interaction state. reason={failureReason}", this);
+            return;
+        }
+
+        if (GetState(_completedStateKey))
+        {
+            return;
+        }
+        
+        SetActivate(true);
     }
 
     private bool ValidateConfiguration(out string failureReason)
