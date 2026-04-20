@@ -60,6 +60,15 @@ namespace _02.Scripts._02.Ingame.EndingSequence
         [SerializeField, Tooltip("씬 진입 후 자유 탐색 시간 (초)")]
         private float _freeRoamDuration = 7f;
 
+        [SerializeField, Tooltip("화면 깜빡임 횟수")]
+        private int _flickerCount = 4;
+
+        [SerializeField, Tooltip("화면 깜빡임 켜짐 시간 (초)")]
+        private float _flickerOnDuration = 0.08f;
+
+        [SerializeField, Tooltip("화면 깜빡임 꺼짐 시간 (초)")]
+        private float _flickerOffDuration = 0.12f;
+
         [SerializeField, Tooltip("타이핑 글자당 간격 (초)")]
         private float _typingSpeed = 0.04f;
 
@@ -153,6 +162,8 @@ namespace _02.Scripts._02.Ingame.EndingSequence
             if (_endingBgmKey.IsValid) SoundManager.Instance?.PlayBGM(_endingBgmKey, _bgmFadeInDuration);
 
             yield return new WaitForSeconds(_freeRoamDuration);
+
+            yield return FlickerScreen();
 
             _playerController.EnterCutsceneMode();
             Managers.Get<IGameManager>().EnterTransition();
@@ -268,6 +279,17 @@ namespace _02.Scripts._02.Ingame.EndingSequence
             yield return new WaitForSecondsRealtime(_creditEndDelay);
 
             Managers.Get<IGameManager>().ReturnToMainMenu();
+        }
+
+        private IEnumerator FlickerScreen()
+        {
+            for (int i = 0; i < _flickerCount; i++)
+            {
+                _blackoutCanvasGroup.alpha = 1f;
+                yield return new WaitForSeconds(_flickerOnDuration);
+                _blackoutCanvasGroup.alpha = 0f;
+                yield return new WaitForSeconds(_flickerOffDuration);
+            }
         }
 
         private void OnDestroy()
