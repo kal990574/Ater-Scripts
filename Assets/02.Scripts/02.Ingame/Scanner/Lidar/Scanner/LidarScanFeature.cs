@@ -9,6 +9,7 @@ public class LidarScanFeature : MonoBehaviour
     [SerializeField] private Transform _rayOrigin;
     [SerializeField] private Transform muzzle;
     [SerializeField] private LineRenderer _lineRenderer;
+    [SerializeField] private LidarSurfaceHitParticleEmitter _surfaceHitParticleEmitter;
 
     [Header("Optional Settings")]
     [SerializeField] private Vector3 _originOffset = Vector3.zero;
@@ -53,6 +54,11 @@ public class LidarScanFeature : MonoBehaviour
         
         _eventPublisher = new GameEventPublisher();
         _eventPublisher.SetSource(this);
+
+        if (_surfaceHitParticleEmitter == null)
+        {
+            _surfaceHitParticleEmitter = GetComponentInChildren<LidarSurfaceHitParticleEmitter>();
+        }
 
         _lineRenderer.useWorldSpace = true;
         _lineRenderer.positionCount = 2;
@@ -100,6 +106,10 @@ public class LidarScanFeature : MonoBehaviour
             
             CurrentTarget.OnScanning(deltaTime);
         }
+        else
+        {
+            _surfaceHitParticleEmitter?.ResetEmitter();
+        }
 
         if (_soundInstance != null)
         {
@@ -107,6 +117,11 @@ public class LidarScanFeature : MonoBehaviour
         }
 
         LidarEffect.DrawLidarEffect(_lidarRay.RayResults, CurrentTarget);
+
+        if (CurrentTarget != null && LidarEffect.TryGetCurrentTargetHitSample(out LidarSurfaceHitSample hitSample))
+        {
+            _surfaceHitParticleEmitter?.Emit(hitSample, deltaTime);
+        }
     }
 
     private void HandleTargetChanged(ScannableObject previous, ScannableObject current)
@@ -152,6 +167,7 @@ public class LidarScanFeature : MonoBehaviour
 
         _lidarRay.ClearScanResults();
         LidarEffect.ResetLine();
+        _surfaceHitParticleEmitter?.ResetEmitter();
         IsOnScan = false;
         
         
