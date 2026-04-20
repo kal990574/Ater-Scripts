@@ -44,6 +44,10 @@ namespace _02.Scripts._02.Ingame.EndingSequence
         [SerializeField, Tooltip("엔딩 로그 텍스트 (타이핑 표시)")]
         private TMP_Text _logText;
 
+        [Header("Config")]
+        [SerializeField, Tooltip("엔딩 시퀀스 텍스트 설정 SO")]
+        private EndingSequenceConfigSO _config;
+
         [Header("Mannequin")]
         [SerializeField, Tooltip("점프스케어 마네킹 오브젝트 (비활성 상태로 배치)")]
         private GameObject _mannequin;
@@ -175,16 +179,7 @@ namespace _02.Scripts._02.Ingame.EndingSequence
             _textCanvasGroup.alpha = 1f;
             _logText.text = "";
 
-            string[] lines =
-            {
-                "접속 횟수: 999",
-                "",
-                "장비 반응 정상",
-                "구역 진입에 성공했다",
-                "",
-                "첫 번째 기억 — 학교",
-                "구조를 파악하고 다음 구역으로의 경로를 찾는다.."
-            };
+            string[] lines = _config.Lines;
 
             float totalLines = lines.Length;
             for (int i = 0; i < lines.Length; i++)
