@@ -6,6 +6,8 @@ public class SoundKey
     public const string BGM_Chapter1 = "BGM_Chapter1";
     public const string  BGM_Chapter2 = "BGM_Chapter2";
     public const string BGM_Chasing = "BGM_Chasing";
+    public const string BGM_Ending = "BGM_Ending";
+    public const string BGM_Credit = "BGM_Credit";
 
 
     //----------SFX----------
