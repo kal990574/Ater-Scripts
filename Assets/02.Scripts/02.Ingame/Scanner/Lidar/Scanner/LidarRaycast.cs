@@ -5,12 +5,14 @@ public class LidarRaycast
 {
     private readonly Dictionary<ScannableObject, TargetHitData> _hitMap = new();
     private readonly List<LidarRayData> _rayResults = new();
+    private readonly List<LidarSurfaceHitSample> _surfaceHitSamples = new();
     private readonly LidarScanFeature _scanFeature;
     private readonly LidarScanConfigSO _config;
     private readonly IRaycastService _raycastService;
 
     public IReadOnlyDictionary<ScannableObject, TargetHitData> HitMap => _hitMap;
     public IReadOnlyList<LidarRayData> RayResults => _rayResults;
+    public IReadOnlyList<LidarSurfaceHitSample> SurfaceHitSamples => _surfaceHitSamples;
 
     public LidarRaycast(LidarScanFeature scanFeature, IRaycastService raycastService = null)
     {
@@ -39,6 +41,7 @@ public class LidarRaycast
     {
         _hitMap.Clear();
         _rayResults.Clear();
+        _surfaceHitSamples.Clear();
     }
 
     public IEnumerable<Vector3> EnumerateRayDirections()
@@ -135,6 +138,7 @@ public class LidarRaycast
                 hit.Distance,
                 true));
 
+        _surfaceHitSamples.Add(new LidarSurfaceHitSample(target, hit.Point, hit.Normal, hit.Distance));
         UpdateTargetHitData(origin, hit, target);
     }
 
@@ -150,13 +154,14 @@ public class LidarRaycast
             {
                 data.ClosestDistance = distance;
                 data.RepresentativePoint = hit.Point;
+                data.RepresentativeNormal = hit.Normal;
             }
 
             _hitMap[target] = data;
             return;
         }
 
-        TargetHitData newData = new(1, hit.Point, distance);
+        TargetHitData newData = new(1, hit.Point, hit.Normal, distance);
         _hitMap.Add(target, newData);
     }
 }

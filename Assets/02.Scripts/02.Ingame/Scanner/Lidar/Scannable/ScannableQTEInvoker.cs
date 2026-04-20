@@ -41,6 +41,9 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
 
     public GameObject Owner => gameObject;
     public bool IsConfigured => scannableObject != null && _qteConfig != null && _settings != null;
+    public event Action OnQteSucceeded;
+    public event Action OnQteGreatSucceeded;
+    public event Action OnQteFailed;
 
     [TabGroup("Inspector", "Debug")]
     [ShowInInspector, ReadOnly, LabelText("Is Configured")]
@@ -108,6 +111,7 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
             return;
         }
 
+        OnQteFailed?.Invoke();
         _qteHandler.HandleQteFailure(_settings.FailPenalty);
         _onQteFail?.Invoke();
     }
@@ -119,6 +123,7 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
             return;
         }
 
+        OnQteSucceeded?.Invoke();
         _qteHandler.HandleQteSuccess();
         _onQteSuccess?.Invoke();
     }
@@ -130,6 +135,7 @@ public class ScannableQTEInvoker : MonoBehaviour, IQTEInvoker
             return;
         }
 
+        OnQteGreatSucceeded?.Invoke();
         _qteHandler.HandleQteGreatSuccess(_settings.GreatSuccessBonus);
         _onQteGreatSuccess?.Invoke();
     }
