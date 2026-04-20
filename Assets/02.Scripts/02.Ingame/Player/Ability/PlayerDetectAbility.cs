@@ -10,7 +10,6 @@ namespace _02.Scripts.Player
         private PlayerDetectTargetTracker _targetTracker;
 
         public IDetectable CurrentTarget => _targetTracker != null ? _targetTracker.CurrentTarget : null;
-        public RaycastSetting PromptQuery => _query;
 
         private void Start()
         {

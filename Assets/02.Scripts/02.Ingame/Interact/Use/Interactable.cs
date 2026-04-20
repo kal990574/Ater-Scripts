@@ -28,16 +28,10 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     private GameEventPublisher _eventPublisher;
     private List<Collider> _interactColliders = new List<Collider>();
 
-    [TabGroup("Inspector", "Interactable")]
-    [LabelText("Hover Description Before Scan")]
-    [MultiLineProperty]
-    [SerializeField] private string _hoverDescriptionBeforeScan = "";
-
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
     public bool IsInteractActive => _isInteractActive && IsScanRequirementSatisfied() && IsAdditionalInteractRequirementSatisfied();
     public override bool CanDetect => _isDetectable && IsInteractActive;
-    public override bool CanShowHoverUI => _isDetectable && _isInteractActive;
 
     protected IRuntimeView RuntimeView => _instance;
 

@@ -20,10 +20,6 @@ public class DoorInteractable : StateInteractable
     [LabelText("Open")]
     [SerializeField] private string _openStateKey = "is_open";
 
-    [TabGroup("Inspector", "DoorInteractable")]
-    [LabelText("Unlocked Description")]
-    [MultiLineProperty]
-    [SerializeField] private string _hoverDescriptionUnlocked = "";
 
     [TabGroup("Inspector", "Events")]
     [LabelText("On Unlocked")]

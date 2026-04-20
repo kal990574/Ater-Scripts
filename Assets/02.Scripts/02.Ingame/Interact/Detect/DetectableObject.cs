@@ -14,8 +14,6 @@ public class DetectableObject : MonoBehaviour , IDetectable
     public Transform Transform => transform;
     public virtual bool CanDetect => _isDetectable;
 
-    public virtual bool CanShowHoverUI => _isDetectable;
-
     public event Action<bool> OnDetected;
 
     [TabGroup("Inspector", "DetectableObject")]
