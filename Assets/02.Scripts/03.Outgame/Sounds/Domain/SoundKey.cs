@@ -109,6 +109,14 @@ public class SoundKey
     public const string JumpScare_SubSound_Laughing =  "JumpScare_SubSound_Laughing";
     
     
+    //나레이션
+    public const string Narration_Typing = "Narration_Typing";
+
+    //엔딩
+    public const string Ending_Typing = "Ending_Typing";
+    public const string Ending_Glitch = "Ending_Glitch";
+    public const string Ending_JumpScare = "Ending_JumpScare";
+
     //----------Stinger----------
 
 

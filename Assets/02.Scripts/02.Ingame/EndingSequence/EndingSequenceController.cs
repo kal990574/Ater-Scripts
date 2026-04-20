@@ -1,4 +1,6 @@
 using System.Collections;
+using _02.Scripts.Core;
+using _02.Scripts.Core.Domain;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -9,40 +11,98 @@ namespace _02.Scripts._02.Ingame.EndingSequence
     public class EndingSequenceController : MonoBehaviour
     {
         [Header("Player")]
-        [SerializeField] private PlayerController _playerController;
+        [SerializeField, Tooltip("씬의 PlayerController 참조")]
+        private PlayerController _playerController;
 
         [Header("Letterbox")]
-        [SerializeField] private RectTransform _topBar;
-        [SerializeField] private RectTransform _bottomBar;
-        [SerializeField] private float _letterboxHeight = 120f;
-        [SerializeField] private float _letterboxDuration = 0.8f;
-        [SerializeField] private CanvasGroup _hudCanvasGroup;
+        [SerializeField, Tooltip("레터박스 상단 바 RectTransform")]
+        private RectTransform _topBar;
+
+        [SerializeField, Tooltip("레터박스 하단 바 RectTransform")]
+        private RectTransform _bottomBar;
+
+        [SerializeField, Tooltip("레터박스 바의 최대 높이 (px)")]
+        private float _letterboxHeight = 120f;
+
+        [SerializeField, Tooltip("레터박스 닫히는 시간 (초)")]
+        private float _letterboxInDuration = 0.8f;
+
+        [SerializeField, Tooltip("레터박스 열리는 시간 (초)")]
+        private float _letterboxOutDuration = 0.4f;
+
+        [SerializeField, Tooltip("HUD CanvasGroup (레터박스 진입 시 페이드아웃)")]
+        private CanvasGroup _hudCanvasGroup;
 
         [Header("Glitch")]
-        [SerializeField] private GlitchOverlayUI _glitchOverlay;
+        [SerializeField, Tooltip("글리치 오버레이 UI 컴포넌트")]
+        private GlitchOverlayUI _glitchOverlay;
 
         [Header("Text UI")]
-        [SerializeField] private CanvasGroup _textCanvasGroup;
-        [SerializeField] private TMP_Text _logText;
+        [SerializeField, Tooltip("텍스트 패널 CanvasGroup (알파 제어용)")]
+        private CanvasGroup _textCanvasGroup;
+
+        [SerializeField, Tooltip("엔딩 로그 텍스트 (타이핑 표시)")]
+        private TMP_Text _logText;
 
         [Header("Mannequin")]
-        [SerializeField] private GameObject _mannequin;
+        [SerializeField, Tooltip("점프스케어 마네킹 오브젝트 (비활성 상태로 배치)")]
+        private GameObject _mannequin;
 
         [Header("Blackout")]
-        [SerializeField] private CanvasGroup _blackoutCanvasGroup;
+        [SerializeField, Tooltip("암전용 CanvasGroup (alpha 0→1)")]
+        private CanvasGroup _blackoutCanvasGroup;
 
         [Header("Timing")]
-        [SerializeField] private float _freeRoamDuration = 7f;
-        [SerializeField] private float _typingSpeed = 0.04f;
-        [SerializeField] private float _linePause = 1.0f;
-        [SerializeField] private float _mannequinExposure = 0.15f;
+        [SerializeField, Tooltip("씬 진입 후 자유 탐색 시간 (초)")]
+        private float _freeRoamDuration = 7f;
+
+        [SerializeField, Tooltip("타이핑 글자당 간격 (초)")]
+        private float _typingSpeed = 0.04f;
+
+        [SerializeField, Tooltip("줄 간 대기 시간 (초)")]
+        private float _linePause = 1.0f;
+
+        [SerializeField, Tooltip("빈 줄 대기 시간 비율 (_linePause에 곱해짐)")]
+        private float _emptyLinePauseRatio = 0.5f;
+
+        [SerializeField, Tooltip("특수문자(…, —) 딜레이 배수")]
+        private float _specialCharDelayMultiplier = 3f;
+
+        [SerializeField, Tooltip("마침표(.) 딜레이 배수")]
+        private float _periodDelayMultiplier = 2f;
+
+        [SerializeField, Tooltip("레터박스 아웃 후 마네킹 등장까지 정적 시간 (초)")]
+        private float _preJumpScareDelay = 2f;
+
+        [SerializeField, Tooltip("마네킹 노출 시간 (초)")]
+        private float _mannequinExposure = 0.15f;
+
+        [SerializeField, Tooltip("암전 후 엔딩 이벤트까지 대기 시간 (초)")]
+        private float _blackoutDuration = 1.5f;
+
+        [Header("Glitch Intensity")]
+        [SerializeField, Tooltip("글리치 시작 강도 (0~1)")]
+        private float _glitchIntensityStart = 0.3f;
+
+        [SerializeField, Tooltip("글리치 최대 강도 (0~1)")]
+        private float _glitchIntensityEnd = 1f;
 
         [Header("Audio")]
-        [SerializeField] private AudioSource _glitchSfx;
-        [SerializeField] private AudioSource _jumpScareSfx;
+        [SerializeField, Tooltip("글리치 루프 사운드 키")]
+        private SoundKeyReference _glitchSfxKey;
+
+        [SerializeField, Tooltip("점프스케어 충격음 키")]
+        private SoundKeyReference _jumpScareSfxKey;
+
+        [SerializeField, Tooltip("타이핑 효과음 키")]
+        private SoundKeyReference _typingSfxKey;
+
+        [SerializeField, Tooltip("타이핑 사운드 재생 간격 (N글자마다 1회)")]
+        private int _typingSoundInterval = 2;
 
         [Header("Events")]
-        [SerializeField] private UnityEvent _onSequenceEnd;
+        [SerializeField, Tooltip("엔딩 시퀀스 완료 시 호출 (크레딧 로드 등)")]
+        private UnityEvent _onSequenceEnd;
 
         private Sequence _seq;
         private Animator _hudAnimator;
@@ -60,41 +120,40 @@ namespace _02.Scripts._02.Ingame.EndingSequence
 
         private IEnumerator EndingSequence()
         {
-            // 1. 자유 탐색 시간
-            yield return new WaitForSecondsRealtime(_freeRoamDuration);
+            yield return new WaitForSeconds(_freeRoamDuration);
 
-            // 2. 조작 잠금 + 레터박스
             _playerController.EnterCutsceneMode();
+            Managers.Get<IGameManager>().EnterTransition();
             _hudAnimator = _hudCanvasGroup.GetComponent<Animator>();
             if (_hudAnimator != null) _hudAnimator.enabled = false;
 
             _seq = DOTween.Sequence().SetUpdate(true);
             _seq.Append(_topBar
-                .DOSizeDelta(new Vector2(_topBar.sizeDelta.x, _letterboxHeight), _letterboxDuration)
+                .DOSizeDelta(new Vector2(_topBar.sizeDelta.x, _letterboxHeight), _letterboxInDuration)
                 .SetEase(Ease.OutQuad));
             _seq.Join(_bottomBar
-                .DOSizeDelta(new Vector2(_bottomBar.sizeDelta.x, _letterboxHeight), _letterboxDuration)
+                .DOSizeDelta(new Vector2(_bottomBar.sizeDelta.x, _letterboxHeight), _letterboxInDuration)
                 .SetEase(Ease.OutQuad));
-            _seq.Join(_hudCanvasGroup.DOFade(0f, _letterboxDuration));
+            _seq.Join(_hudCanvasGroup.DOFade(0f, _letterboxInDuration));
 
             yield return _seq.WaitForCompletion();
 
-            // 3. 글리치 시작 (약하게) + 사운드
-            _glitchOverlay.SetIntensity(0.3f);
+            _glitchOverlay.SetIntensity(_glitchIntensityStart);
             _glitchOverlay.StartGlitch();
-            if (_glitchSfx != null) _glitchSfx.Play();
+            if (_glitchSfxKey.IsValid) SoundManager.Instance?.PlaySFX2D(_glitchSfxKey);
 
-            // 4. 텍스트 타이핑 (줄별 표시)
             _textCanvasGroup.alpha = 1f;
             _logText.text = "";
 
             string[] lines =
             {
-                "접속 횟수: 99.",
-                "장비 반응 정상. 구역 진입에 성공했다.",
+                "접속 횟수: 999",
                 "",
-                "첫 번째 기억 — 학교.",
-                "구조를 파악하고 다음 구역으로의 경로를 찾는다."
+                "장비 반응 정상",
+                "구역 진입에 성공했다",
+                "",
+                "첫 번째 기억 — 학교",
+                "구조를 파악하고 다음 구역으로의 경로를 찾는다.."
             };
 
             float totalLines = lines.Length;
@@ -105,61 +164,66 @@ namespace _02.Scripts._02.Ingame.EndingSequence
                 if (string.IsNullOrEmpty(line))
                 {
                     _logText.text += "\n";
-                    yield return new WaitForSecondsRealtime(_linePause * 0.5f);
+                    yield return new WaitForSecondsRealtime(_linePause * _emptyLinePauseRatio);
                     continue;
                 }
 
+                int charCount = 0;
                 foreach (char c in line)
                 {
                     _logText.text += c;
                     _logText.ForceMeshUpdate();
-                    yield return new WaitForSecondsRealtime(_typingSpeed);
+
+                    if (_typingSfxKey.IsValid && !char.IsWhiteSpace(c) && ++charCount % _typingSoundInterval == 0)
+                    {
+                        SoundManager.Instance?.PlaySFX2D(_typingSfxKey);
+                    }
+
+                    float delay = _typingSpeed;
+                    if (c == '…' || c == '—')
+                        delay *= _specialCharDelayMultiplier;
+                    else if (c == '.')
+                        delay *= _periodDelayMultiplier;
+
+                    yield return new WaitForSecondsRealtime(delay);
                 }
 
                 _logText.text += "\n";
 
-                // 글리치 강도를 줄 진행에 따라 올림
-                _glitchOverlay.SetIntensity(Mathf.Lerp(0.3f, 1f, (i + 1) / totalLines));
+                _glitchOverlay.SetIntensity(Mathf.Lerp(_glitchIntensityStart, _glitchIntensityEnd, (i + 1) / totalLines));
 
                 if (i < lines.Length - 1)
                     yield return new WaitForSecondsRealtime(_linePause);
             }
 
-            // 마지막 줄 후 잠시 대기
             yield return new WaitForSecondsRealtime(_linePause);
 
-            // 5. 글리치 정지 + 텍스트 숨김
             _glitchOverlay.StopGlitch();
-            if (_glitchSfx != null) _glitchSfx.Stop();
             _textCanvasGroup.alpha = 0f;
 
-            // 6. 레터박스 아웃
             _seq?.Kill();
             _seq = DOTween.Sequence().SetUpdate(true);
             _seq.Append(_topBar
-                .DOSizeDelta(new Vector2(_topBar.sizeDelta.x, 0f), _letterboxDuration)
+                .DOSizeDelta(new Vector2(_topBar.sizeDelta.x, 0f), _letterboxOutDuration)
                 .SetEase(Ease.InQuad));
             _seq.Join(_bottomBar
-                .DOSizeDelta(new Vector2(_bottomBar.sizeDelta.x, 0f), _letterboxDuration)
+                .DOSizeDelta(new Vector2(_bottomBar.sizeDelta.x, 0f), _letterboxOutDuration)
                 .SetEase(Ease.InQuad));
 
             yield return _seq.WaitForCompletion();
 
-            // 7. 정적 후 마네킹 점프스케어
-            yield return new WaitForSecondsRealtime(2f);
+            yield return new WaitForSecondsRealtime(_preJumpScareDelay);
 
             _mannequin.SetActive(true);
-            if (_jumpScareSfx != null) _jumpScareSfx.Play();
+            if (_jumpScareSfxKey.IsValid) SoundManager.Instance?.PlaySFX2D(_jumpScareSfxKey);
 
             yield return new WaitForSecondsRealtime(_mannequinExposure);
 
-            // 8. 암전
             _mannequin.SetActive(false);
             _blackoutCanvasGroup.alpha = 1f;
 
-            yield return new WaitForSecondsRealtime(1.5f);
+            yield return new WaitForSecondsRealtime(_blackoutDuration);
 
-            // 9. 엔딩 이벤트
             _onSequenceEnd?.Invoke();
         }
 
