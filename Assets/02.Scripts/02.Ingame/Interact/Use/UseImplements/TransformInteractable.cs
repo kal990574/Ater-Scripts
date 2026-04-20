@@ -78,11 +78,11 @@ public class TransformInteractable : UsableObject
     [LabelText("Disable Interaction After Use")]
     [SerializeField] private bool _disableInteractionAfterUse;
 
-    [TabGroup("Inspector", "TransformInteractable")]
+    [TabGroup("Inspector", "Events")]
     [LabelText("On Move Started")]
     [SerializeField] private UnityEvent _onMoveStarted;
 
-    [TabGroup("Inspector", "TransformInteractable")]
+    [TabGroup("Inspector", "Events")]
     [LabelText("On Move Completed")]
     [SerializeField] private UnityEvent _onMoveCompleted;
 
