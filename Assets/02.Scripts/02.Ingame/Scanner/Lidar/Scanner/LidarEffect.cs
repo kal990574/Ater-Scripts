@@ -8,8 +8,9 @@ public class LidarEffect
     private readonly Transform _muzzle;
     private readonly LineRenderer _lineRenderer;
     private readonly LidarScanConfigSO _config;
-    
     private readonly List<Collider> _colliders = new();
+    private LidarSurfaceHitSample _currentTargetHitSample;
+    private bool _hasCurrentTargetHitSample;
     private float _lastDrawTime = -999.0f;
     
     public LidarEffect(LidarScanFeature scanFeature)
@@ -22,8 +23,12 @@ public class LidarEffect
         ClearLine();
     }
 
-    public void DrawLidarEffect(IReadOnlyList<LidarRayData> rayDatas, ScannableObject target)
+    public void DrawLidarEffect(
+        IReadOnlyList<LidarRayData> rayDatas,
+        ScannableObject target)
     {
+        _hasCurrentTargetHitSample = false;
+
         if (CanDrawEffect() == false)
         {
             return;
@@ -42,7 +47,14 @@ public class LidarEffect
 
     public void ResetLine()
     {
+        _hasCurrentTargetHitSample = false;
         ClearLine();
+    }
+
+    public bool TryGetCurrentTargetHitSample(out LidarSurfaceHitSample hitSample)
+    {
+        hitSample = _currentTargetHitSample;
+        return _hasCurrentTargetHitSample;
     }
 
     private bool CanDrawEffect()
@@ -62,9 +74,16 @@ public class LidarEffect
 
     private void DrawTargetLine(ScannableObject target)
     {
-        Vector3 targetPoint = GetPointOnTargetSurface(target);
+        if (!TryGetRandomTargetSurfaceSample(target, out LidarSurfaceHitSample hitSample))
+        {
+            ResetLine();
+            return;
+        }
+
+        _currentTargetHitSample = hitSample;
+        _hasCurrentTargetHitSample = true;
         SetLineColor(_config.OnTargetGradient);
-        SetLine(_muzzle.position, targetPoint);
+        SetLine(_muzzle.position, hitSample.Point);
     }
 
     private void DrawRaycastLine(IReadOnlyList<LidarRayData> rayDatas)
@@ -80,56 +99,89 @@ public class LidarEffect
         SetLine(_muzzle.position, rayData.EndPoint);
     }
 
-    private Vector3 GetPointOnTargetSurface(ScannableObject target)
+    private bool TryGetRandomTargetSurfaceSample(
+        ScannableObject target,
+        out LidarSurfaceHitSample hitSample)
     {
+        hitSample = default;
+
         if (target == null)
         {
-            return _muzzle != null ? _muzzle.position : Vector3.zero;
+            return false;
         }
 
         _colliders.Clear();
         target.GetComponentsInChildren(_colliders);
-
-        if (_colliders.Count > 0)
+        if (_colliders.Count == 0)
         {
-            Collider targetCollider = _colliders[Random.Range(0, _colliders.Count)];
-            Vector3 sampledPoint = SampleRandomSurfacePoint(targetCollider);
-
-            if (sampledPoint != targetCollider.bounds.center)
-            {
-                return sampledPoint;
-            }
-
-            return targetCollider.ClosestPoint(_muzzle.position);
+            return false;
         }
 
-        return target.transform.position;
+        Collider targetCollider = _colliders[Random.Range(0, _colliders.Count)];
+        if (!TrySampleRandomSurfacePoint(targetCollider, out Vector3 sampledPoint, out Vector3 sampledNormal))
+        {
+            sampledPoint = targetCollider.ClosestPoint(_muzzle.position);
+            sampledNormal = ResolveFallbackNormal(targetCollider, sampledPoint);
+        }
+
+        hitSample = new LidarSurfaceHitSample(target, sampledPoint, sampledNormal, Vector3.Distance(_muzzle.position, sampledPoint));
+        return true;
     }
 
-    private Vector3 SampleRandomSurfacePoint(Collider targetCollider)
+    private bool TrySampleRandomSurfacePoint(Collider targetCollider, out Vector3 sampledPoint, out Vector3 sampledNormal)
     {
+        sampledPoint = default;
+        sampledNormal = Vector3.up;
+
+        if (targetCollider == null)
+        {
+            return false;
+        }
+
         Bounds bounds = targetCollider.bounds;
         Vector3 center = bounds.center;
         float radius = bounds.extents.magnitude;
-
         if (radius <= Mathf.Epsilon)
         {
-            return center;
+            sampledPoint = center;
+            sampledNormal = Vector3.up;
+            return false;
         }
 
         for (int attempt = 0; attempt < 8; attempt++)
         {
-            Vector3 direction = Random.onUnitSphere;
-            Vector3 sampleOrigin = center + direction * radius * 2.0f;
+            Vector3 outwardDirection = Random.onUnitSphere;
+            Vector3 sampleOrigin = center + outwardDirection * radius * 2.0f;
             Vector3 surfacePoint = bounds.ClosestPoint(sampleOrigin);
-
-            if ((surfacePoint - sampleOrigin).sqrMagnitude > 0.0001f)
+            if ((surfacePoint - sampleOrigin).sqrMagnitude <= 0.0001f)
             {
-                return surfacePoint;
+                continue;
             }
+
+            sampledPoint = surfacePoint;
+            sampledNormal = outwardDirection;
+            return true;
         }
 
-        return center;
+        sampledPoint = targetCollider.ClosestPoint(_muzzle.position);
+        sampledNormal = ResolveFallbackNormal(targetCollider, sampledPoint);
+        return false;
+    }
+
+    private Vector3 ResolveFallbackNormal(Collider targetCollider, Vector3 sampledPoint)
+    {
+        if (targetCollider == null)
+        {
+            return Vector3.up;
+        }
+
+        Vector3 normal = sampledPoint - targetCollider.bounds.center;
+        if (normal.sqrMagnitude <= 0.0001f)
+        {
+            return Vector3.up;
+        }
+
+        return normal.normalized;
     }
 
     private void SetLine(Vector3 startPoint, Vector3 endPoint)
