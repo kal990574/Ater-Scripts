@@ -25,11 +25,11 @@ public class DoorInteractable : StateInteractable
     [MultiLineProperty]
     [SerializeField] private string _hoverDescriptionUnlocked = "";
 
-    [TabGroup("Inspector", "DoorInteractable")]
+    [TabGroup("Inspector", "Events")]
     [LabelText("On Unlocked")]
     [SerializeField] private UnityEvent _onUnlocked;
 
-    [TabGroup("Inspector", "DoorInteractable")]
+    [TabGroup("Inspector", "Events")]
     [LabelText("On Opened")]
     [SerializeField] private UnityEvent _onOpened;
 

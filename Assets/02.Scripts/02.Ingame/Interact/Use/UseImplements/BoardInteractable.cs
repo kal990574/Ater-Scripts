@@ -16,7 +16,7 @@ public class BoardInteractable : StateInteractable
     [LabelText("Open")]
     [SerializeField] private string _openStateKey = "is_open";
 
-    [TabGroup("Inspector", "BoardInteractable")]
+    [TabGroup("Inspector", "Events")]
     [LabelText("On Opened")]
     [SerializeField] private UnityEvent _onOpened;
 

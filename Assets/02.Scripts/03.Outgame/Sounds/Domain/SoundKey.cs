@@ -4,6 +4,8 @@ public class SoundKey
     public const string BGM_Title = "BGM_Title";
     public const string BGM_TUTORIAL = "BGM_Tutorial";
     public const string BGM_Chapter1 = "BGM_Chapter1";
+    public const string  BGM_Chapter2 = "BGM_Chapter2";
+    public const string BGM_Chasing = "BGM_Chasing";
 
 
     //----------SFX----------
@@ -74,12 +76,17 @@ public class SoundKey
     public const string Safe_Dial = "Safe_Dial";
     public const string Safe_False = "Safe_False";
     public const string Safe_Open = "Safe_Open";
+    
+    public const string Button_Activate = "Button_Activate";
 
     //키카드
     public const string Keycard_TryOpen = "Keycard_TryOpen";
     public const string Keycard_Use = "Keycard_Use";
     public const string Keycard_Open = "Keycard_Open";
-
+    
+    public const string MetalDoorOpen = "MetalDoorOpen";
+    public const string ObstacleInteract =  "ObstacleInteract";
+    
     //점프스케어
     public const string JumpScare_Tutorial1 =  "JumpScare_Tutorial1";
     public const string JumpScare_Tutorial2 =  "JumpScare_Tutorial2";
@@ -93,6 +100,15 @@ public class SoundKey
     public const string JumpScare_Chapter1_DollAnimation = "JumpScare_Chapter1_DollAnimation";
     public const string JumpScare_Chapter1_SwitchOff = "JumpScare_Chapter1_SwitchOff";
     public const string JumpScare_Chapter1_SwitchOn = "JumpScare_Chapter1_SwitchOn";
+    
+   
+    public const string CutScene_Chapter2_MetalDoorBroken = "CutScene_Chapter2_MetalDoorBroken";
+    public const string CutScene_Chapter2_EnemyWalkLoop = "CutScene_Chapter2_EnemyWalkLoop";
+    public const string CutScene_Chapter2_EnemyRotateHead = "CutScene_Chapter2_EnemyRotateHead";
+    public const string CutScene_Chapter2_LightBlink= "CutScene_Chapter2_LightBlink";
+    public const string CutScene_Chapter2_WallDown =  "CutScene_Chapter2_WallDown";
+    public const string CutScene_Chapter2_WallUp =  "CutScene_Chapter2_WallUp";
+    
     
     
     public const string JumpScare_SubFakeEnemy_Terror =  "JumpScare_SubFakeEnemy_Terror";
