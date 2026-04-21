@@ -46,6 +46,7 @@ public class DoorInteractable : StateInteractable
     {
         base.OnAwake();
         GetComponentCached(ref _doorAnimator);
+        SetInteractComplete(IsOpen);
     }
 
     protected override bool CanUse(InteractionContext context, out string failureReason)
@@ -112,6 +113,7 @@ public class DoorInteractable : StateInteractable
         }
 
         SetState(_openStateKey, false);
+        SetInteractComplete(false);
         SetActivate(true);
 
         Debug.Log($"[{nameof(DoorInteractable)}] {gameObject.name} interaction was reactivated.", this);
@@ -131,6 +133,7 @@ public class DoorInteractable : StateInteractable
     protected virtual void ApplyOpenState()
     {
         SetState(_openStateKey, true);
+        SetInteractComplete(true);
         SetActivate(false);
     }
 

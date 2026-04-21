@@ -35,6 +35,12 @@ public class FuseBoxInteractable : StateInteractable
     [LabelText("On Completed")]
     [SerializeField] private UnityEvent _onCompleted;
 
+    protected override void OnAwake()
+    {
+        base.OnAwake();
+        SetInteractComplete(GetState(_completedStateKey));
+    }
+
     protected override bool CanUse(InteractionContext context, out string failureReason)
     {
         if (!ValidateConfiguration(out failureReason))
@@ -97,6 +103,7 @@ public class FuseBoxInteractable : StateInteractable
         _fuseLightOff.SetActive(false);
 
         SetState(_completedStateKey, true);
+        SetInteractComplete(true);
 
         Debug.Log($"[{nameof(FuseBoxInteractable)}] {gameObject.name} completed successfully. requiredItemId={_requiredFuseItemId}", this);
         _onCompleted?.Invoke();

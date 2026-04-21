@@ -34,6 +34,7 @@ public class PuzzleInteractable : StateInteractable
     {
         base.OnAwake();
         GetComponentCached(ref PuzzleBase);
+        SetInteractComplete(GetState(_completedStateKey) || (PuzzleBase != null && PuzzleBase.IsSolved));
         EnsureInteractionAvailableWhileLocked();
     }
 
@@ -60,6 +61,7 @@ public class PuzzleInteractable : StateInteractable
     public void HandlePuzzleSolved()
     {
         SetState(_completedStateKey, true);
+        SetInteractComplete(true);
         _onCompleted?.Invoke();
         ApplyAfterUse();
     }
@@ -139,6 +141,7 @@ public class PuzzleInteractable : StateInteractable
 
         if (GetState(_completedStateKey))
         {
+            SetInteractComplete(true);
             return;
         }
         

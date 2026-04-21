@@ -24,6 +24,7 @@ public class BoardInteractable : StateInteractable
     {
         base.OnAwake();
         GetComponentCached(ref _animator);
+        SetInteractComplete(GetState(_openStateKey));
     }
 
     protected override bool CanUse(InteractionContext context, out string failureReason)
@@ -55,6 +56,7 @@ public class BoardInteractable : StateInteractable
     protected override bool OnUse(InteractionContext context, out string failureReason)
     {
         SetState(_openStateKey, true);
+        SetInteractComplete(true);
 
         if (_animator != null && !string.IsNullOrWhiteSpace(_openAnimationStateName))
         {

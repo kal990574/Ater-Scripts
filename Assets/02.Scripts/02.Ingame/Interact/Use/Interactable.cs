@@ -18,6 +18,9 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     [TabGroup("Inspector", "Interactable")]
     [SerializeField] protected bool _isInteractActive;
 
+    [TabGroup("Inspector", "Interactable")]
+    [SerializeField] protected bool _isInteractComplete;
+
     [TabGroup("Inspector", "Interactable")] 
     [LabelText("Interact Collider Layer")] 
     [SerializeField]
@@ -30,8 +33,12 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
 
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
-    public bool IsInteractActive => _isInteractActive && IsScanRequirementSatisfied() && IsAdditionalInteractRequirementSatisfied();
-    public override bool CanDetect => _isDetectable;
+    public bool IsInteractComplete => _isInteractComplete;
+    public bool IsInteractActive => !_isInteractComplete 
+                                    && _isInteractActive 
+                                    && IsScanRequirementSatisfied()
+                                    && IsAdditionalInteractRequirementSatisfied();
+    public override bool CanDetect => !_isInteractComplete && _isDetectable;
 
     protected IRuntimeView RuntimeView => _instance;
 
@@ -90,7 +97,14 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     public void SetActivate(bool active)
     {
         _isInteractActive = active;
-        SetInteractCollidersEnabled(active);
+        SetInteractCollidersEnabled(active && !_isInteractComplete);
+        RefreshInteractAvailability();
+    }
+
+    protected void SetInteractComplete(bool complete)
+    {
+        _isInteractComplete = complete;
+        SetInteractCollidersEnabled(_isInteractActive && !_isInteractComplete);
         RefreshInteractAvailability();
     }
 
@@ -181,7 +195,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
 
     protected void RefreshInteractAvailability()
     {
-        if (!IsInteractActive && _isOnDetected && !CanDetect)
+        if ((!IsInteractActive || !CanDetect) && _isOnDetected)
         {
             OnDetectExit();
         }

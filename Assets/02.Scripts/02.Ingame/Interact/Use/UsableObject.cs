@@ -81,6 +81,11 @@ public class UsableObject : Interactable
 
     private UseInteractionOutcome EvaluatePreconditions(InteractionContext context)
     {
+        if (IsInteractComplete)
+        {
+            return UseInteractionOutcome.Fail(EUseInteractResult.AlreadyCompleted, "Interaction is already completed.");
+        }
+
         if (!IsInteractActive)
         {
             return UseInteractionOutcome.Fail(EUseInteractResult.NotActive, "Interaction is not active.");
