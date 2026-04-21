@@ -22,6 +22,7 @@ namespace _02.Scripts.Sonar
         public int CurrentCharges => _currentCharges;
         public int MaxCharges => _config.MaxCharges;
         public event Action<int, int> OnChargesChanged;
+        public event Action OnScanFailed;
         public ISoundService SoundService => SoundManager.Instance;
         
         public void Initialize()
@@ -80,6 +81,7 @@ namespace _02.Scripts.Sonar
             if (!HaveResources)
             {
                 SoundService.PlaySFX2D(_config.SonarEmpty);
+                OnScanFailed?.Invoke();
                 return;
             }
             
