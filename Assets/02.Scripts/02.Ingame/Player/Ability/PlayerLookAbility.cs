@@ -13,6 +13,15 @@ namespace _02.Scripts.Player
         private float _pitch;
         private float _sensitivity;
 
+        // 추격 모드
+        private bool _isChaseMode;
+        private float _headBobFrequency;
+        private float _headBobAmplitude;
+        private float _dampingFactor;
+        private float _headBobTimer;
+        private float _targetYaw;
+        private float _currentDampedYaw;
+
         private void Start()
         {
             _input = GetComponent<IPlayerInput>();
@@ -47,11 +56,44 @@ namespace _02.Scripts.Player
             Vector2 lookInput = _input.LookInput;
 
             float yaw = lookInput.x * _sensitivity;
-            transform.Rotate(Vector3.up, yaw);
-            
+
+            if (_isChaseMode && _dampingFactor > 0f)
+            {
+                _targetYaw += yaw;
+                _currentDampedYaw = Mathf.Lerp(_currentDampedYaw, _targetYaw, _dampingFactor);
+                transform.rotation = Quaternion.Euler(0f, _currentDampedYaw, 0f);
+            }
+            else
+            {
+                transform.Rotate(Vector3.up, yaw);
+            }
+
             _pitch -= lookInput.y * _sensitivity;
             _pitch = Mathf.Clamp(_pitch, _config.MinPitch, _config.MaxPitch);
             _cameraTarget.localRotation = Quaternion.Euler(_pitch, 0, 0);
+
+            if (_isChaseMode && _input.MoveInput.magnitude > 0.1f)
+            {
+                _headBobTimer += Time.deltaTime * _headBobFrequency;
+                float bobX = Mathf.Sin(_headBobTimer) * _headBobAmplitude;
+                float bobZ = Mathf.Sin(_headBobTimer * 0.6f) * _headBobAmplitude * 0.5f;
+                _cameraTarget.localRotation *= Quaternion.Euler(bobX, 0f, bobZ);
+            }
+        }
+
+        public void SetChaseMode(bool active, float bobFreq, float bobAmp, float dampFactor)
+        {
+            _isChaseMode = active;
+            _headBobFrequency = bobFreq;
+            _headBobAmplitude = bobAmp;
+            _dampingFactor = dampFactor;
+            _headBobTimer = 0f;
+
+            if (active)
+            {
+                _targetYaw = transform.eulerAngles.y;
+                _currentDampedYaw = _targetYaw;
+            }
         }
 
         private void LookCursor()

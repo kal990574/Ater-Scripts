@@ -10,6 +10,19 @@ namespace _02.Scripts.Player
         private ISoundService _soundService;
 
         private AudioSource _footstepSource;
+        private bool _isChasing;
+
+        public void SetChasing(bool chasing)
+        {
+            if (_isChasing == chasing) return;
+            _isChasing = chasing;
+
+            if (_footstepSource != null)
+            {
+                _soundService.StopLoopSFX(_footstepSource);
+                _footstepSource = null;
+            }
+        }
 
         private void Start()
         {
@@ -25,7 +38,8 @@ namespace _02.Scripts.Player
             if (shouldPlay && _footstepSource == null)
             {
                 // 루프 재생 시작
-                _footstepSource = _soundService.PlayLoopSFX(SoundKey.Player_Walking, transform.position);
+                string key = _isChasing ? SoundKey.Player_Running : SoundKey.Player_Walking;
+                _footstepSource = _soundService.PlayLoopSFX(key, transform.position);
             }
             else if (!shouldPlay && _footstepSource != null)
             {

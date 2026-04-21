@@ -1,3 +1,4 @@
+using _02.Scripts.Chase;
 using _02.Scripts.Enemy;
 using System.Collections;
 using DG.Tweening;
@@ -25,6 +26,7 @@ public class BarrierCutsceneController : MonoBehaviour
 
     [Header("Enemies - Deactivate")]
     [SerializeField] private EnemyController[] _chaseEnemies;
+    [SerializeField] private ChaseEffectController _chaseEffectController;
 
     [Header("Enemies - Cinematic")]
     [SerializeField] private GameObject[] _cinematicEnemies;
@@ -66,6 +68,7 @@ public class BarrierCutsceneController : MonoBehaviour
     public void Play()
     {
         DeactivateChaseEnemies();
+        _chaseEffectController.StopChaseEffects();
         _playerController.EnterCutsceneMode();
         StartCutsceneIntro();
     }

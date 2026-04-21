@@ -14,6 +14,9 @@ public class SoundKey
     //----------SFX----------
     //플레이어
     public const string Player_Walking = "Player_Walking";
+    public const string Player_Running = "Player_Running";
+    public const string Player_Breathing_Heavy = "Player_Breathing_Heavy";
+    public const string Player_Heartbeat = "Player_Heartbeat";
 
     //라이더 스캔
     public const string Lidar_Using = "Lidar_Using";
