@@ -404,6 +404,11 @@ public class StatisticsManager : MonoBehaviour
     [Button("Reload Persistent From Save", ButtonSizes.Medium)]
     private void DebugReloadPersistent()
     {
+        ReloadPersistentFromStorage();
+    }
+
+    public void ReloadPersistentFromStorage()
+    {
         if (_repository == null)
         {
             _repository = new StatisticsPlayerPrefsRepository();

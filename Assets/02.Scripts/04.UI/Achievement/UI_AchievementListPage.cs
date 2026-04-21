@@ -6,18 +6,18 @@ using UnityEngine;
 
 public class UI_AchievementListPage : MonoBehaviour
 {
-    [SerializeField] private AchievementManager _achievementManager;
     [SerializeField] private Transform _cardRoot;
     [SerializeField] private UI_AchievementCard _cardPrefab;
     [SerializeField] private TextMeshProUGUI _progressSummaryText;
 
     private readonly List<UI_AchievementCard> _spawnedCards = new List<UI_AchievementCard>();
+    
 
     private void OnEnable()
     {
-        if (_achievementManager != null)
+        if (AchievementManager.Instance != null)
         {
-            _achievementManager.AchievementListChanged += Refresh;
+            AchievementManager.Instance.AchievementListChanged += Refresh;
         }
 
         Refresh();
@@ -25,9 +25,9 @@ public class UI_AchievementListPage : MonoBehaviour
 
     private void OnDisable()
     {
-        if (_achievementManager != null)
+        if (AchievementManager.Instance != null)
         {
-            _achievementManager.AchievementListChanged -= Refresh;
+            AchievementManager.Instance.AchievementListChanged -= Refresh;
         }
     }
 
@@ -35,12 +35,12 @@ public class UI_AchievementListPage : MonoBehaviour
     {
         ClearCards();
 
-        if (_achievementManager == null || _cardRoot == null || _cardPrefab == null)
+        if (AchievementManager.Instance == null || _cardRoot == null || _cardPrefab == null)
         {
             return;
         }
 
-        IReadOnlyList<AchievementDefinition> definitions = _achievementManager.GetAllDefinitions();
+        IReadOnlyList<AchievementDefinition> definitions = AchievementManager.Instance.GetAllDefinitions();
 
         for (int index = 0; index < definitions.Count; index++)
         {
@@ -51,7 +51,7 @@ public class UI_AchievementListPage : MonoBehaviour
                 continue;
             }
 
-            if (_achievementManager.TryGetState(definition.Id, out AchievementState state) == false)
+            if (AchievementManager.Instance.TryGetState(definition.Id, out AchievementState state) == false)
             {
                 continue;
             }
@@ -70,14 +70,14 @@ public class UI_AchievementListPage : MonoBehaviour
 
         if (_progressSummaryText != null)
         {
-            _progressSummaryText.text = $"{_achievementManager.GetUnlockedCount()} / {_achievementManager.GetTotalCount()} 달성";
+            _progressSummaryText.text = $"{AchievementManager.Instance.GetUnlockedCount()} / {AchievementManager.Instance.GetTotalCount()} 달성";
         }
     }
 
     private UI_AchievementViewData CreateViewData(AchievementDefinition definition, AchievementState state)
     {
-        int displayCurrentValue = _achievementManager != null
-            ? _achievementManager.GetDisplayCurrentValue(definition, state)
+        int displayCurrentValue = AchievementManager.Instance != null
+            ? AchievementManager.Instance.GetDisplayCurrentValue(definition, state)
             : state != null ? state.CurrentValue : 0;
 
         bool isHiddenAndLocked =

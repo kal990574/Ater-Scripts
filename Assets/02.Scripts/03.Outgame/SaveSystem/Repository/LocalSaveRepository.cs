@@ -8,11 +8,17 @@ namespace _02.Scripts._03.Outgame.SaveSystem.Repository
 {
     public class LocalSaveRepository : ISaveRepository
     {
+        public const string SaveFileName = "save.json";
         private readonly string _savePath;
 
         public LocalSaveRepository()
         {
-            _savePath = Path.Combine(Application.persistentDataPath, "save.json");
+            _savePath = GetSavePath();
+        }
+
+        public static string GetSavePath()
+        {
+            return Path.Combine(Application.persistentDataPath, SaveFileName);
         }
 
         public async UniTask Save(SaveData saveData)
