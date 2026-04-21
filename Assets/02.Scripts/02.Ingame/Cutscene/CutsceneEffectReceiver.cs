@@ -9,6 +9,13 @@ public class CutsceneEffectReceiver : MonoBehaviour
     [SerializeField] private CinemachineImpulseSource _impulseSource;
     [SerializeField] private float _doorImpulseForce = 2.0f;
 
+    [Header("Sound")]
+    [SerializeField] private SoundKeyReference _cutsceneBgmKey;
+    [SerializeField] private SoundKeyReference _enemyWalkLoopKey;
+    [SerializeField] private SoundKeyReference _enemyRotateHeadKey;
+
+    private AudioSource _walkLoopSource;
+
     [Header("Enemy")]
     [SerializeField] private NavMeshAgent _enemyAgent;
     [SerializeField] private Animator _enemyAnimator;
@@ -37,6 +44,28 @@ public class CutsceneEffectReceiver : MonoBehaviour
         _impulseSource.GenerateImpulseWithForce(_doorImpulseForce);
     }
 
+    public void OnPlayCutsceneBGM()
+    {
+        if (!_cutsceneBgmKey.IsEmpty)
+            SoundManager.Instance.PlayBGM(_cutsceneBgmKey, 1f);
+    }
+
+    public void OnPlayEnemyWalkLoop()
+    {
+        if (!_enemyWalkLoopKey.IsEmpty)
+            _walkLoopSource = SoundManager.Instance.PlayLoopSFX(
+                _enemyWalkLoopKey, _enemyAgent.transform.position);
+    }
+
+    public void OnStopEnemyWalkLoop()
+    {
+        if (_walkLoopSource != null)
+        {
+            SoundManager.Instance.StopLoopSFX(_walkLoopSource);
+            _walkLoopSource = null;
+        }
+    }
+
     private bool _isHeadTurning;
     private Quaternion _headTargetRot;
     private Quaternion _headStartRot;
@@ -45,6 +74,9 @@ public class CutsceneEffectReceiver : MonoBehaviour
 
     public void OnEnemyLookAtPlayer(Action onComplete = null)
     {
+        if (!_enemyRotateHeadKey.IsEmpty)
+            SoundManager.Instance.PlaySFX(_enemyRotateHeadKey, _enemyHead.position);
+
         _headStartRot = _enemyHead.rotation;
 
         Vector3 dir = _playerTransform.position - _enemyHead.position;

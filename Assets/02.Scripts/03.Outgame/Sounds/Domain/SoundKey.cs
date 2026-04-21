@@ -5,6 +5,7 @@ public class SoundKey
     public const string BGM_TUTORIAL = "BGM_Tutorial";
     public const string BGM_Chapter1 = "BGM_Chapter1";
     public const string  BGM_Chapter2 = "BGM_Chapter2";
+    public const string BGM_Chapter2_Cutscene = "BGM_Chapter2_Cutscene";
     public const string BGM_Chasing = "BGM_Chasing";
     public const string BGM_Ending = "BGM_Ending";
     public const string BGM_Credit = "BGM_Credit";
@@ -110,9 +111,10 @@ public class SoundKey
     public const string CutScene_Chapter2_LightBlink= "CutScene_Chapter2_LightBlink";
     public const string CutScene_Chapter2_WallDown =  "CutScene_Chapter2_WallDown";
     public const string CutScene_Chapter2_WallUp =  "CutScene_Chapter2_WallUp";
-    
-    
-    
+    public const string CutScene_Chapter2_MannequinCreak = "CutScene_Chapter2_MannequinCreak";
+
+
+
     public const string JumpScare_SubFakeEnemy_Terror =  "JumpScare_SubFakeEnemy_Terror";
     
     public const string JumpScare_SubPost_Dark =  "JumpScare_SubPost_Dark";

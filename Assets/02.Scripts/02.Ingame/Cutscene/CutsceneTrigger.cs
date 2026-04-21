@@ -44,6 +44,7 @@ public class CutsceneTrigger : MonoBehaviour
 
         _hasTriggered = true;
         _playerController.EnterCutsceneMode();
+        SoundManager.Instance.StopBGM(1f);
 
         StartCutsceneIntro();
     }
