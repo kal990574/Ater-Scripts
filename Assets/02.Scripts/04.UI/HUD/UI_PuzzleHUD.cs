@@ -8,14 +8,14 @@ public class UI_PuzzleHUD : MonoBehaviour
 
     private void OnEnable()
     {
-        if (PuzzleHUDManager.instance != null)
-            PuzzleHUDManager.instance.OnHUDChanged += Refresh;
+        if (PuzzleHUDManager.Instance != null)
+            PuzzleHUDManager.Instance.OnHUDChanged += Refresh;
     }
 
     private void OnDisable()
     {
-        if (PuzzleHUDManager.instance != null)
-            PuzzleHUDManager.instance.OnHUDChanged -= Refresh;
+        if (PuzzleHUDManager.Instance != null)
+            PuzzleHUDManager.Instance.OnHUDChanged -= Refresh;
     }
 
     private void Refresh(string text, bool visible)

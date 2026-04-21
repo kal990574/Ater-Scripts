@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class HoverPromptManager : MonoBehaviour
 {
-    public static HoverPromptManager instance {  get; private set; }
+    public static HoverPromptManager Instance {  get; private set; }
 
     [SerializeField] private HoverPromptDataSO _promptData;
 
@@ -11,13 +11,18 @@ public class HoverPromptManager : MonoBehaviour
 
     private void Awake()
     {
-        instance = this;
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
     }
 
     public void ShowPrompt(int[] promptIds)
     {
         string text = _promptData.BuildPromptString(promptIds);
-        OnPromptChanged?.Invoke(text, true);
+        OnPromptChanged?.Invoke(text, !string.IsNullOrEmpty(text));
     }
 
     public void HidePrompt()

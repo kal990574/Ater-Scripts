@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PuzzleHUDManager : MonoBehaviour
 {
-    public static PuzzleHUDManager instance { get; private set; }
+    public static PuzzleHUDManager Instance { get; private set; }
 
     [SerializeField] private PuzzleHUDDataSo _data;
     [SerializeField] private PlayerController _playerController;
@@ -12,7 +12,12 @@ public class PuzzleHUDManager : MonoBehaviour
 
     private void Awake()
     {
-        instance = this;
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
     }
 
     private void OnEnable()

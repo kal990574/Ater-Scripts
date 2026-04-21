@@ -10,7 +10,7 @@ public class PuzzleHUDDataSo : ScriptableObject
     public bool BuildPuzzleHUDString(EPuzzleType type, out string result)
     {
         var data = _datas.FindAll(d => d.PuzzleType == type);
-        if (data == null || data.Count == 0)
+        if (data.Count == 0)
         {
             result = string.Empty;
             return false;

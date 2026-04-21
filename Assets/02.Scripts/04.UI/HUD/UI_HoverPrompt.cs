@@ -8,14 +8,14 @@ public class UI_HoverPrompt : MonoBehaviour
 
     private void OnEnable()
     {
-        if (HoverPromptManager.instance != null)
-            HoverPromptManager.instance.OnPromptChanged += Refresh;
+        if (HoverPromptManager.Instance != null)
+            HoverPromptManager.Instance.OnPromptChanged += Refresh;
     }
 
     private void OnDisable()
     {
-        if (HoverPromptManager.instance != null)
-            HoverPromptManager.instance.OnPromptChanged -= Refresh;
+        if (HoverPromptManager.Instance != null)
+            HoverPromptManager.Instance.OnPromptChanged -= Refresh;
     }
 
     private void Refresh(string text, bool visible)

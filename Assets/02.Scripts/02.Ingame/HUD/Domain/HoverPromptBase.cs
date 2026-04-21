@@ -30,21 +30,21 @@ public class HoverPromptBase : MonoBehaviour
     public void OnHoverEnter()
     {
         _isHovering = true;
-        int[] ids = (_isScanComplete && _activePromptIds != null && _activePromptIds.Length > 0)? _activePromptIds : _defaultPromptIds;
-        HoverPromptManager.instance?.ShowPrompt(ids);
+        int[] ids = (_isScanComplete && _activePromptIds != null && _activePromptIds.Length > 0) ? _activePromptIds : _defaultPromptIds;
+        HoverPromptManager.Instance?.ShowPrompt(ids);
     }
 
     public void OnHoverExit()
     {
         _isHovering = false;
-        HoverPromptManager.instance?.HidePrompt();
+        HoverPromptManager.Instance?.HidePrompt();
     }
     public void OnScanComplete()
     {
         _isScanComplete = true;
         if (!_isHovering) return;
         if (_activePromptIds == null || _activePromptIds.Length == 0) return;
-        HoverPromptManager.instance?.ShowPrompt(_activePromptIds);
+        HoverPromptManager.Instance?.ShowPrompt(_activePromptIds);
     }
 
 }
