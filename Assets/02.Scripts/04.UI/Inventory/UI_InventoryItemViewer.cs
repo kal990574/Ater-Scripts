@@ -116,6 +116,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
     public void Hide()
     {
         _examineViewService?.Hide();
+        _itemNameText.text = string.Empty;
         _descriptionText.text = string.Empty;
     }
 
