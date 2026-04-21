@@ -31,7 +31,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
     public bool IsInteractActive => _isInteractActive && IsScanRequirementSatisfied() && IsAdditionalInteractRequirementSatisfied();
-    public override bool CanDetect => _isDetectable && IsInteractActive;
+    public override bool CanDetect => _isDetectable;
 
     protected IRuntimeView RuntimeView => _instance;
 
@@ -181,7 +181,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
 
     protected void RefreshInteractAvailability()
     {
-        if (!IsInteractActive && _isOnDetected)
+        if (!IsInteractActive && _isOnDetected && !CanDetect)
         {
             OnDetectExit();
         }
