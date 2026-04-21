@@ -73,6 +73,11 @@ namespace _02.Scripts.Core.Manager
         public void MarkChapterCleared()
         {
             _publisher.TryPublish(context => new ChapterClearedRawEvent(context,CurrentChapter), "GameManager");
+            if (CurrentChapter == 2)
+            {
+                //챕터2 클리어시 게임클리어 이벤트 발행ㄴ
+                StatisticsManager.Instance?.EndRun(EStatisticsRunEndReason.Clear);
+            }
             OnChapterCleared?.Invoke(CurrentChapter);
         }
 

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class AchievementStatePlayerPrefsRepository : IAchievementStateRepository
 {
-    private const string SaveKey = "Achievement.StateCollection";
+    public const string SaveKey = "Achievement.StateCollection";
 
     public List<AchievementState> LoadStates(IReadOnlyList<AchievementDefinition> definitions)
     {

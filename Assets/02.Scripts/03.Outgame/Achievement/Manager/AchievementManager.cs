@@ -145,6 +145,11 @@ public class AchievementManager : MonoBehaviour
     [Button("Reload All Data", ButtonSizes.Medium)]
     private void ReloadAllData()
     {
+        ReloadAllDataFromStorage();
+    }
+
+    public void ReloadAllDataFromStorage()
+    {
         _debugCommands?.ReloadAllData();
     }
 

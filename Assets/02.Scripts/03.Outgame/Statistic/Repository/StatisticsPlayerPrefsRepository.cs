@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class StatisticsPlayerPrefsRepository : IStatisticsRepository
 {
-    private const string SaveKey = "Statistics.Persistent";
+    public const string SaveKey = "Statistics.Persistent";
 
     public PersistentStatistics Load()
     {

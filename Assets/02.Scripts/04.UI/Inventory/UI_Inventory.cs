@@ -28,6 +28,7 @@ public class UI_Inventory : MonoBehaviour
         _uiInventoryContainer.OnSwapRequested += HandleSwapRequested;
 
         _examineInteraction.OnDragChanged += _uiInventoryItemViewer.SetDragging;
+        _examineInteraction.OnMoveDragChanged += _uiInventoryItemViewer.SetMoveDragging;
         _examineInteraction.OnScrolled += _uiInventoryItemViewer.Zoom;
         _examineInteraction.OnClicked += _uiInventoryItemViewer.TryInteract;
 
@@ -47,6 +48,7 @@ public class UI_Inventory : MonoBehaviour
         _uiInventoryContainer.OnSwapRequested -= HandleSwapRequested;
 
         _examineInteraction.OnDragChanged -= _uiInventoryItemViewer.SetDragging;
+        _examineInteraction.OnMoveDragChanged -= _uiInventoryItemViewer.SetMoveDragging;
         _examineInteraction.OnScrolled -= _uiInventoryItemViewer.Zoom;
         _examineInteraction.OnClicked -= _uiInventoryItemViewer.TryInteract;
 
