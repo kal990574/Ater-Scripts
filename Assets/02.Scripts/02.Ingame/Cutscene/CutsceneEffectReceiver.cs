@@ -54,7 +54,7 @@ public class CutsceneEffectReceiver : MonoBehaviour
     {
         if (!_enemyWalkLoopKey.IsEmpty)
             _walkLoopSource = SoundManager.Instance.PlayLoopSFX(
-                _enemyWalkLoopKey, _enemyAgent.transform.position);
+                _enemyWalkLoopKey, _enemyAgent.transform.position + Vector3.up);
     }
 
     public void OnStopEnemyWalkLoop()
@@ -91,6 +91,9 @@ public class CutsceneEffectReceiver : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (_walkLoopSource != null)
+            _walkLoopSource.transform.position = _enemyAgent.transform.position + Vector3.up;
+
         if (!_isHeadTurning) return;
 
         _headTurnElapsed += Time.deltaTime;

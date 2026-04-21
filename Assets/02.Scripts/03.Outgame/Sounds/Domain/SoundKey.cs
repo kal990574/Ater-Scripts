@@ -110,8 +110,14 @@ public class SoundKey
     public const string CutScene_Chapter2_EnemyRotateHead = "CutScene_Chapter2_EnemyRotateHead";
     public const string CutScene_Chapter2_LightBlink= "CutScene_Chapter2_LightBlink";
     public const string CutScene_Chapter2_WallDown =  "CutScene_Chapter2_WallDown";
+
     public const string CutScene_Chapter2_WallUp =  "CutScene_Chapter2_WallUp";
-    public const string CutScene_Chapter2_MannequinCreak = "CutScene_Chapter2_MannequinCreak";
+    public const string CutScene_Chapter2_MannequinCreak_1 = "CutScene_Chapter2_MannequinCreak_1";
+    public const string CutScene_Chapter2_MannequinCreak_2 = "CutScene_Chapter2_MannequinCreak_2";
+    public const string CutScene_Chapter2_MannequinCreak_3 = "CutScene_Chapter2_MannequinCreak_3";
+    public const string CutScene_Chapter2_MannequinCreak_4 = "CutScene_Chapter2_MannequinCreak_4";
+    public const string CutScene_Chapter2_MannequinCreak_5 = "CutScene_Chapter2_MannequinCreak_5";
+    public const string FinalCutScene_MannequinCreak = "FinalCutScene_MannequinCreak";
 
 
 

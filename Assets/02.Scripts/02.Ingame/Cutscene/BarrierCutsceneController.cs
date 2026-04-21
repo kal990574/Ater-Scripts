@@ -53,8 +53,10 @@ public class BarrierCutsceneController : MonoBehaviour
     [Header("Sound")]
     [SerializeField] private SoundKeyReference _afterChaseBgmKey;
     [SerializeField] private float _bgmFadeTime = 1f;
+    [SerializeField] private SoundKeyReference _wallDownImpactKey;
 
     [Header("Events")]
+    [SerializeField] private UnityEvent _onMannequinReveal;
     [SerializeField] private UnityEvent _onBarrierDrop;
     [SerializeField] private UnityEvent _onCutsceneEnd;
 
@@ -115,6 +117,8 @@ public class BarrierCutsceneController : MonoBehaviour
             if (enemy != null)
                 enemy.SetActive(true);
         }
+
+        _onMannequinReveal?.Invoke();
 
         yield return new WaitForSeconds(_enemyShowDuration);
 
@@ -179,6 +183,9 @@ public class BarrierCutsceneController : MonoBehaviour
             {
                 if (_impulseSource != null)
                     _impulseSource.GenerateImpulseWithForce(_impulseForce);
+
+                if (!_wallDownImpactKey.IsEmpty)
+                    SoundManager.Instance.PlaySFX(_wallDownImpactKey, _barrierTransform.position);
 
                 _onBarrierDrop?.Invoke();
             });
