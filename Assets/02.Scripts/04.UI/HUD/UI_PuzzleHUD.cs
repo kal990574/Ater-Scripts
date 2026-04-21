@@ -5,17 +5,23 @@ public class UI_PuzzleHUD : MonoBehaviour
 {
     [SerializeField] private GameObject _root;
     [SerializeField] private TextMeshProUGUI _text;
-    [SerializeField] private PuzzleHUDDataSo _data;
 
-    public void Activate(EPuzzleType puzzleType)
+    private void OnEnable()
     {
-        if (_data.BuildPuzzleHUDString(puzzleType, out string prompt))
-            _text.text = prompt;
-        _root.SetActive(true);
+        if (PuzzleHUDManager.instance != null)
+            PuzzleHUDManager.instance.OnHUDChanged += Refresh;
     }
 
-    public void Deactivate()
+    private void OnDisable()
     {
-        _root.SetActive(false);
+        if (PuzzleHUDManager.instance != null)
+            PuzzleHUDManager.instance.OnHUDChanged -= Refresh;
+    }
+
+    private void Refresh(string text, bool visible)
+    {
+        _root.SetActive(visible);
+        if (visible)
+            _text.text = text;
     }
 }

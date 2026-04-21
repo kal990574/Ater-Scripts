@@ -19,7 +19,7 @@ public class PuzzleHUDDataSo : ScriptableObject
         var sb = new StringBuilder();
         foreach (var entry in data)
         {
-            if (sb.Length > 0) sb.Append(" ");
+            if (sb.Length > 0) sb.Append("\n\n");
             sb.Append($"<sprite name={entry.Icon}> : {entry.Label}");
         }
         result = sb.ToString();
