@@ -135,6 +135,7 @@ public class TransformInteractable : UsableObject
 
     protected override bool OnUse(InteractionContext context, out string failureReason)
     {
+        SetInteractComplete(true);
         TransformInteractablePose pose = TransformInteractablePoseResolver.Resolve(Settings);
         StartSequence(pose);
 

@@ -8,13 +8,18 @@ namespace _02.Scripts.Player
         {
             if (target == null)
             {
-                Debug.Log("[PlayerInteractAbility] : 吏?뺣맂 ??곸씠 ?놁쓬");
+                Debug.Log("[PlayerInteractAbility] : target is null.");
                 return;
             }
 
             if (!target.Transform.TryGetComponent(out IRuntimeInteractObject interactableObject))
             {
-                Debug.Log("[PlayerInteractAbility] :?대떦 ??곸? ?곹샇?묒슜 媛?ν븯吏 ?딆쓬");
+                Debug.Log("[PlayerInteractAbility] : target does not have an interactable runtime object.");
+                return;
+            }
+
+            if (target.Transform.TryGetComponent(out Interactable interactable) && !interactable.IsInteractActive)
+            {
                 return;
             }
 

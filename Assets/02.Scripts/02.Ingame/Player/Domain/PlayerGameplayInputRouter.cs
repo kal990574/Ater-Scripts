@@ -41,8 +41,27 @@ namespace _02.Scripts.Player
             HandleCurrentMode(input);
         }
 
+        private static bool IsQtePlaying()
+        {
+            return QTEManager.Instance != null && QTEManager.Instance.IsPlaying;
+        }
+
+        private static void HandleQte(IPlayerInput input)
+        {
+            if (input.InteractInput)
+            {
+                QTEManager.Instance?.SubmitCurrent();
+            }
+        }
+
         private void HandleInteraction(IPlayerInput input)
         {
+            if (IsQtePlaying())
+            {
+                HandleQte(input);
+                return;
+            }
+            
             IDetectable target = _targetResolver?.Invoke();
             if (target != null && input.InteractInput)
             {
