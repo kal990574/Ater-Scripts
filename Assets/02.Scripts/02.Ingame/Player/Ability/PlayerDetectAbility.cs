@@ -8,10 +8,8 @@ namespace _02.Scripts.Player
         [SerializeField] private RaycastSetting _query = new(5f, ~0, QueryTriggerInteraction.Ignore);
 
         private PlayerDetectTargetTracker _targetTracker;
-        private PlayerEventPublisher _eventPublisher;
 
         public IDetectable CurrentTarget => _targetTracker != null ? _targetTracker.CurrentTarget : null;
-        public RaycastSetting PromptQuery => _query;
 
         private void Start()
         {
@@ -22,10 +20,6 @@ namespace _02.Scripts.Player
                     _query));
         }
 
-        public void SetEventPublisher(PlayerEventPublisher eventPublisher)
-        {
-            _eventPublisher = eventPublisher;
-        }
 
         private void Update()
         {
@@ -33,30 +27,13 @@ namespace _02.Scripts.Player
             {
                 return;
             }
-
             _targetTracker?.UpdateTarget(_camera.transform.position, _camera.transform.forward);
-            _eventPublisher?.UpdatePrompt(_camera);
-        }
-
-        public void ResumePrompt()
-        {
-            _eventPublisher?.Resume();
-        }
-
-        public void ForceHidePrompt()
-        {
-            _eventPublisher?.HideUntilLookAway();
         }
 
         private void OnDisable()
         {
-            ClearCurrentHoverTarget();
+            _targetTracker?.Clear();
         }
 
-        private void ClearCurrentHoverTarget()
-        {
-            _targetTracker?.Clear();
-            _eventPublisher?.Clear();
-        }
     }
 }

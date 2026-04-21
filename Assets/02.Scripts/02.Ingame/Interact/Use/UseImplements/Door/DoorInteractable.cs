@@ -20,10 +20,6 @@ public class DoorInteractable : StateInteractable
     [LabelText("Open")]
     [SerializeField] private string _openStateKey = "is_open";
 
-    [TabGroup("Inspector", "DoorInteractable")]
-    [LabelText("Unlocked Description")]
-    [MultiLineProperty]
-    [SerializeField] private string _hoverDescriptionUnlocked = "";
 
     [TabGroup("Inspector", "Events")]
     [LabelText("On Unlocked")]
@@ -39,17 +35,7 @@ public class DoorInteractable : StateInteractable
     public bool IsUnlocked => GetState(_unlockStateKey);
     public bool IsOpen => GetState(_openStateKey);
 
-    public override string HoverDescription
-    {
-        get
-        {
-            if (IsOpen) return string.Empty;
-            if (IsUnlocked)
-                return _hoverDescriptionUnlocked;
 
-            return base.HoverDescription;
-        }
-    }
 
     protected override bool IsAdditionalInteractRequirementSatisfied()
     {

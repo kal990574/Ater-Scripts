@@ -18,17 +18,18 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
     private PlayerInteractionContextFactory _interactionContextFactory;
     private PlayerGameplayInputRouter _gameplayInputRouter;
     private PlayerBlockedInputRouter _blockedInputRouter;
-    private PlayerEventPublisher _eventPublisher;
     
     public PlayerConfigSO Config => _playerConfig;
     public IPlayerInput Input => _input;
     public bool CanMove => _modeService != null && _modeService.CanMove;
     public bool CanRotate => _modeService != null && _modeService.CanRotate;
     public EPlayerInteractMode InteractMode => _modeService != null ? _modeService.CurrentMode : _initialMode;
-    public PlayerEventPublisher EventPublisher => _eventPublisher;
     private IDetectable Target => GetAbility<PlayerDetectAbility>()?.CurrentTarget;
 
     public event Action<EPlayerInteractMode> OnModeChanged;
+
+    public event Action<EPuzzleType> OnPuzzleModeEntered;
+    public event Action OnPuzzleModeExited;
 
     private void Awake()
     {
@@ -39,13 +40,6 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 
         _modeService = new PlayerModeService(_initialMode);
         _modeService.OnModeChanged += HandleModeChanged;
-
-        PlayerDetectAbility detectAbility = GetAbility<PlayerDetectAbility>();
-        if (detectAbility != null)
-        {
-            _eventPublisher = new PlayerEventPublisher(this, detectAbility.PromptQuery);
-            detectAbility.SetEventPublisher(_eventPublisher);
-        }
 
         PlayerHandAbility handAbility = GetAbility<PlayerHandAbility>();
         _interactionContextFactory = new PlayerInteractionContextFactory(this, handAbility);
@@ -303,20 +297,19 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 
     public void EnterPuzzleMode()
     {
-        GetAbility<PlayerDetectAbility>()?.ForceHidePrompt();
         _modeService?.EnterPuzzleMode(null);
     }
 
     public void ExitPuzzleMode()
     {
-        GetAbility<PlayerDetectAbility>()?.ResumePrompt();
         _modeService?.ExitPuzzleMode(null);
+        OnPuzzleModeExited?.Invoke();
     }
 
     public void EnterPuzzleMode(IPuzzleInputHandler puzzleInputHandler)
     {
-        GetAbility<PlayerDetectAbility>()?.ForceHidePrompt();
         _modeService?.EnterPuzzleMode(puzzleInputHandler);
+        OnPuzzleModeEntered?.Invoke(puzzleInputHandler.PuzzleType);
     }
 
     public void ExitPuzzleMode(IPuzzleInputHandler puzzleInputHandler)
@@ -328,8 +321,8 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
             return;
         }
 
-        GetAbility<PlayerDetectAbility>()?.ResumePrompt();
         _modeService?.ExitPuzzleMode(puzzleInputHandler);
+        OnPuzzleModeExited?.Invoke();
     }
 
     private void HandleInventoryToggled(bool isOn)
