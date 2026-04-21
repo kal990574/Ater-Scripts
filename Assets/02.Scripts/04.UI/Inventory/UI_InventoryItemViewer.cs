@@ -11,12 +11,16 @@ public class UI_InventoryItemViewer : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _descriptionText;
 
     [SerializeField] private float _rotateSpeed = 0.5f;
+    [SerializeField] private float _moveSpeed = 0.0025f;
+    [SerializeField] private float _maxMoveDistance = 0.5f;
     [SerializeField] private float _zoomSpeed = 1.0f;
     [SerializeField] private float _minFieldOfView = 20.0f;
     [SerializeField] private float _maxFieldOfView = 60.0f;
 
     private Vector3 _initialCameraLocalPosition;
+    private Vector3 _initialRootLocalPosition;
     private bool _isDragging;
+    private bool _isMoveDragging;
 
     private RuntimeInstanceManager _runtimeInstanceManager;
     private ExamineViewService _examineViewService;
@@ -25,6 +29,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
     private void Start()
     {
         _initialCameraLocalPosition = _itemViewerCamera.transform.localPosition;
+        _initialRootLocalPosition = _examineRoot.localPosition;
         _itemViewerCamera.transform.LookAt(_examineRoot);
 
         _runtimeInstanceManager = RuntimeInstanceManager.Instance;
@@ -38,11 +43,17 @@ public class UI_InventoryItemViewer : MonoBehaviour
     private void Update()
     {
         HandleRotate();
+        HandleMove();
     }
 
     public void SetDragging(bool isDragging)
     {
         _isDragging = isDragging;
+    }
+
+    public void SetMoveDragging(bool isMoveDragging)
+    {
+        _isMoveDragging = isMoveDragging;
     }
 
     public void Zoom(float scrollDelta)
@@ -59,6 +70,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
     public void ShowItem(string instanceId)
     {
         _examineRoot.rotation = Quaternion.identity;
+        _examineRoot.localPosition = _initialRootLocalPosition;
         _itemViewerCamera.transform.localPosition = _initialCameraLocalPosition;
         _itemViewerCamera.fieldOfView = _maxFieldOfView;
 
@@ -109,7 +121,7 @@ public class UI_InventoryItemViewer : MonoBehaviour
 
     private void HandleRotate()
     {
-        if (_isDragging == false)
+        if (_isDragging == false || Mouse.current == null)
         {
             return;
         }
@@ -119,9 +131,35 @@ public class UI_InventoryItemViewer : MonoBehaviour
         _examineRoot.Rotate(Vector3.right, delta.y * _rotateSpeed, Space.World);
     }
 
+    private void HandleMove()
+    {
+        if (_isMoveDragging == false || Mouse.current == null)
+        {
+            return;
+        }
+
+        Vector2 delta = Mouse.current.delta.ReadValue();
+        if (delta.sqrMagnitude <= 0.0f)
+        {
+            return;
+        }
+
+        Vector3 worldOffset =
+            (_itemViewerCamera.transform.right * delta.x + _itemViewerCamera.transform.up * delta.y) * _moveSpeed;
+
+        Vector3 localOffset = _examineRoot.parent == null
+            ? worldOffset
+            : _examineRoot.parent.InverseTransformVector(worldOffset);
+
+        Vector3 targetLocalPosition = _examineRoot.localPosition + localOffset;
+        Vector3 fromInitial = targetLocalPosition - _initialRootLocalPosition;
+        _examineRoot.localPosition = _initialRootLocalPosition + Vector3.ClampMagnitude(fromInitial, _maxMoveDistance);
+    }
+
     private void OnDisable()
     {
         _isDragging = false;
+        _isMoveDragging = false;
         _examineViewService?.Hide();
     }
 }
