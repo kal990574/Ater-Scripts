@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
+
 [DisallowMultipleComponent]
 public abstract class Interactable : DetectableObject, IRuntimeInteractObject, IRuntimeDataConsumer
 {
@@ -26,10 +27,16 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     [SerializeField]
     private LayerMask _interactColliderLayers;
 
+    [TabGroup("Inspector", "Interactable")]
+    [LabelText("Sonar Collider Layer")]
+    [SerializeField]
+    private LayerMask _sonarColliderLayers;
+
     private IRuntimeView _instance;
     protected ScannableObject _scannableObject;
     private GameEventPublisher _eventPublisher;
     private List<Collider> _interactColliders = new List<Collider>();
+    private List<Collider> _sonarColliders = new List<Collider>();
 
     public RuntimeData RuntimeData => _instance != null ? _instance.RuntimeData : null;
     public RuntimeItemData RuntimeItemData => _instance.RuntimeItemData;
@@ -67,6 +74,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
         }
 
         CacheInteractColliders();
+        CacheSonarColliders();
         CacheScannableObject();
         SubscribeScannableEvents();
         OnAwake();
@@ -105,7 +113,20 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
     {
         _isInteractComplete = complete;
         SetInteractCollidersEnabled(_isInteractActive && !_isInteractComplete);
+        SetSonarDetectable(!complete);
         RefreshInteractAvailability();
+    }
+
+    private void SetSonarDetectable(bool detectable)
+    {
+        for (int i = 0; i < _sonarColliders.Count; i++)
+        {
+            Collider collider = _sonarColliders[i];
+            if (collider != null)
+            {
+                collider.enabled = detectable;
+            }
+        }
     }
 
     public void SetRuntimeData(IRuntimeView runtimeView)
@@ -169,6 +190,29 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
         SetInteractCollidersEnabled(true);
     }
     
+    private void CacheSonarColliders()
+    {
+        Collider[] colliders = GetComponentsInChildren<Collider>(true);
+        _sonarColliders.Clear();
+
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider collider = colliders[i];
+            if (collider == null)
+            {
+                continue;
+            }
+
+            int colliderLayerMask = 1 << collider.gameObject.layer;
+            if ((_sonarColliderLayers.value & colliderLayerMask) == 0)
+            {
+                continue;
+            }
+
+            _sonarColliders.Add(collider);
+        }
+    }
+
     private void SetInteractCollidersEnabled(bool isEnabled)
     {
         if (_interactColliders == null || _interactColliders.Count == 0)
