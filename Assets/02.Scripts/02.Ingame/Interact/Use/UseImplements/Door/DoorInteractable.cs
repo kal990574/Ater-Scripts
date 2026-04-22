@@ -139,6 +139,7 @@ public class DoorInteractable : StateInteractable
 
     protected virtual void PlayUnlockPresentation()
     {
+        GetComponent<HoverPromptBase>()?.Unlocked();
         _onUnlocked?.Invoke();
     }
 

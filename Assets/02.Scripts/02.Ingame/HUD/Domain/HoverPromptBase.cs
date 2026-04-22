@@ -4,16 +4,24 @@ public class HoverPromptBase : MonoBehaviour
 {
     [SerializeField] private int[] _defaultPromptIds;
     [SerializeField] private int[] _activePromptIds;
+    [SerializeField] private int[] _unlockedPromptIds;
 
     private IDetectable _detectable;
     private bool _isHovering;
     private bool _isScanComplete;
+    private bool _isUnlocked;
 
     private void Awake()
     {
         _detectable = GetComponent<IDetectable>();
         if (_detectable != null)
             _detectable.OnDetected += HandleDetected;
+    }
+    private void OnDisable()
+    {
+        if (!_isHovering) return;
+        _isHovering = false;
+        HoverPromptManager.Instance?.HidePrompt();
     }
 
     private void OnDestroy()
@@ -30,8 +38,7 @@ public class HoverPromptBase : MonoBehaviour
     public void OnHoverEnter()
     {
         _isHovering = true;
-        int[] ids = (_isScanComplete && _activePromptIds != null && _activePromptIds.Length > 0) ? _activePromptIds : _defaultPromptIds;
-        HoverPromptManager.Instance?.ShowPrompt(ids);
+        RefreshIfHovering();
     }
 
     public void OnHoverExit()
@@ -42,9 +49,24 @@ public class HoverPromptBase : MonoBehaviour
     public void OnScanComplete()
     {
         _isScanComplete = true;
-        if (!_isHovering) return;
-        if (_activePromptIds == null || _activePromptIds.Length == 0) return;
-        HoverPromptManager.Instance?.ShowPrompt(_activePromptIds);
+        RefreshIfHovering();
     }
+    public void Unlocked()
+    {
+        _isUnlocked = true;
+        RefreshIfHovering();
 
+    }
+    private void RefreshIfHovering()
+    {
+        if (!_isHovering) return;
+        HoverPromptManager.Instance?.ShowPrompt(GetCurrentPromptIds());
+    }
+    private int[] GetCurrentPromptIds()
+    {
+        if (_isUnlocked && HasIds(_unlockedPromptIds)) return _unlockedPromptIds;
+        if (_isScanComplete && HasIds(_activePromptIds)) return _activePromptIds;
+        return _defaultPromptIds;
+    }
+    private static bool HasIds(int[] ids) => ids != null && ids.Length > 0;
 }
