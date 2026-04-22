@@ -23,14 +23,13 @@ namespace _02.Scripts.AIHint.Component
 
         public void ShowRecording()
         {
-            _responseText.text = "";
-            _titleText.text = "Ask Anything...";
             _modalWindow.ModalWindowIn();
+            _titleText.text = "녹음중..";
         }
 
         public void ShowProcessing()
         {
-            _titleText.text = "...";
+            _titleText.text = "처리중..";
         }
 
         public void ShowResponse(string text)

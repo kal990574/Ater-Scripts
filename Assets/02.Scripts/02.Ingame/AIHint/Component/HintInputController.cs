@@ -42,6 +42,7 @@ namespace _02.Scripts.AIHint.Component
 
         private AIHintManager _hintService;
         private IGameStateProvider _gameStateProvider;
+        private IGameManager _gameManager;
         private AudioClip _recordingClip;
         private bool _isRecording;
         private bool _isProcessing;
@@ -49,8 +50,9 @@ namespace _02.Scripts.AIHint.Component
 
         private void Start()
         {
-            var gameManager = Managers.Get<IGameManager>();
-            _gameStateProvider = new GameStateProviderAdapter(gameManager);
+            _gameManager = Managers.Get<IGameManager>();
+            _gameStateProvider = new GameStateProviderAdapter(_gameManager);
+            _gameManager.OnGameStateChanged += OnGameStateChanged;
 
             var stt = new ClovaSpeechToText(_naverConfig);
 
@@ -64,10 +66,19 @@ namespace _02.Scripts.AIHint.Component
             _hintService = new AIHintManager(stt, llm, tts);
         }
 
+        private void OnDestroy()
+        {
+            if (_gameManager != null)
+            {
+                _gameManager.OnGameStateChanged -= OnGameStateChanged;
+            }
+        }
+
         private void Update()
         {
             if (_isProcessing) return;
-            
+            if (_gameManager.CurrentState != GameState.Playing) return;
+
 #if UNITY_EDITOR
             if (Input.GetKeyDown(KeyCode.T))
             {
@@ -91,6 +102,19 @@ namespace _02.Scripts.AIHint.Component
                 {
                     StartRecording();
                 }
+            }
+        }
+
+        private void OnGameStateChanged(GameState state)
+        {
+            if (state == GameState.Playing) return;
+
+            if (_isRecording)
+            {
+                Microphone.End(null);
+                _isRecording = false;
+                _hintUI.Hide();
+                _phoneView.Hide().Forget();
             }
         }
 
