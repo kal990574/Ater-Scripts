@@ -6,6 +6,7 @@ using UnityEngine;
 public class RuntimeDataInitializer : MonoBehaviour
 {
     [SerializeField] private string _initialId;
+    [SerializeField] private string _initialName;
     [SerializeField] private InteractState _defaultState = new();
 
     private RuntimeView _runtimeView;
@@ -47,7 +48,7 @@ public class RuntimeDataInitializer : MonoBehaviour
         RuntimeData runtimeData = runtimeInstanceManager.GetRuntimeData(_initialId);
         if (runtimeData == null)
         {
-            runtimeData = runtimeInstanceManager.GetOrCreateRuntimeData(_initialId, _defaultState);
+            runtimeData = runtimeInstanceManager.GetOrCreateRuntimeData(_initialId, _initialName, _defaultState);
         }
 
         if (runtimeData == null)

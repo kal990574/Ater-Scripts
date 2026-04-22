@@ -6,6 +6,7 @@ using UnityEngine;
 public class RuntimeItemDataInitializer : MonoBehaviour
 {
     [SerializeField] private string _initialId;
+    [SerializeField] private string _initialName;
     [SerializeField] private int _itemId = -1;
 
     private RuntimeView _runtimeView;
@@ -50,7 +51,8 @@ public class RuntimeItemDataInitializer : MonoBehaviour
             return;
         }
 
-        RuntimeItemData runtimeItemData = runtimeInstanceManager.GetOrCreateItemInstance(_initialId, _itemId);
+        string objectName = ResolveItemObjectName(runtimeInstanceManager);
+        RuntimeItemData runtimeItemData = runtimeInstanceManager.GetOrCreateItemInstance(_initialId, _itemId, objectName);
         if (runtimeItemData == null)
         {
             return;
@@ -82,5 +84,21 @@ public class RuntimeItemDataInitializer : MonoBehaviour
         }
 
         _runtimeView.SetInstanceId(_initialId);
+    }
+
+    private string ResolveItemObjectName(RuntimeInstanceManager runtimeInstanceManager)
+    {
+        if (runtimeInstanceManager == null)
+        {
+            return _initialName;
+        }
+
+        ItemData itemData = runtimeInstanceManager.ItemDataTable.GetItemData(_itemId);
+        if (itemData == null || string.IsNullOrWhiteSpace(itemData.ItemName))
+        {
+            return _initialName;
+        }
+
+        return itemData.ItemName;
     }
 }
