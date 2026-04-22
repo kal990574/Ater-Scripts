@@ -1,3 +1,4 @@
+using _02.Scripts.Chase;
 using _02.Scripts.Enemy;
 using System.Collections;
 using DG.Tweening;
@@ -11,6 +12,7 @@ public class CutsceneTrigger : MonoBehaviour
     [SerializeField] private PlayerController _playerController;
     [SerializeField] private EnemyController _enemyController;
     [SerializeField] private CutsceneEffectReceiver _effectReceiver;
+    [SerializeField] private ChaseEffectController _chaseEffectController;
 
     [Header("Look Target")]
     [SerializeField] private Transform _lookTarget;
@@ -137,6 +139,7 @@ public class CutsceneTrigger : MonoBehaviour
             _effectReceiver.OnStartChaseAnimation();
             _playerController.ExitCutsceneMode();
             _enemyController.Activate();
+            _chaseEffectController.StartChaseEffects();
         });
     }
 
