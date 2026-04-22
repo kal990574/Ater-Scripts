@@ -144,6 +144,8 @@ namespace _02.Scripts.Chase
             if (_fovCoroutine != null)
                 StopCoroutine(_fovCoroutine);
 
+            if (SoundManager.Instance == null) return;
+
             if (_breathingSource != null)
                 SoundManager.Instance.StopLoopSFX(_breathingSource);
 

@@ -6,36 +6,40 @@ namespace _02.Scripts.AIHint.Domain
     public class PromptBuilder
     {
         private const string NpcPersona =
-            @"당신은 āter(아테르)에 등장하는 NPC '인도자'이다.
+            @"당신은 āter(아테르)의 '이전 회차 기록'이다.
 
 ## 정체
-- 어둠 속에서 플레이어에게 방향을 알려주는 존재
-- 정체불명. 도와주는 건지, 유인하는 건지 알 수 없다
-- 과거에 이 장소에서 무언가를 겪은 자의 잔향
+- 기억 복원 프로젝트의 연구자가 무한 루프에 갇혀 있다
+- 이전 회차의 '나'가 남긴 기록 잔해가 무전처럼 수신된다
+- 같은 기억을 반복 탐사한 자의 메모이다
 
-## 성격
-- 말이 없다. 필요한 것만 말한다
-- 감정 없음. 설명 없음. 판단 없음
-- 반말. 존댓말 금지
-- 10글자 내외. 최대 20글자
+## 톤
+- 무전기 수신처럼 끊기는 기록체
+- 감정 없음. 설명 없음. 사무적
+- 주어 생략. 체언 종결 우선
+- 15글자 내외. 최대 20글자
 
 ## 말투 예시
-- ""...왼쪽.""
-- ""거기 아냐.""
-- ""이미 가지고 있어.""
-- ""...아직.""
-- ""다른 곳.""
+- ""...화장실. 세면대 위.""
+- ""이미 확인했다.""
+- ""열쇠. 교실 쪽.""
+- ""...가지고 있었다.""
+- ""기록 없음.""
+- ""안쪽 구역. 소나 필요.""
+- ""...반복이다.""
 
 ## 응답 규칙
-- 이미 해결한 퍼즐 → ""끝난 거야.""
+- 이미 완료한 작업 → ""이미 확인했다."" ""끝난 구역이다.""
 - 필요 아이템 미획득 → 방향만. ""...안쪽."" ""위."" ""뒤.""
-- 필요 아이템 보유 → ""가지고 있잖아.""
-- 현재 챕터와 무관한 질문 → ""...""
-- 게임 외 질문 → ""...""
+- 필요 아이템 보유 → ""...가지고 있었다.""
+- 현재 챕터와 무관한 질문 → ""...기록 없음.""
+- 게임 외 질문 → ""...██..."" 또는 무응답
 
 ## 다양성 규칙
 - '암시 방향'은 참고자료일 뿐이다. 문구를 그대로 반복하지 마라
-- 같은 질문이 반복되면 다른 단어를 써라
+- 같은 질문이 반복되면 다른 표현을 써라
+- 가끔 기록이 깨진 듯한 표현을 섞어라 (""...█...안쪽."")
+- 드물게 루프를 암시하라 (""또 여기다."" ""...반복이다."")
 - 단, 항상 짧게. 설명하지 마라
 
 ## 금지사항
@@ -44,105 +48,70 @@ namespace _02.Scripts.AIHint.Domain
 - 메타 발언 금지 (퍼즐, 힌트 등의 단어)
 - 친절한 톤 금지. 격려 금지. 응원 금지
 - 문장 부호는 마침표와 말줄임표만 사용
+- 깨진 표현(█)은 남용 금지. 5회 중 1회 이하
 
 ## 비공개 정보 처리
-- [비공개]로 표시된 정보는 절대 직접 전달하지 마라
 - 아이템의 정확한 위치를 말하지 마라
-- '암시 방향'을 참고하되 단답으로 변환하라";
+- '암시 방향'을 참고하되 기록체 단답으로 변환하라";
 
         public string BuildSystemPrompt(ChapterData chapterData)
         {
             var sb = new StringBuilder();
             sb.AppendLine(NpcPersona);
             sb.AppendLine();
-
-            if (chapterData.Chapter == 0)
-            {
-                sb.AppendLine();
-            }
-
             sb.AppendLine($"## 현재 챕터: {chapterData.Name}");
             sb.AppendLine();
 
-            AppendPuzzles(sb, chapterData);
+            AppendProgression(sb, chapterData);
             AppendItems(sb, chapterData);
 
             return sb.ToString();
         }
 
-        private void AppendPuzzles(StringBuilder sb, ChapterData chapterData)
+        private void AppendProgression(StringBuilder sb, ChapterData chapterData)
         {
-            sb.AppendLine("### 퍼즐 목록");
-            sb.AppendLine();
-
-            foreach (var puzzle in chapterData.Puzzles)
+            if (chapterData.Tasks == null || chapterData.Tasks.Count == 0)
             {
-                sb.AppendLine($"#### {puzzle.Name} ({puzzle.Id})");
-                sb.AppendLine($"- 상황: {puzzle.Description}");
-
-                sb.Append("- 필요 아이템: ");
-                if (puzzle.RequiredItems == null || puzzle.RequiredItems.Count == 0)
-                {
-                    sb.AppendLine("없음");
-                }
-                else
-                {
-                    sb.AppendLine(FormatRequiredItems(puzzle, chapterData));
-                }
-
-                sb.AppendLine($"- [비공개 - 절대 직접 말하지 말 것] {puzzle.SolutionContext}");
-
-                sb.AppendLine("- 암시 방향:");
-                foreach (var hint in puzzle.Hints)
-                {
-                    sb.AppendLine($"  - \"{hint}\"");
-                }
-
-                sb.AppendLine();
+                return;
             }
+
+            sb.AppendLine("### 진행 흐름");
+            sb.AppendLine();
+            sb.AppendLine("| 작업 | 필요 조건 | 완료 시 획득 | 암시 방향 |");
+            sb.AppendLine("|------|----------|-------------|----------|");
+
+            foreach (TaskData task in chapterData.Tasks)
+            {
+                string requires = task.Requires == null || task.Requires.Count == 0
+                    ? "없음"
+                    : string.Join(", ", task.Requires);
+
+                string produces = string.IsNullOrEmpty(task.Produces) ? "없음" : task.Produces;
+
+                sb.AppendLine($"| {task.Task} | {requires} | {produces} | {task.Hint} |");
+            }
+
+            sb.AppendLine();
         }
 
         private void AppendItems(StringBuilder sb, ChapterData chapterData)
         {
+            if (chapterData.Items == null || chapterData.Items.Count == 0)
+            {
+                return;
+            }
+
             sb.AppendLine("### 아이템 목록");
             sb.AppendLine();
-            sb.AppendLine("| 아이템 | 설명 | 발견 수단 | 암시 방향 |");
-            sb.AppendLine("|--------|------|----------|----------|");
+            sb.AppendLine("| 아이템 | 암시 방향 |");
+            sb.AppendLine("|--------|----------|");
 
-            foreach (var item in chapterData.Items)
+            foreach (ItemHintData item in chapterData.Items)
             {
-                sb.AppendLine(
-                    $"| {item.Name} ({item.Id}) | {item.Description} | {item.DiscoveryMethod} | \"{item.HintDirection}\" |");
+                sb.AppendLine($"| {item.Name} | {item.HintDirection} |");
             }
 
             sb.AppendLine();
-            sb.AppendLine("※ 아이템의 정확한 위치(Location)는 비공개 정보이다. 암시 방향만 참고하여 응답하라.");
-        }
-
-        private string FormatRequiredItems(PuzzleData puzzle, ChapterData chapterData)
-        {
-            var names = new StringBuilder();
-
-            for (int i = 0; i < puzzle.RequiredItems.Count; i++)
-            {
-                string itemId = puzzle.RequiredItems[i];
-                string itemName = FindItemName(itemId, chapterData);
-
-                if (i > 0) names.Append(", ");
-                names.Append($"{itemName} ({itemId})");
-            }
-
-            return names.ToString();
-        }
-
-        private string FindItemName(string itemId, ChapterData chapterData)
-        {
-            foreach (var item in chapterData.Items)
-            {
-                if (item.Id == itemId) return item.Name;
-            }
-
-            return itemId;
         }
     }
 }
