@@ -1,4 +1,5 @@
 using Sirenix.OdinInspector;
+using UnityEditor.Searcher;
 using UnityEngine;
 
 public class UsableObject : Interactable
@@ -72,6 +73,7 @@ public class UsableObject : Interactable
     {
         PublishObjectInteracted(GetSuccessInteractEventType(context));
         ApplyAfterUse();
+        _isInteractComplete = true;
     }
 
     protected virtual EInteractObjectEventType GetSuccessInteractEventType(InteractionContext context)
