@@ -160,6 +160,8 @@ namespace _02.Scripts.AIHint.Component
             try
             {
                 var playerState = CollectPlayerState();
+                Debug.Log($"[AIHint] 인벤토리: [{string.Join(", ", playerState.Inventory)}]");
+                Debug.Log($"[AIHint] 완료작업: [{string.Join(", ", playerState.CompletedTasks)}]");
                 HintResult result = await _hintService.ProcessHintAsync(wavData, playerState);
                 HandleHintResult(result);
             }
