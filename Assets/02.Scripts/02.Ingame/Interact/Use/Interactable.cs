@@ -201,7 +201,7 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
         }
     }
 
-    private bool IsScanRequirementSatisfied()
+    public bool IsScanRequirementSatisfied()
     {
         if (_scannableObject == null)
         {
@@ -222,11 +222,6 @@ public abstract class Interactable : DetectableObject, IRuntimeInteractObject, I
         if (_scannableObject == null)
         {
             _scannableObject = GetComponentInParent<ScannableObject>();
-        }
-
-        if (_scannableObject == null)
-        {
-            _scannableObject = GetComponentInChildren<ScannableObject>();
         }
     }
 
