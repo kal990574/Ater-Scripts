@@ -125,7 +125,7 @@ namespace _02.Scripts.AIHint.Component
 
             if (_recordingClip == null)
             {
-                Debug.LogError("[AIHint] 마이크 시작 실패. 마이크 권한을 확인하세요.");
+                Debug.LogWarning("[AIHint] 마이크 시작 실패. 마이크 권한을 확인하세요.");
                 return;
             }
 
@@ -146,6 +146,8 @@ namespace _02.Scripts.AIHint.Component
             if (lastPosition == 0)
             {
                 _isProcessing = false;
+                _hintUI.Hide();
+                _phoneView.Hide().Forget();
                 return;
             }
 
@@ -163,8 +165,8 @@ namespace _02.Scripts.AIHint.Component
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"[AIHint] 처리 실패: {e.Message}");
-                _hintUI.Hide();
+                Debug.LogWarning($"[AIHint] 처리 실패: {e.Message}");
+                ShowErrorAndHide("...수신 실패.").Forget();
             }
             finally
             {
@@ -205,7 +207,7 @@ namespace _02.Scripts.AIHint.Component
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"[AIHint-Test] 예외: {e}");
+                Debug.LogWarning($"[AIHint-Test] 예외: {e}");
                 _hintUI.Hide();
                 await _phoneView.Hide();
             }
@@ -221,8 +223,7 @@ namespace _02.Scripts.AIHint.Component
             if (!result.IsSuccess)
             {
                 Debug.LogWarning($"[AIHint] 실패: {result.HintText}");
-                _hintUI.Hide();
-                await _phoneView.Hide();
+                ShowErrorAndHide("...응답 없음.").Forget();
                 return;
             }
 
@@ -249,6 +250,13 @@ namespace _02.Scripts.AIHint.Component
             await _phoneView.Hide();
         }
 
+        private async UniTaskVoid ShowErrorAndHide(string message)
+        {
+            _hintUI.ShowResponse(message);
+            await _hintUI.HideAfterDelay(0f);
+            await _phoneView.Hide();
+        }
+
         private PlayerHintState CollectPlayerState()
         {
             return new PlayerHintState(
@@ -265,7 +273,7 @@ namespace _02.Scripts.AIHint.Component
 
             if (json == null)
             {
-                Debug.LogError($"[AIHint] ChapterData JSON 로드 실패: Resources/ChapterData/{fileName}");
+                Debug.LogWarning($"[AIHint] ChapterData JSON 로드 실패: Resources/ChapterData/{fileName}");
                 return new ChapterData();
             }
 

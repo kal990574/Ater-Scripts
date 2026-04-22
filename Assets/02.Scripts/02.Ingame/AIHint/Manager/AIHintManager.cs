@@ -35,7 +35,12 @@ namespace _02.Scripts.AIHint.Manager
             // stt
             string userQuery = await _stt.RecognizeAsync(audioData);
             Debug.Log($"[AIHint] STT 결과: {userQuery}");
-            
+
+            if (string.IsNullOrWhiteSpace(userQuery))
+            {
+                return HintResult.Fail("...수신 실패.");
+            }
+
             // llm
             var request = new HintRequest(userQuery, playerState);
             HintResponse response = await _llm.GenerateHintAsync(request);

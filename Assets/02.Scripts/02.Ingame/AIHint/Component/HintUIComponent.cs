@@ -24,12 +24,12 @@ namespace _02.Scripts.AIHint.Component
         public void ShowRecording()
         {
             _modalWindow.ModalWindowIn();
-            _titleText.text = "녹음중..";
+            _titleText.text = "입력중..";
         }
 
         public void ShowProcessing()
         {
-            _titleText.text = "처리중..";
+            _titleText.text = "전송중..";
         }
 
         public void ShowResponse(string text)
