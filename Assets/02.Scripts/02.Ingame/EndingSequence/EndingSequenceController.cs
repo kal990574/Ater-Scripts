@@ -199,7 +199,7 @@ namespace _02.Scripts._02.Ingame.EndingSequence
             _textCanvasGroup.alpha = 1f;
             _logText.text = "";
 
-            string[] lines = _config.Lines;
+            string[] lines = _config.Text.Split('\n');
 
             float totalLines = lines.Length;
             for (int i = 0; i < lines.Length; i++)
