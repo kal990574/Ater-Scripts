@@ -230,16 +230,18 @@ namespace _02.Scripts.AIHint.Component
             return new PlayerHintState(
                 _gameStateProvider.CurrentChapter,
                 _gameStateProvider.GetInventory(),
-                _gameStateProvider.GetSolvedPuzzles());
+                _gameStateProvider.GetCompletedTasks());
         }
 
         private ChapterData LoadCurrentChapterData()
         {
-            var json = Resources.Load<TextAsset>("ChapterData/chapter_tutorial");
+            int chapter = _gameStateProvider.CurrentChapter;
+            string fileName = chapter == 0 ? "chapter_tutorial" : $"chapter_{chapter}";
+            var json = Resources.Load<TextAsset>($"ChapterData/{fileName}");
 
             if (json == null)
             {
-                Debug.LogError("[AIHint] ChapterData JSON 로드 실패: Resources/ChapterData/chapter_tutorial");
+                Debug.LogError($"[AIHint] ChapterData JSON 로드 실패: Resources/ChapterData/{fileName}");
                 return new ChapterData();
             }
 

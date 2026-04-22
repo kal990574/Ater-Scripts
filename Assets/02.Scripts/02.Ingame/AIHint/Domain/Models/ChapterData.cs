@@ -8,29 +8,23 @@ namespace _02.Scripts.AIHint.Domain.Models
     {
         public int Chapter;
         public string Name;
-        public List<PuzzleData> Puzzles;
-        public List<ItemData> Items;
+        public List<TaskData> Tasks;
+        public List<ItemHintData> Items;
     }
 
     [Serializable]
-    public sealed class PuzzleData
+    public sealed class TaskData
     {
-        public string Id;
-        public string Name;
-        public string Description;
-        public List<string> RequiredItems;
-        public string SolutionContext;
-        public List<string> Hints;
+        public string Task;
+        public List<string> Requires;
+        public string Produces;
+        public string Hint;
     }
 
     [Serializable]
-    public sealed class ItemData
+    public sealed class ItemHintData
     {
-        public string Id;
         public string Name;
-        public string Description;
-        public string Location;
-        public string DiscoveryMethod;
         public string HintDirection;
     }
 }

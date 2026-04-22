@@ -6,6 +6,6 @@ namespace _02.Scripts.Core.Domain
     {
         int CurrentChapter { get; }
         IReadOnlyList<string> GetInventory();
-        IReadOnlyList<string> GetSolvedPuzzles();
+        IReadOnlyList<string> GetCompletedTasks();
     }
 }

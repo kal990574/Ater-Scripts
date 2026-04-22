@@ -15,7 +15,7 @@ public class RuntimeInstanceManager : MonoBehaviour
 
     [ShowInInspector, ReadOnly, FoldoutGroup("Debug")]
     [DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
-    private IReadOnlyDictionary<string, RuntimeData> RuntimeInstances =>
+    public IReadOnlyDictionary<string, RuntimeData> RuntimeInstances =>
         _runtimeInstanceService?.Instances;
 
     private void Awake()
@@ -172,4 +172,5 @@ public class RuntimeInstanceManager : MonoBehaviour
 
         return _runtimeInstanceService.GetItemInstance(instanceId);
     }
+
 }

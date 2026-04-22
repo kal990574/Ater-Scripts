@@ -88,7 +88,7 @@ namespace _02.Scripts.AIHint.Infrastructure.OpenAI
           sb.AppendLine("## 플레이어 상태");
           sb.AppendLine($"- 현재 챕터: {request.PlayerState.CurrentChapter}");
           sb.AppendLine($"- 인벤토리: [{string.Join(", ", request.PlayerState.Inventory)}]");
-          sb.AppendLine($"- 해결한 퍼즐: [{string.Join(", ", request.PlayerState.SolvedPuzzles)}]");
+          sb.AppendLine($"- 완료한 작업: [{string.Join(", ", request.PlayerState.CompletedTasks)}]");
           sb.AppendLine();
           sb.AppendLine("## 플레이어 질문");
           sb.AppendLine(request.UserQuery);
