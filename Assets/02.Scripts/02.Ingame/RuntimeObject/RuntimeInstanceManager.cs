@@ -11,6 +11,7 @@ public class RuntimeInstanceManager : MonoBehaviour
     [SerializeField] private ItemDataTableSO _itemDataTableSo;
 
     private RuntimeInstanceService _runtimeInstanceService;
+    public ItemDataTableSO ItemDataTable => _itemDataTableSo;
 
     [ShowInInspector, ReadOnly, FoldoutGroup("Debug")]
     [DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
@@ -38,7 +39,17 @@ public class RuntimeInstanceManager : MonoBehaviour
         _runtimeInstanceService?.SetItemDataTable(itemDataTableSo);
     }
 
-    public RuntimeData CreateRuntimeData(InteractState defaultState = null)
+    public RuntimeData CreateRuntimeData(string objectName = null, InteractState defaultState = null)
+    {
+        if (_runtimeInstanceService == null)
+        {
+            return null;
+        }
+
+        return _runtimeInstanceService.CreateRuntimeData(objectName, defaultState);
+    }
+
+    public RuntimeData CreateRuntimeData(InteractState defaultState)
     {
         if (_runtimeInstanceService == null)
         {
@@ -48,7 +59,17 @@ public class RuntimeInstanceManager : MonoBehaviour
         return _runtimeInstanceService.CreateRuntimeData(defaultState);
     }
 
-    public RuntimeData GetOrCreateRuntimeData(string instanceId, InteractState defaultState = null)
+    public RuntimeData GetOrCreateRuntimeData(string instanceId, string objectName = null, InteractState defaultState = null)
+    {
+        if (_runtimeInstanceService == null)
+        {
+            return null;
+        }
+
+        return _runtimeInstanceService.GetOrCreateRuntimeData(instanceId, objectName, defaultState);
+    }
+
+    public RuntimeData GetOrCreateRuntimeData(string instanceId, InteractState defaultState)
     {
         if (_runtimeInstanceService == null)
         {
@@ -56,6 +77,16 @@ public class RuntimeInstanceManager : MonoBehaviour
         }
 
         return _runtimeInstanceService.GetOrCreateRuntimeData(instanceId, defaultState);
+    }
+
+    public RuntimeItemData CreateItemInstance(int itemId, string objectName = null)
+    {
+        if (_runtimeInstanceService == null)
+        {
+            return null;
+        }
+
+        return _runtimeInstanceService.CreateInstance(itemId, objectName);
     }
 
     public RuntimeItemData CreateItemInstance(int itemId)
@@ -66,6 +97,16 @@ public class RuntimeInstanceManager : MonoBehaviour
         }
 
         return _runtimeInstanceService.CreateInstance(itemId);
+    }
+
+    public RuntimeItemData GetOrCreateItemInstance(string instanceId, int itemId, string objectName = null)
+    {
+        if (_runtimeInstanceService == null)
+        {
+            return null;
+        }
+
+        return _runtimeInstanceService.GetOrCreateItemInstance(instanceId, itemId, objectName);
     }
 
     public RuntimeItemData GetOrCreateItemInstance(string instanceId, int itemId)

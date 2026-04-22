@@ -18,26 +18,36 @@ public class RuntimeInstanceService
         this.itemDataTableSo = itemDataTableSo;
     }
 
-    public RuntimeData CreateRuntimeData(InteractState defaultState = null)
+    public RuntimeData CreateRuntimeData(string objectName = null, InteractState defaultState = null)
     {
-        RuntimeData runtimeData = new RuntimeData(defaultState);
+        RuntimeData runtimeData = new RuntimeData(null, objectName, defaultState);
         RegisterInstance(runtimeData);
         return runtimeData;
     }
 
-    public RuntimeData GetOrCreateRuntimeData(string instanceId, InteractState defaultState = null)
+    public RuntimeData CreateRuntimeData(InteractState defaultState)
+    {
+        return CreateRuntimeData(null, defaultState);
+    }
+
+    public RuntimeData GetOrCreateRuntimeData(string instanceId, string objectName = null, InteractState defaultState = null)
     {
         if (TryGetRuntimeData(instanceId, out RuntimeData runtimeData))
         {
             return runtimeData;
         }
 
-        runtimeData = new RuntimeData(instanceId, defaultState);
+        runtimeData = new RuntimeData(instanceId, objectName, defaultState);
         RegisterInstance(runtimeData);
         return runtimeData;
     }
 
-    public RuntimeItemData CreateInstance(int itemId)
+    public RuntimeData GetOrCreateRuntimeData(string instanceId, InteractState defaultState)
+    {
+        return GetOrCreateRuntimeData(instanceId, null, defaultState);
+    }
+
+    public RuntimeItemData CreateInstance(int itemId, string objectName = null)
     {
         if (itemDataTableSo == null)
         {
@@ -45,7 +55,7 @@ public class RuntimeInstanceService
             return null;
         }
 
-        RuntimeItemData runtimeItem = new RuntimeItemData(itemDataTableSo.GetItemData(itemId));
+        RuntimeItemData runtimeItem = new RuntimeItemData(null, objectName, itemDataTableSo.GetItemData(itemId));
         if (runtimeItem == null)
         {
             return null;
@@ -55,7 +65,7 @@ public class RuntimeInstanceService
         return runtimeItem;
     }
 
-    public RuntimeItemData GetOrCreateItemInstance(string instanceId, int itemId)
+    public RuntimeItemData GetOrCreateItemInstance(string instanceId, int itemId, string objectName = null)
     {
         if (TryGetRuntimeData(instanceId, out RuntimeData runtimeData))
         {
@@ -80,9 +90,19 @@ public class RuntimeInstanceService
             return null;
         }
 
-        RuntimeItemData runtimeItem = new RuntimeItemData(instanceId, itemData);
+        RuntimeItemData runtimeItem = new RuntimeItemData(instanceId, objectName, itemData);
         RegisterInstance(runtimeItem);
         return runtimeItem;
+    }
+
+    public RuntimeItemData CreateInstance(int itemId)
+    {
+        return CreateInstance(itemId, null);
+    }
+
+    public RuntimeItemData GetOrCreateItemInstance(string instanceId, int itemId)
+    {
+        return GetOrCreateItemInstance(instanceId, itemId, null);
     }
 
     public bool RegisterInstance(RuntimeData runtimeData)

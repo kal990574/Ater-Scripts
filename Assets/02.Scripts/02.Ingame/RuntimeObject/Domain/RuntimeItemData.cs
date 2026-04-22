@@ -17,12 +17,17 @@ public class RuntimeItemData : RuntimeData
     public GameObject HandPrefab => data != null ? data.HandPrefab : null;
 
     public RuntimeItemData(ItemData data = null)
-        : this(null, data)
+        : this(null, null, data)
     {
     }
 
     public RuntimeItemData(string instanceId, ItemData data = null)
-        : base(instanceId, data != null ? data.CreateDefaultState() : null)
+        : this(instanceId, null, data)
+    {
+    }
+
+    public RuntimeItemData(string instanceId, string objectName, ItemData data = null)
+        : base(instanceId, objectName, data != null ? data.CreateDefaultState() : null)
     {
         this.data = data;
     }
