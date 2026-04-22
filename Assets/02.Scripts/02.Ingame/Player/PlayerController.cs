@@ -229,13 +229,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
             return;
         }
 
-        if (result.InventoryEmptyAfterConsume || result.NextRecommendedSlotIndex < 0)
-        {
-            SwitchToScanMode();
-            return;
-        }
-
-        _modeService?.SetGameplayMode(EPlayerInteractMode.Item);
+        SwitchToScanMode();
     }
 
     public T GetAbility<T>() where T : PlayerAbility

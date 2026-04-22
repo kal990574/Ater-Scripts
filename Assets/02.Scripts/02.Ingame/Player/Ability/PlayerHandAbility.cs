@@ -93,12 +93,7 @@ namespace _02.Scripts.Player
             NotifyHandSlotChanged();
             return true;
         }
-
-        public bool TryConsumeCurrentHandItem()
-        {
-            return TryConsumeCurrentHandItem(out _);
-        }
-
+        
         public bool TryConsumeCurrentHandItem(out HandConsumeResult result)
         {
             if (_inventoryManager == null || HasHandItem == false)
@@ -107,7 +102,6 @@ namespace _02.Scripts.Player
                 return false;
             }
 
-            int nextHandIndex = GetNextHandIndexAfterThrow();
             bool isRemoved = _inventoryManager.RemoveItem(_handIndex);
             if (isRemoved == false)
             {
@@ -116,45 +110,24 @@ namespace _02.Scripts.Player
             }
 
             ClearHandItem();
-
-            if (_inventoryManager.Count <= 0)
-            {
-                result = new HandConsumeResult(true, true, -1);
-                return true;
-            }
-
-            int resolvedIndex = ResolveNextHandIndex(nextHandIndex);
-            if (resolvedIndex < 0)
-            {
-                result = new HandConsumeResult(true, false, -1);
-                return true;
-            }
-
-            bool didEquipNext = TryPickUpItem(resolvedIndex);
-            result = new HandConsumeResult(true, false, didEquipNext ? resolvedIndex : -1);
+            bool inventoryEmptyAfterConsume = _inventoryManager.Count <= 0;
+            result = new HandConsumeResult(true, inventoryEmptyAfterConsume, -1);
             return true;
         }
 
         public void ClearHandItem()
         {
+            if (_handIndex < 0 && string.IsNullOrEmpty(_currentHandInstanceId))
+            {
+                return;
+            }
+
             _handIndex = -1;
             _currentHandInstanceId = null;
             _handViewService?.Hide();
             NotifyHandSlotChanged();
         }
-
-        public void CycleHandItem(int direction)
-        {
-            if (_inventoryManager == null || _inventoryManager.Count == 0)
-            {
-                return;
-            }
-
-            int current = _handIndex < 0 ? 0 : _handIndex;
-            int newIndex = (current + direction + _inventoryManager.Count) % _inventoryManager.Count;
-            TryPickUpItem(newIndex);
-        }
-
+        
         private void SyncCurrentHandItemState()
         {
             if (_inventoryManager == null || string.IsNullOrEmpty(_currentHandInstanceId))
@@ -188,23 +161,7 @@ namespace _02.Scripts.Player
                 NotifyHandSlotChanged();
             }
         }
-
-        private int GetNextHandIndexAfterThrow()
-        {
-            int itemCountAfterRemoval = _inventoryManager.Count - 1;
-            if (itemCountAfterRemoval <= 0)
-            {
-                return -1;
-            }
-
-            if (_handIndex < itemCountAfterRemoval)
-            {
-                return _handIndex;
-            }
-
-            return itemCountAfterRemoval - 1;
-        }
-
+        
         private int ResolveNextHandIndex(int preferredIndex)
         {
             if (_inventoryManager == null || _inventoryManager.Count <= 0)
