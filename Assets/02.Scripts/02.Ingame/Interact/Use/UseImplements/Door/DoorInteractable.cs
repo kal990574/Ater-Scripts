@@ -39,7 +39,7 @@ public class DoorInteractable : StateInteractable
 
     protected override bool IsAdditionalInteractRequirementSatisfied()
     {
-        return IsUnlocked;
+        return true;
     }
 
     protected override void OnAwake()

@@ -18,8 +18,9 @@ namespace _02.Scripts.Player
                 return;
             }
 
-            if (target.Transform.TryGetComponent(out Interactable interactable) && !interactable.IsInteractActive)
+            if (target.Transform.TryGetComponent(out Interactable interactable) && !interactable.IsScanRequirementSatisfied())
             {
+                Debug.Log("[PlayerInteractAbility] : target is not Scanned");
                 return;
             }
 
