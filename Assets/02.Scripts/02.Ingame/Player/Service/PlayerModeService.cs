@@ -6,6 +6,7 @@ namespace _02.Scripts.Player
 {
     public class PlayerModeService
     {
+        private PlayerController _playerController;
         private EPlayerInteractMode _currentMode;
         private EPlayerInteractMode _lastGameplayMode;
         private bool _canMove;
@@ -13,8 +14,9 @@ namespace _02.Scripts.Player
         private bool _isPausedByGame;
         private IPuzzleInputHandler _activePuzzleInputHandler;
 
-        public PlayerModeService(EPlayerInteractMode initialMode)
+        public PlayerModeService(PlayerController playerController, EPlayerInteractMode initialMode)
         {
+            _playerController = playerController;
             _currentMode = initialMode;
             _lastGameplayMode = IsGameplayMode(initialMode) ? initialMode : EPlayerInteractMode.Scan;
             ApplyModeState();
@@ -115,12 +117,17 @@ namespace _02.Scripts.Player
             {
                 return;
             }
-
+            
             if (IsGameplayMode(mode))
             {
                 _lastGameplayMode = mode;
             }
 
+            if (_currentMode == EPlayerInteractMode.Scan)
+            {
+                _playerController.GetAbility<PlayerScanAbility>().CheckLidarScanDeactive();
+            }
+            
             _currentMode = mode;
             ApplyModeState();
             OnModeChanged?.Invoke(mode);

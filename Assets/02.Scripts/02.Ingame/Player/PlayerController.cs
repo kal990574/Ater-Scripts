@@ -38,7 +38,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
             _input = GetComponentInChildren<IPlayerInput>();
         }
 
-        _modeService = new PlayerModeService(_initialMode);
+        _modeService = new PlayerModeService(this,_initialMode);
         _modeService.OnModeChanged += HandleModeChanged;
 
         PlayerHandAbility handAbility = GetAbility<PlayerHandAbility>();
@@ -170,7 +170,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
             ExitUIMode();
             return;
         }
-
+        
         EnterUIMode();
     }
 
@@ -209,6 +209,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
             return true;
         }
 
+        
         _modeService?.SetGameplayMode(EPlayerInteractMode.Item);
         scanAbility?.SetScannerVisible(false);
 
@@ -250,35 +251,7 @@ public class PlayerController : MonoBehaviour ,IPlayerModeProvider
 
         return null;
     }
-
-    [System.Obsolete("Prefer explicit mode request methods such as EnterUIMode, EnterPuzzleMode, SwitchToScanMode, or SwitchToItemMode.")]
-    public void SetInteractMode(EPlayerInteractMode mode)
-    {
-        if (_modeService == null)
-        {
-            return;
-        }
-
-        if (mode == EPlayerInteractMode.Item || mode == EPlayerInteractMode.Scan)
-        {
-            _modeService.SetGameplayMode(mode);
-            return;
-        }
-
-        switch (mode)
-        {
-            case EPlayerInteractMode.UI:
-                _modeService.EnterUIMode();
-                break;
-            case EPlayerInteractMode.Puzzle:
-                _modeService.EnterPuzzleMode(null);
-                break;
-            case EPlayerInteractMode.Cutscene:
-                _modeService.EnterCutsceneMode();
-                break;
-        }
-    }
-
+    
     public void EnterUIMode()
     {
         _modeService?.EnterUIMode();

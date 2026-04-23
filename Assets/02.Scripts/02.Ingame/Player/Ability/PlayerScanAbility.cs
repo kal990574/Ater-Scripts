@@ -37,6 +37,16 @@ namespace _02.Scripts.Player
             _isScannerActive = isVisible;
         }
 
+        public void CheckLidarScanDeactive()
+        {
+            if (!_isLidarHolding)
+            {
+                return;
+            }
+            
+            LidarScanDeactive();
+        }
+
         public void LidarScanDeactive()
         {
             _isLidarHolding = false;
