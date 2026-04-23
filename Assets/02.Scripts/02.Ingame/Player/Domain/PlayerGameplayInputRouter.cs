@@ -106,9 +106,20 @@ namespace _02.Scripts.Player
                 return;
             }
 
+            int scrollableCount = Mathf.Min(_handAbility.InventoryCount, 5);
+            if (scrollableCount <= 0)
+            {
+                return;
+            }
+
             int direction = scroll > 0f ? 1 : -1;
-            int current = _handAbility.CurrentHandIndex < 0 ? 0 : _handAbility.CurrentHandIndex;
-            int nextIndex = (current + direction + _handAbility.InventoryCount) % _handAbility.InventoryCount;
+            int current = _handAbility.CurrentHandIndex;
+            if (current < 0 || current >= scrollableCount)
+            {
+                current = 0;
+            }
+
+            int nextIndex = (current + direction + scrollableCount) % scrollableCount;
             _itemModeRequester?.Invoke(nextIndex);
         }
 

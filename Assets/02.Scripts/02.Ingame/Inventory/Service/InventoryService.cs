@@ -27,24 +27,7 @@ public class InventoryService
         OnInventoryChanged?.Invoke();
         return true;
     }
-
-    public bool Remove(string instanceId)
-    {
-        if (string.IsNullOrEmpty(instanceId))
-        {
-            return false;
-        }
-
-        int index = _itemInstanceIds.IndexOf(instanceId);
-        if (index < 0)
-        {
-            return false;
-        }
-
-        RemoveAt(index);
-        return true;
-    }
-
+    
     public bool RemoveAt(int index)
     {
         if (index < 0 || index >= _itemInstanceIds.Count)
