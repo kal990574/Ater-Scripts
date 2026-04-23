@@ -1,5 +1,4 @@
 using Sirenix.OdinInspector;
-using UnityEditor.Searcher;
 using UnityEngine;
 
 public class UsableObject : Interactable
