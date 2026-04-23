@@ -73,7 +73,7 @@ public class UsableObject : Interactable
     {
         PublishObjectInteracted(GetSuccessInteractEventType(context));
         ApplyAfterUse();
-        _isInteractComplete = true;
+        SetInteractComplete(true);
     }
 
     protected virtual EInteractObjectEventType GetSuccessInteractEventType(InteractionContext context)
