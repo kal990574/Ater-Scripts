@@ -2,7 +2,7 @@
                                                                                                                                  
   > 어둠을 스캔해 단서를 잇는 1인칭 호러 퍼즐 탈출 게임                                                                            
                                                                                                                                    
-  [![YouTube](https://img.shields.io/badge/YouTube-Trailer-red?logo=youtube)](https://www.youtube.com/watch?v=Sb3PPvMQYA8)         
+  [![Ater Trailer](https://img.youtube.com/vi/Sb3PPvMQYA8/maxresdefault.jpg)](https://www.youtube.com/watch?v=Sb3PPvMQYA8)   
                                                                                                                                    
   ## 📋 프로젝트 개요                                                                                                              
                   
